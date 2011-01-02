@@ -715,7 +715,7 @@ public class LauncherProvider extends ContentProvider {
         }
 
         private ComponentName getSearchWidgetProvider() {
-        	//TODO:
+        	//TODO_BOOMBULER:
         	/*
             SearchManager searchManager =
                     (SearchManager) mContext.getSystemService(Context.SEARCH_SERVICE);

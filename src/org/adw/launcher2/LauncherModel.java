@@ -1412,9 +1412,9 @@ public class LauncherModel extends BroadcastReceiver {
             try {
                 if (data != null) {
                     Bitmap saved = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    Bitmap loaded = info.getIcon(mIconCache);
+                    Bitmap loaded = info.getIcon(mIconCache);     
+                    //TODO_BOOMBULER: needSave = !saved.sameAs(loaded);
                     needSave = !saved.equals(loaded);
-                    //TODO: needSave = !saved.sameAs(loaded);
                 } else {
                     needSave = true;
                 }

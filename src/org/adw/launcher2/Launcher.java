@@ -1078,7 +1078,7 @@ public final class Launcher extends Activity
             initialQuery = getTypedText();
             clearTypedText();
         }
-        // TODO:
+        // TODO_BOOMBULER:
         /*
         if (appSearchData == null) {
             appSearchData = new Bundle();
@@ -1112,7 +1112,7 @@ public final class Launcher extends Activity
                 .setIcon(android.R.drawable.ic_search_category_default)
                 .setAlphabeticShortcut(SearchManager.MENU_KEY);
         menu.add(0, MENU_NOTIFICATIONS, 0, R.string.menu_notifications)
-             //TODO:   .setIcon(com.android.internal.R.drawable.ic_menu_notifications)
+             //TODO_BOOMBULER:   .setIcon(com.android.internal.R.drawable.ic_menu_notifications)
                 .setAlphabeticShortcut('N');
 
         final Intent settings = new Intent(android.provider.Settings.ACTION_SETTINGS);
@@ -1494,6 +1494,10 @@ public final class Launcher extends Activity
                     ". Make sure to create a MAIN intent-filter for the corresponding activity " +
                     "or use the exported attribute for this activity. "
                     + "tag="+ tag + " intent=" + intent, e);
+        }
+        if (tag instanceof ApplicationInfo) {
+        	ApplicationInfo info = (ApplicationInfo)tag;
+        	AppDB.getInstance().incrementLaunchCounter(info);
         }
     }
 

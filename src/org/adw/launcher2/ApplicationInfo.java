@@ -50,8 +50,7 @@ class ApplicationInfo extends ItemInfo {
     Bitmap iconBitmap;
 
     ComponentName componentName;
-
-
+    
     ApplicationInfo() {
         itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
     }
