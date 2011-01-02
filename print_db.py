@@ -31,7 +31,7 @@ def make_dir():
 def pull_file(fn):
   print "pull_file: " + fn
   rv = os.system("adb pull"
-    + " /data/data/com.android.launcher/databases/launcher.db"
+    + " /data/data/org.adw.launcher2/databases/launcher.db"
     + " " + fn);
   if rv != 0:
     print "adb pull failed"
