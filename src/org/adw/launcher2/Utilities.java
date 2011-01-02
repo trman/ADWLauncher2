@@ -36,15 +36,12 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.Layout.Alignment;
 import android.util.DisplayMetrics;
-import android.util.Log;
 
 
 /**
  * Various utilities shared amongst the Launcher's classes.
  */
 final class Utilities {
-    private static final String TAG = "Launcher.Utilities";
-
     private static final boolean TEXT_BURN = false;
 
     private static int sIconWidth = -1;
@@ -52,12 +49,10 @@ final class Utilities {
     private static int sIconTextureWidth = -1;
     private static int sIconTextureHeight = -1;
 
-    private static final Paint sPaint = new Paint();
     private static final Paint sBlurPaint = new Paint();
     private static final Paint sGlowColorPressedPaint = new Paint();
     private static final Paint sGlowColorFocusedPaint = new Paint();
     private static final Paint sDisabledPaint = new Paint();
-    private static final Rect sBounds = new Rect();
     private static final Rect sOldBounds = new Rect();
     private static final Canvas sCanvas = new Canvas();
 
@@ -146,15 +141,6 @@ final class Utilities {
 
             final int left = (textureWidth-width) / 2;
             final int top = (textureHeight-height) / 2;
-
-            if (false) {
-                // draw a big box for the icon for debugging
-                canvas.drawColor(sColors[sColorIndex]);
-                if (++sColorIndex >= sColors.length) sColorIndex = 0;
-                Paint debugPaint = new Paint();
-                debugPaint.setColor(0xffcccc00);
-                canvas.drawRect(left, top, left+width, top+height, debugPaint);
-            }
 
             sOldBounds.set(icon.getBounds());
             icon.setBounds(left, top, left+width, top+height);
@@ -305,11 +291,6 @@ final class Utilities {
 
             mBubbleRect.offsetTo((mBitmapWidth-mBubbleRect.width())/2, 0);
 
-            if (false) {
-                Log.d(TAG, "mBitmapWidth=" + mBitmapWidth + " mBitmapHeight="
-                        + mBitmapHeight + " w=" + ((int)(mBubbleRect.width() + 0.5f))
-                        + " h=" + ((int)((MAX_LINES * mLineHeight) + leading + 0.5f)));
-            }
         }
 
         /** You own the bitmap after this and you must call recycle on it. */

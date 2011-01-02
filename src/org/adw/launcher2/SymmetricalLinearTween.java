@@ -17,9 +17,7 @@
 package org.adw.launcher2;
 
 import android.os.Handler;
-import android.os.Message;
 import android.os.SystemClock;
-import android.util.Log;
 
 /**
  * Provides an animation between 0.0f and 1.0f over a given duration.

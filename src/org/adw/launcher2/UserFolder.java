@@ -12,7 +12,6 @@ import android.view.View;
  *
  */
 public class UserFolder extends Folder implements DropTarget {
-    private static final String TAG = "Launcher.UserFolder";
 
     public UserFolder(Context context, AttributeSet attrs) {
         super(context, attrs);

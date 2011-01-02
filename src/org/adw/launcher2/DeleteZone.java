@@ -120,7 +120,7 @@ public class DeleteZone extends ImageView implements DropTarget, DragController.
                 new Thread("deleteAppWidgetId") {
                     @Override
 					public void run() {
-                        appWidgetHost.deleteAppWidgetId(launcherAppWidgetInfo.appWidgetId);
+                        appWidgetHost.deleteAppWidgetId(appWidgetId);
                     }
                 }.start();
             }

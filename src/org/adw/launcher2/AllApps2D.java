@@ -170,7 +170,7 @@ public class AllApps2D
         return true;
     }
 
-    public void onItemClick(AdapterView parent, View v, int position, long id) {
+    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         ApplicationInfo app = (ApplicationInfo) parent.getItemAtPosition(position);
         mLauncher.startActivitySafely(app.intent, app);
     }

@@ -20,7 +20,6 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.nio.ByteBuffer;
@@ -287,23 +286,17 @@ public class FastXmlSerializer implements XmlSerializer {
             IllegalArgumentException, IllegalStateException {
         if (os == null)
             throw new IllegalArgumentException();
-        if (true) {
-            try {
-                mCharset = Charset.forName(encoding).newEncoder();
-            } catch (IllegalCharsetNameException e) {
-                throw (UnsupportedEncodingException) (new UnsupportedEncodingException(
-                        encoding).initCause(e));
-            } catch (UnsupportedCharsetException e) {
-                throw (UnsupportedEncodingException) (new UnsupportedEncodingException(
-                        encoding).initCause(e));
-            }
-            mOutputStream = os;
-        } else {
-            setOutput(
-                encoding == null
-                    ? new OutputStreamWriter(os)
-                    : new OutputStreamWriter(os, encoding));
+        
+        try {
+            mCharset = Charset.forName(encoding).newEncoder();
+        } catch (IllegalCharsetNameException e) {
+            throw (UnsupportedEncodingException) (new UnsupportedEncodingException(
+                    encoding).initCause(e));
+        } catch (UnsupportedCharsetException e) {
+            throw (UnsupportedEncodingException) (new UnsupportedEncodingException(
+                    encoding).initCause(e));
         }
+        mOutputStream = os;
     }
 
     public void setOutput(Writer writer) throws IOException, IllegalArgumentException,

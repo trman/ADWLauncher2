@@ -74,7 +74,7 @@ public class Folder extends LinearLayout implements DragSource, OnItemLongClickL
         mCloseButton.setOnLongClickListener(this);
     }
 
-    public void onItemClick(AdapterView parent, View v, int position, long id) {
+    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
         ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
         int[] pos = new int[2];
         v.getLocationOnScreen(pos);

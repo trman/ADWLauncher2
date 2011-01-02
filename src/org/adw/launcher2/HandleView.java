@@ -20,7 +20,6 @@ package org.adw.launcher2;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -70,10 +69,6 @@ public class HandleView extends ImageView {
         return super.onTouchEvent(ev);
     }
 
-    private static boolean isDirectionKey(int keyCode) {
-        return keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_LEFT ||
-                keyCode == KeyEvent.KEYCODE_DPAD_RIGHT || keyCode == KeyEvent.KEYCODE_DPAD_UP;
-    }
 
     void setLauncher(Launcher launcher) {
         mLauncher = launcher;

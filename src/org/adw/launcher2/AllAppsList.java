@@ -24,7 +24,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 

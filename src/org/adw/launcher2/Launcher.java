@@ -58,7 +58,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Parcelable;
-import android.os.SystemClock;
 import android.provider.LiveFolders;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
@@ -92,8 +91,6 @@ public final class Launcher extends Activity
     static final boolean LOGD = false;
 
     static final boolean PROFILE_STARTUP = false;
-    static final boolean DEBUG_WIDGETS = false;
-    static final boolean DEBUG_USER_INTERFACE = false;
 
     private static final int WALLPAPER_SCREENS_SPAN = 2;
 
@@ -205,8 +202,6 @@ public final class Launcher extends Activity
     private ImageView mPreviousView;
     private ImageView mNextView;
 
-    // Hotseats (quick-launch icons next to AllApps)
-    private static final int NUM_HOTSEATS = 2;
     private String[] mHotseatConfig = null;
     private Intent[] mHotseats = null;
     private Drawable[] mHotseatIcons = null;
@@ -780,21 +775,18 @@ public final class Launcher extends Activity
         dragController.addDropTarget(deleteZone);
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
     public void previousScreen(View v) {
         if (!isAllAppsVisible()) {
             mWorkspace.scrollLeft();
         }
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
     public void nextScreen(View v) {
         if (!isAllAppsVisible()) {
             mWorkspace.scrollRight();
         }
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
     public void launchHotSeat(View v) {
         if (isAllAppsVisible()) return;
 
@@ -808,7 +800,6 @@ public final class Launcher extends Activity
         // reload these every tap; you never know when they might change
         loadHotseats();
         if (index >= 0 && index < mHotseats.length && mHotseats[index] != null) {
-            Intent intent = mHotseats[index];
             startActivitySafely(
                 mHotseats[index],
                 "hotseat"
@@ -2170,18 +2161,6 @@ public final class Launcher extends Activity
             // Use removeAllViewsInLayout() to avoid an extra requestLayout() and invalidate().
             ((ViewGroup) workspace.getChildAt(i)).removeAllViewsInLayout();
         }
-
-        if (DEBUG_USER_INTERFACE) {
-            android.widget.Button finishButton = new android.widget.Button(this);
-            finishButton.setText("Finish");
-            workspace.addInScreen(finishButton, 1, 0, 0, 1, 1);
-
-            finishButton.setOnClickListener(new android.widget.Button.OnClickListener() {
-                public void onClick(View v) {
-                    finish();
-                }
-            });
-        }
     }
 
     /**
@@ -2243,17 +2222,10 @@ public final class Launcher extends Activity
     public void bindAppWidget(LauncherAppWidgetInfo item) {
         setLoadOnResume();
 
-        final long start = DEBUG_WIDGETS ? SystemClock.uptimeMillis() : 0;
-        if (DEBUG_WIDGETS) {
-            Log.d(TAG, "bindAppWidget: " + item);
-        }
         final Workspace workspace = mWorkspace;
 
         final int appWidgetId = item.appWidgetId;
         final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
-        if (DEBUG_WIDGETS) {
-            Log.d(TAG, "bindAppWidget: id=" + item.appWidgetId + " belongs to component " + appWidgetInfo.provider);
-        }
 
         item.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
 
@@ -2266,11 +2238,6 @@ public final class Launcher extends Activity
         workspace.requestLayout();
 
         mDesktopItems.add(item);
-
-        if (DEBUG_WIDGETS) {
-            Log.d(TAG, "bound widget id="+item.appWidgetId+" in "
-                    + (SystemClock.uptimeMillis()-start) + "ms");
-        }
     }
 
     /**

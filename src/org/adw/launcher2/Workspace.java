@@ -54,7 +54,6 @@ import android.widget.TextView;
  * A workspace is meant to be used with a fixed width only.
  */
 public class Workspace extends ViewGroup implements DropTarget, DragSource, DragScroller {
-    @SuppressWarnings({"UnusedDeclaration"})
     private static final String TAG = "Launcher.Workspace";
     private static final int INVALID_SCREEN = -1;
 
@@ -1433,8 +1432,6 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
     }
 
     void updateShortcuts(ArrayList<ApplicationInfo> apps) {
-        final PackageManager pm = mLauncher.getPackageManager();
-
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);

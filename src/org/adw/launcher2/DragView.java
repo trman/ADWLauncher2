@@ -83,13 +83,6 @@ public class DragView extends View implements TweenCallback {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (false) {
-            // for debugging
-            Paint p = new Paint();
-            p.setStyle(Paint.Style.FILL);
-            p.setColor(0xaaffffff);
-            canvas.drawRect(0, 0, getWidth(), getHeight(), p);
-        }
         float scale = mAnimationScale;
         if (scale < 0.999f) { // allow for some float error
             float width = mBitmap.getWidth();

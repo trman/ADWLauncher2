@@ -30,7 +30,6 @@ import java.util.HashMap;
  * Cache of application icons.  Icons can be made from any thread.
  */
 public class IconCache {
-    private static final String TAG = "Launcher.IconCache";
 
     private static final int INITIAL_ICON_CACHE_CAPACITY = 50;
 

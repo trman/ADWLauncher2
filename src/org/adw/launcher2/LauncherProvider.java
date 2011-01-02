@@ -18,7 +18,6 @@ package org.adw.launcher2;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.List;
 
 import org.adw.launcher2.LauncherSettings.Favorites;
 import org.xmlpull.v1.XmlPullParser;
@@ -26,7 +25,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import android.appwidget.AppWidgetHost;
 import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
@@ -725,24 +723,6 @@ public class LauncherProvider extends ContentProvider {
             if (searchComponent == null) return null;
             return getProviderInPackage(searchComponent.getPackageName());*/
         	return null;
-        }
-
-        /**
-         * Gets an appwidget provider from the given package. If the package contains more than
-         * one appwidget provider, an arbitrary one is returned.
-         */
-        private ComponentName getProviderInPackage(String packageName) {
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(mContext);
-            List<AppWidgetProviderInfo> providers = appWidgetManager.getInstalledProviders();
-            if (providers == null) return null;
-            final int providerCount = providers.size();
-            for (int i = 0; i < providerCount; i++) {
-                ComponentName provider = providers.get(i).provider;
-                if (provider != null && provider.getPackageName().equals(packageName)) {
-                    return provider;
-                }
-            }
-            return null;
         }
 
         private boolean addSearchWidget(SQLiteDatabase db, ContentValues values) {
