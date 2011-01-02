@@ -1498,6 +1498,9 @@ public final class Launcher extends Activity
         if (tag instanceof ApplicationInfo) {
         	ApplicationInfo info = (ApplicationInfo)tag;
         	AppDB.getInstance().incrementLaunchCounter(info);
+        } else if (tag instanceof ShortcutInfo) {
+        	ShortcutInfo info = (ShortcutInfo)tag;
+        	AppDB.getInstance().incrementLaunchCounter(info);        	
         }
     }
 
