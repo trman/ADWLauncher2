@@ -16,6 +16,8 @@
 
 package org.adw.launcher2;
 
+import java.util.HashMap;
+
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,8 +25,6 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-
-import java.util.HashMap;
 
 /**
  * Cache of application icons.  Icons can be made from any thread.
@@ -69,7 +69,8 @@ public class IconCache {
      */
     public void remove(ComponentName componentName) {
         synchronized (mCache) {
-            mCache.remove(componentName);
+        	if (componentName != null)
+        		mCache.remove(componentName);
         }
     }
 
@@ -85,16 +86,17 @@ public class IconCache {
     /**
      * Fill in "application" with the icon and label for "info."
      */
-    public void getTitleAndIcon(ApplicationInfo application, ResolveInfo info) {
+    public void getTitleAndIcon(ShortcutInfo application, ResolveInfo info) {
         synchronized (mCache) {
-            CacheEntry entry = cacheLocked(application.componentName, info);
+            CacheEntry entry = cacheLocked(application.intent.getComponent(), info);
             if (entry.titleBitmap == null) {
                 entry.titleBitmap = mBubble.createTextBitmap(entry.title);
             }
 
             application.title = entry.title;
-            application.titleBitmap = entry.titleBitmap;
-            application.iconBitmap = entry.icon;
+            application.setIcon(entry.icon);
+            //TODO_BOOMBULER:
+            //application.titleBitmap = entry.titleBitmap;
         }
     }
 

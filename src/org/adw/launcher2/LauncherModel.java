@@ -98,10 +98,10 @@ public class LauncherModel extends BroadcastReceiver {
         public void bindFolders(HashMap<Long,FolderInfo> folders);
         public void finishBindingItems();
         public void bindAppWidget(LauncherAppWidgetInfo info);
-        public void bindAllApplications(ArrayList<ApplicationInfo> apps);
-        public void bindAppsAdded(ArrayList<ApplicationInfo> apps);
-        public void bindAppsUpdated(ArrayList<ApplicationInfo> apps);
-        public void bindAppsRemoved(ArrayList<ApplicationInfo> apps, boolean permanent);
+        public void bindAllApplications(ArrayList<ShortcutInfo> apps);
+        public void bindAppsAdded(ArrayList<ShortcutInfo> apps);
+        public void bindAppsUpdated(ArrayList<ShortcutInfo> apps);
+        public void bindAppsRemoved(ArrayList<ShortcutInfo> apps, boolean permanent);
         public boolean isAllAppsVisible();
     }
 
@@ -401,7 +401,6 @@ public class LauncherModel extends BroadcastReceiver {
      */
     private class LoaderTask implements Runnable {
         private Context mContext;
-        private Thread mWaitThread;
         private final boolean mIsLaunching;
         private boolean mStopped;
         private boolean mLoadAndBindStepFinished;
@@ -654,7 +653,6 @@ public class LauncherModel extends BroadcastReceiver {
                         int itemType = c.getInt(itemTypeIndex);
 
                         switch (itemType) {
-                        case LauncherSettings.Favorites.ITEM_TYPE_APPLICATION:
                         case LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT:
                             intentDescription = c.getString(intentIndex);
                             try {
@@ -663,14 +661,9 @@ public class LauncherModel extends BroadcastReceiver {
                                 continue;
                             }
 
-                            if (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION) {
-                                info = getShortcutInfo(manager, intent, context, c, iconIndex,
-                                        titleIndex);
-                            } else {
-                                info = getShortcutInfo(c, context, iconTypeIndex,
-                                        iconPackageIndex, iconResourceIndex, iconIndex,
-                                        titleIndex);
-                            }
+                            info = getShortcutInfo(c, context, iconTypeIndex,
+                                    iconPackageIndex, iconResourceIndex, iconIndex,
+                                    titleIndex);
 
                             if (info != null) {
                                 updateSavedIcon(context, info, c, iconIndex);
@@ -978,8 +971,8 @@ public class LauncherModel extends BroadcastReceiver {
             }
 
             // shallow copy
-            final ArrayList<ApplicationInfo> list
-                    = (ArrayList<ApplicationInfo>)mAllAppsList.data.clone();
+            final ArrayList<ShortcutInfo> list
+                    = (ArrayList<ShortcutInfo>)mAllAppsList.data.clone();
             mHandler.post(new Runnable() {
                 public void run() {
                     final Callbacks callbacks = tryGetCallbacks(oldCallbacks);
@@ -1035,14 +1028,14 @@ public class LauncherModel extends BroadcastReceiver {
 
                 for (int j=0; i<N && j<batchSize; j++) {
                     // This builds the icon bitmaps.
-                    mAllAppsList.add(new ApplicationInfo(apps.get(i), mIconCache));
+                    mAllAppsList.add(new ShortcutInfo(apps.get(i), mIconCache));
                     i++;
                 }
 
                 final boolean first = i <= batchSize;
                 final Callbacks callbacks = tryGetCallbacks(oldCallbacks);
-                final ArrayList<ApplicationInfo> added = mAllAppsList.added;
-                mAllAppsList.added = new ArrayList<ApplicationInfo>();
+                final ArrayList<ShortcutInfo> added = mAllAppsList.added;
+                mAllAppsList.added = new ArrayList<ShortcutInfo>();
 
                 mHandler.post(new Runnable() {
                     public void run() {
@@ -1064,14 +1057,6 @@ public class LauncherModel extends BroadcastReceiver {
                     } catch (InterruptedException exc) { }
                 }
             }
-        }
-
-        public void dumpState() {
-            Log.d(TAG, "mLoaderTask.mContext=" + mContext);
-            Log.d(TAG, "mLoaderTask.mWaitThread=" + mWaitThread);
-            Log.d(TAG, "mLoaderTask.mIsLaunching=" + mIsLaunching);
-            Log.d(TAG, "mLoaderTask.mStopped=" + mStopped);
-            Log.d(TAG, "mLoaderTask.mLoadAndBindStepFinished=" + mLoadAndBindStepFinished);
         }
     }
 
@@ -1119,24 +1104,24 @@ public class LauncherModel extends BroadcastReceiver {
                     break;
             }
 
-            ArrayList<ApplicationInfo> added = null;
-            ArrayList<ApplicationInfo> removed = null;
-            ArrayList<ApplicationInfo> modified = null;
+            ArrayList<ShortcutInfo> added = null;
+            ArrayList<ShortcutInfo> removed = null;
+            ArrayList<ShortcutInfo> modified = null;
 
             if (mAllAppsList.added.size() > 0) {
                 added = mAllAppsList.added;
-                mAllAppsList.added = new ArrayList<ApplicationInfo>();
+                mAllAppsList.added = new ArrayList<ShortcutInfo>();
             }
             if (mAllAppsList.removed.size() > 0) {
                 removed = mAllAppsList.removed;
-                mAllAppsList.removed = new ArrayList<ApplicationInfo>();
-                for (ApplicationInfo info: removed) {
+                mAllAppsList.removed = new ArrayList<ShortcutInfo>();
+                for (ShortcutInfo info: removed) {
                     mIconCache.remove(info.intent.getComponent());
                 }
             }
             if (mAllAppsList.modified.size() > 0) {
                 modified = mAllAppsList.modified;
-                mAllAppsList.modified = new ArrayList<ApplicationInfo>();
+                mAllAppsList.modified = new ArrayList<ShortcutInfo>();
             }
 
             final Callbacks callbacks = mCallbacks != null ? mCallbacks.get() : null;
@@ -1146,7 +1131,7 @@ public class LauncherModel extends BroadcastReceiver {
             }
 
             if (added != null) {
-                final ArrayList<ApplicationInfo> addedFinal = added;
+                final ArrayList<ShortcutInfo> addedFinal = added;
                 mHandler.post(new Runnable() {
                     public void run() {
                         if (callbacks == mCallbacks.get()) {
@@ -1156,7 +1141,7 @@ public class LauncherModel extends BroadcastReceiver {
                 });
             }
             if (modified != null) {
-                final ArrayList<ApplicationInfo> modifiedFinal = modified;
+                final ArrayList<ShortcutInfo> modifiedFinal = modified;
                 mHandler.post(new Runnable() {
                     public void run() {
                         if (callbacks == mCallbacks.get()) {
@@ -1167,7 +1152,7 @@ public class LauncherModel extends BroadcastReceiver {
             }
             if (removed != null) {
                 final boolean permanent = mOp != OP_UNAVAILABLE;
-                final ArrayList<ApplicationInfo> removedFinal = removed;
+                final ArrayList<ShortcutInfo> removedFinal = removed;
                 mHandler.post(new Runnable() {
                     public void run() {
                         if (callbacks == mCallbacks.get()) {
@@ -1240,7 +1225,7 @@ public class LauncherModel extends BroadcastReceiver {
         if (info.title == null) {
             info.title = componentName.getClassName();
         }
-        info.itemType = LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
+        info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
         return info;
     }
 
@@ -1412,7 +1397,7 @@ public class LauncherModel extends BroadcastReceiver {
             try {
                 if (data != null) {
                     Bitmap saved = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    Bitmap loaded = info.getIcon(mIconCache);     
+                    Bitmap loaded = info.getIcon(mIconCache);
                     //TODO_BOOMBULER: needSave = !saved.sameAs(loaded);
                     needSave = !saved.equals(loaded);
                 } else {
@@ -1462,24 +1447,11 @@ public class LauncherModel extends BroadcastReceiver {
     }
 
     private static final Collator sCollator = Collator.getInstance();
-    public static final Comparator<ApplicationInfo> APP_NAME_COMPARATOR
-            = new Comparator<ApplicationInfo>() {
-        public final int compare(ApplicationInfo a, ApplicationInfo b) {
+    public static final Comparator<ShortcutInfo> APP_NAME_COMPARATOR
+            = new Comparator<ShortcutInfo>() {
+        public final int compare(ShortcutInfo a, ShortcutInfo b) {
             return sCollator.compare(a.title.toString(), b.title.toString());
         }
     };
 
-    public void dumpState() {
-        Log.d(TAG, "mCallbacks=" + mCallbacks);
-        ApplicationInfo.dumpApplicationInfoList(TAG, "mAllAppsList.data", mAllAppsList.data);
-        ApplicationInfo.dumpApplicationInfoList(TAG, "mAllAppsList.added", mAllAppsList.added);
-        ApplicationInfo.dumpApplicationInfoList(TAG, "mAllAppsList.removed", mAllAppsList.removed);
-        ApplicationInfo.dumpApplicationInfoList(TAG, "mAllAppsList.modified", mAllAppsList.modified);
-        Log.d(TAG, "mItems size=" + mItems.size());
-        if (mLoaderTask != null) {
-            mLoaderTask.dumpState();
-        } else {
-            Log.d(TAG, "mLoaderTask=null");
-        }
-    }
 }

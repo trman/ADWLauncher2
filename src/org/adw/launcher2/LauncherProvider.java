@@ -702,7 +702,7 @@ public class LauncherProvider extends ContentProvider {
                         Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
                 values.put(Favorites.INTENT, intent.toUri(0));
                 values.put(Favorites.TITLE, info.loadLabel(packageManager).toString());
-                values.put(Favorites.ITEM_TYPE, Favorites.ITEM_TYPE_APPLICATION);
+                values.put(Favorites.ITEM_TYPE, Favorites.ITEM_TYPE_SHORTCUT);
                 values.put(Favorites.SPANX, 1);
                 values.put(Favorites.SPANY, 1);
                 db.insert(TABLE_FAVORITES, null, values);

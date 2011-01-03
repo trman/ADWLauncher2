@@ -358,6 +358,10 @@ public final class Launcher extends Activity
         }
     }
 
+    public IconCache getIconCache() {
+    	return mIconCache;
+    }
+
     static int getScreen() {
         synchronized (sLock) {
             return sScreen;
@@ -1495,12 +1499,9 @@ public final class Launcher extends Activity
                     "or use the exported attribute for this activity. "
                     + "tag="+ tag + " intent=" + intent, e);
         }
-        if (tag instanceof ApplicationInfo) {
-        	ApplicationInfo info = (ApplicationInfo)tag;
-        	AppDB.getInstance().incrementLaunchCounter(info);
-        } else if (tag instanceof ShortcutInfo) {
+        if (tag instanceof ShortcutInfo) {
         	ShortcutInfo info = (ShortcutInfo)tag;
-        	AppDB.getInstance().incrementLaunchCounter(info);        	
+        	AppDB.getInstance().incrementLaunchCounter(info);
         }
     }
 
@@ -2185,7 +2186,6 @@ public final class Launcher extends Activity
             final ItemInfo item = shortcuts.get(i);
             mDesktopItems.add(item);
             switch (item.itemType) {
-                case LauncherSettings.Favorites.ITEM_TYPE_APPLICATION:
                 case LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT:
                     final View shortcut = createShortcut((ShortcutInfo)item);
                     workspace.addInScreen(shortcut, item.screen, item.cellX, item.cellY, 1, 1,
@@ -2290,7 +2290,7 @@ public final class Launcher extends Activity
      *
      * Implementation of the method from LauncherModel.Callbacks.
      */
-    public void bindAllApplications(ArrayList<ApplicationInfo> apps) {
+    public void bindAllApplications(ArrayList<ShortcutInfo> apps) {
         mAllAppsGrid.setApps(apps);
     }
 
@@ -2299,7 +2299,7 @@ public final class Launcher extends Activity
      *
      * Implementation of the method from LauncherModel.Callbacks.
      */
-    public void bindAppsAdded(ArrayList<ApplicationInfo> apps) {
+    public void bindAppsAdded(ArrayList<ShortcutInfo> apps) {
         setLoadOnResume();
         removeDialog(DIALOG_CREATE_SHORTCUT);
         mAllAppsGrid.addApps(apps);
@@ -2310,7 +2310,7 @@ public final class Launcher extends Activity
      *
      * Implementation of the method from LauncherModel.Callbacks.
      */
-    public void bindAppsUpdated(ArrayList<ApplicationInfo> apps) {
+    public void bindAppsUpdated(ArrayList<ShortcutInfo> apps) {
         setLoadOnResume();
         removeDialog(DIALOG_CREATE_SHORTCUT);
         mWorkspace.updateShortcuts(apps);
@@ -2322,28 +2322,11 @@ public final class Launcher extends Activity
      *
      * Implementation of the method from LauncherModel.Callbacks.
      */
-    public void bindAppsRemoved(ArrayList<ApplicationInfo> apps, boolean permanent) {
+    public void bindAppsRemoved(ArrayList<ShortcutInfo> apps, boolean permanent) {
         removeDialog(DIALOG_CREATE_SHORTCUT);
         if (permanent) {
             mWorkspace.removeItems(apps);
         }
         mAllAppsGrid.removeApps(apps);
-    }
-
-    /**
-     * Prints out out state for debugging.
-     */
-    public void dumpState() {
-        Log.d(TAG, "BEGIN launcher2 dump state for launcher " + this);
-        Log.d(TAG, "mSavedState=" + mSavedState);
-        Log.d(TAG, "mWorkspaceLoading=" + mWorkspaceLoading);
-        Log.d(TAG, "mRestoring=" + mRestoring);
-        Log.d(TAG, "mWaitingForResult=" + mWaitingForResult);
-        Log.d(TAG, "mSavedInstanceState=" + mSavedInstanceState);
-        Log.d(TAG, "mDesktopItems.size=" + mDesktopItems.size());
-        Log.d(TAG, "sFolders.size=" + sFolders.size());
-        mModel.dumpState();
-        mAllAppsGrid.dumpState();
-        Log.d(TAG, "END launcher2 dump state");
     }
 }

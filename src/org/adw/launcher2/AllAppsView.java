@@ -33,14 +33,14 @@ public interface AllAppsView {
 
     public boolean isOpaque();
 
-    public void setApps(ArrayList<ApplicationInfo> list);
+    public void setApps(ArrayList<ShortcutInfo> list);
 
-    public void addApps(ArrayList<ApplicationInfo> list);
+    public void addApps(ArrayList<ShortcutInfo> list);
 
-    public void removeApps(ArrayList<ApplicationInfo> list);
+    public void removeApps(ArrayList<ShortcutInfo> list);
 
-    public void updateApps(ArrayList<ApplicationInfo> list);
-    
+    public void updateApps(ArrayList<ShortcutInfo> list);
+
     public void dumpState();
 
     public void surrender();

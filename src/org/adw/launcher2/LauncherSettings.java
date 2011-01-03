@@ -16,8 +16,8 @@
 
 package org.adw.launcher2;
 
-import android.provider.BaseColumns;
 import android.net.Uri;
+import android.provider.BaseColumns;
 
 /**
  * Settings related utilities.
@@ -45,10 +45,6 @@ class LauncherSettings {
          */
         static final String ITEM_TYPE = "itemType";
 
-        /**
-         * The gesture is an application
-         */
-        static final int ITEM_TYPE_APPLICATION = 0;
 
         /**
          * The gesture is an application created shortcut
@@ -202,7 +198,7 @@ class LauncherSettings {
          * <P>Type: INTEGER</P>
          */
         static final String APPWIDGET_ID = "appWidgetId";
-        
+
         /**
          * Indicates whether this favorite is an application-created shortcut or not.
          * If the value is 0, the favorite is not an application-created shortcut, if the

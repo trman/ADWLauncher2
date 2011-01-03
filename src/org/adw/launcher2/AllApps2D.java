@@ -55,7 +55,7 @@ public class AllApps2D
 
     private GridView mGrid;
 
-    private final ArrayList<ApplicationInfo> mAllAppsList = new ArrayList<ApplicationInfo>();
+    private final ArrayList<ShortcutInfo> mAllAppsList = new ArrayList<ShortcutInfo>();
 
     // preserve compatibility with 3D all apps:
     //    0.0 -> hidden
@@ -78,17 +78,17 @@ public class AllApps2D
         }
     }
 
-    public class AppsAdapter extends ArrayAdapter<ApplicationInfo> {
+    public class AppsAdapter extends ArrayAdapter<ShortcutInfo> {
         private final LayoutInflater mInflater;
 
-        public AppsAdapter(Context context, ArrayList<ApplicationInfo> apps) {
+        public AppsAdapter(Context context, ArrayList<ShortcutInfo> apps) {
             super(context, 0, apps);
             mInflater = LayoutInflater.from(context);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            final ApplicationInfo info = getItem(position);
+            final ShortcutInfo info = getItem(position);
 
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.application_boxed, parent, false);
@@ -100,12 +100,13 @@ public class AllApps2D
 //            }
 
             final TextView textView = (TextView) convertView;
+            Bitmap icon = info.getIcon(mLauncher.getIconCache());
             if (DEBUG) {
-                Log.d(TAG, "icon bitmap = " + info.iconBitmap
-                    + " density = " + info.iconBitmap.getDensity());
+                Log.d(TAG, "icon bitmap = " + icon
+                    + " density = " + icon.getDensity());
             }
-            info.iconBitmap.setDensity(Bitmap.DENSITY_NONE);
-            textView.setCompoundDrawablesWithIntrinsicBounds(null, new BitmapDrawable(info.iconBitmap), null, null);
+            icon.setDensity(Bitmap.DENSITY_NONE);
+            textView.setCompoundDrawablesWithIntrinsicBounds(null, new BitmapDrawable(icon), null, null);
             textView.setText(info.title);
 
             return convertView;
@@ -171,7 +172,7 @@ public class AllApps2D
     }
 
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-        ApplicationInfo app = (ApplicationInfo) parent.getItemAtPosition(position);
+    	ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
         mLauncher.startActivitySafely(app.intent, app);
     }
 
@@ -180,8 +181,8 @@ public class AllApps2D
             return false;
         }
 
-        ApplicationInfo app = (ApplicationInfo) parent.getItemAtPosition(position);
-        app = new ApplicationInfo(app);
+        ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
+        app = new ShortcutInfo(app);
 
         mDragController.startDrag(view, this, app, DragController.DRAG_ACTION_COPY);
         mLauncher.closeAllApps(true);
@@ -254,18 +255,18 @@ public class AllApps2D
         return mZoom > 0.999f;
     }
 
-    public void setApps(ArrayList<ApplicationInfo> list) {
+    public void setApps(ArrayList<ShortcutInfo> list) {
         mAllAppsList.clear();
         addApps(list);
     }
 
-    public void addApps(ArrayList<ApplicationInfo> list) {
+    public void addApps(ArrayList<ShortcutInfo> list) {
 //        Log.d(TAG, "addApps: " + list.size() + " apps: " + list.toString());
 
         final int N = list.size();
 
         for (int i=0; i<N; i++) {
-            final ApplicationInfo item = list.get(i);
+            final ShortcutInfo item = list.get(i);
             int index = Collections.binarySearch(mAllAppsList, item,
                     LauncherModel.APP_NAME_COMPARATOR);
             if (index < 0) {
@@ -276,10 +277,10 @@ public class AllApps2D
         mAppsAdapter.notifyDataSetChanged();
     }
 
-    public void removeApps(ArrayList<ApplicationInfo> list) {
+    public void removeApps(ArrayList<ShortcutInfo> list) {
         final int N = list.size();
         for (int i=0; i<N; i++) {
-            final ApplicationInfo item = list.get(i);
+            final ShortcutInfo item = list.get(i);
             int index = findAppByComponent(mAllAppsList, item);
             if (index >= 0) {
                 mAllAppsList.remove(index);
@@ -291,18 +292,20 @@ public class AllApps2D
         mAppsAdapter.notifyDataSetChanged();
     }
 
-    public void updateApps(ArrayList<ApplicationInfo> list) {
+    public void updateApps(ArrayList<ShortcutInfo> list) {
         // Just remove and add, because they may need to be re-sorted.
         removeApps(list);
         addApps(list);
     }
 
-    private static int findAppByComponent(ArrayList<ApplicationInfo> list, ApplicationInfo item) {
+    private static int findAppByComponent(ArrayList<ShortcutInfo> list, ShortcutInfo item) {
         ComponentName component = item.intent.getComponent();
+        if (component == null)
+        	return -1;
         final int N = list.size();
         for (int i=0; i<N; i++) {
-            ApplicationInfo x = list.get(i);
-            if (x.intent.getComponent().equals(component)) {
+            ShortcutInfo x = list.get(i);
+            if (component.equals(x.intent.getComponent())) {
                 return i;
             }
         }
@@ -310,7 +313,7 @@ public class AllApps2D
     }
 
     public void dumpState() {
-        ApplicationInfo.dumpApplicationInfoList(TAG, "mAllAppsList", mAllAppsList);
+    	ShortcutInfo.dumpShortcutInfoList(TAG, "mAllAppsList", mAllAppsList);
     }
 
     public void surrender() {

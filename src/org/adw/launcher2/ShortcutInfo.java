@@ -16,13 +16,14 @@
 
 package org.adw.launcher2;
 
+import java.util.ArrayList;
+
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.util.Log;
-
-import java.util.ArrayList;
 
 /**
  * Represents a launchable icon on the workspaces and in folders.
@@ -65,7 +66,7 @@ class ShortcutInfo extends ItemInfo {
     ShortcutInfo() {
         itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
     }
-    
+
     public ShortcutInfo(ShortcutInfo info) {
         super(info);
         title = info.title.toString();
@@ -79,12 +80,19 @@ class ShortcutInfo extends ItemInfo {
         customIcon = info.customIcon;
     }
 
-    /** TODO: Remove this.  It's only called by ApplicationInfo.makeShortcut. */
-    public ShortcutInfo(ApplicationInfo info) {
-        super(info);
-        title = info.title.toString();
-        intent = new Intent(info.intent);
-        customIcon = false;
+    /**
+     * Must not hold the Context.
+     */
+    public ShortcutInfo(ResolveInfo info, IconCache iconCache) {
+        ComponentName componentName = new ComponentName(
+                info.activityInfo.applicationInfo.packageName,
+                info.activityInfo.name);
+
+        this.container = ItemInfo.NO_ID;
+        this.setActivity(componentName,
+                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+
+        iconCache.getTitleAndIcon(this, info);
     }
 
     public void setIcon(Bitmap b) {
@@ -111,7 +119,7 @@ class ShortcutInfo extends ItemInfo {
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setComponent(className);
         intent.setFlags(launchFlags);
-        itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_APPLICATION;
+        itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
     }
 
     @Override

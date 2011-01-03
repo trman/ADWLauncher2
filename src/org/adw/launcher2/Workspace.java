@@ -1101,11 +1101,10 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
         View view;
 
         switch (info.itemType) {
-        case LauncherSettings.Favorites.ITEM_TYPE_APPLICATION:
         case LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT:
-            if (info.container == NO_ID && info instanceof ApplicationInfo) {
+            if (info.container == NO_ID && info instanceof ShortcutInfo) {
                 // Came from all apps -- make a copy
-                info = new ShortcutInfo((ApplicationInfo)info);
+                info = new ShortcutInfo((ShortcutInfo)info);
             }
             view = mLauncher.createShortcut(R.layout.application, cellLayout, (ShortcutInfo)info);
             break;
@@ -1318,7 +1317,7 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
         mAllowLongPress = allowLongPress;
     }
 
-    void removeItems(final ArrayList<ApplicationInfo> apps) {
+    void removeItems(final ArrayList<ShortcutInfo> apps) {
         final int count = getChildCount();
         final PackageManager manager = getContext().getPackageManager();
         final AppWidgetManager widgets = AppWidgetManager.getInstance(getContext());
@@ -1326,7 +1325,7 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
         final HashSet<String> packageNames = new HashSet<String>();
         final int appCount = apps.size();
         for (int i = 0; i < appCount; i++) {
-            packageNames.add(apps.get(i).componentName.getPackageName());
+            packageNames.add(apps.get(i).intent.getPackage());
         }
 
         for (int i = 0; i < count; i++) {
@@ -1431,7 +1430,7 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
         }
     }
 
-    void updateShortcuts(ArrayList<ApplicationInfo> apps) {
+    void updateShortcuts(ArrayList<ShortcutInfo> apps) {
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);
@@ -1446,12 +1445,12 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
                     // web pages.)
                     final Intent intent = info.intent;
                     final ComponentName name = intent.getComponent();
-                    if (info.itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION &&
-                            Intent.ACTION_MAIN.equals(intent.getAction()) && name != null) {
+                    if (Intent.ACTION_MAIN.equals(intent.getAction()) && name != null) {
                         final int appCount = apps.size();
                         for (int k=0; k<appCount; k++) {
-                            ApplicationInfo app = apps.get(k);
-                            if (app.componentName.equals(name)) {
+                        	ShortcutInfo app = apps.get(k);
+                        	ComponentName cname = app.intent.getComponent();
+                            if (name.equals(cname)) {
                                 info.setIcon(mIconCache.getIcon(info.intent));
                                 ((TextView)view).setCompoundDrawablesWithIntrinsicBounds(null,
                                         new FastBitmapDrawable(info.getIcon(mIconCache)),

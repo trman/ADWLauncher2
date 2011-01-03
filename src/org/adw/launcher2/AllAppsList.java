@@ -16,15 +16,15 @@
 
 package org.adw.launcher2;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.ComponentName;
-import android.content.Intent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -32,19 +32,19 @@ import java.util.List;
  */
 class AllAppsList {
     public static final int DEFAULT_APPLICATIONS_NUMBER = 42;
-    
-    /** The list off all apps. */
-    public ArrayList<ApplicationInfo> data =
-            new ArrayList<ApplicationInfo>(DEFAULT_APPLICATIONS_NUMBER);
-    /** The list of apps that have been added since the last notify() call. */
-    public ArrayList<ApplicationInfo> added =
-            new ArrayList<ApplicationInfo>(DEFAULT_APPLICATIONS_NUMBER);
-    /** The list of apps that have been removed since the last notify() call. */
-    public ArrayList<ApplicationInfo> removed = new ArrayList<ApplicationInfo>();
-    /** The list of apps that have been modified since the last notify() call. */
-    public ArrayList<ApplicationInfo> modified = new ArrayList<ApplicationInfo>();
 
-    private IconCache mIconCache;
+    /** The list off all apps. */
+    public ArrayList<ShortcutInfo> data =
+            new ArrayList<ShortcutInfo>(DEFAULT_APPLICATIONS_NUMBER);
+    /** The list of apps that have been added since the last notify() call. */
+    public ArrayList<ShortcutInfo> added =
+            new ArrayList<ShortcutInfo>(DEFAULT_APPLICATIONS_NUMBER);
+    /** The list of apps that have been removed since the last notify() call. */
+    public ArrayList<ShortcutInfo> removed = new ArrayList<ShortcutInfo>();
+    /** The list of apps that have been modified since the last notify() call. */
+    public ArrayList<ShortcutInfo> modified = new ArrayList<ShortcutInfo>();
+
+    private final IconCache mIconCache;
 
     /**
      * Boring constructor.
@@ -59,14 +59,14 @@ class AllAppsList {
      *
      * If the app is already in the list, doesn't add it.
      */
-    public void add(ApplicationInfo info) {
-        if (findActivity(data, info.componentName)) {
+    public void add(ShortcutInfo info) {
+        if (findActivity(data, info.intent.getComponent())) {
             return;
         }
         data.add(info);
         added.add(info);
     }
-    
+
     public void clear() {
         data.clear();
         // TODO: do we clear these too?
@@ -79,7 +79,7 @@ class AllAppsList {
         return data.size();
     }
 
-    public ApplicationInfo get(int index) {
+    public ShortcutInfo get(int index) {
         return data.get(index);
     }
 
@@ -91,7 +91,7 @@ class AllAppsList {
 
         if (matches.size() > 0) {
             for (ResolveInfo info : matches) {
-                add(new ApplicationInfo(info, mIconCache));
+                add(new ShortcutInfo(info, mIconCache));
             }
         }
     }
@@ -100,11 +100,11 @@ class AllAppsList {
      * Remove the apps for the given apk identified by packageName.
      */
     public void removePackage(String packageName) {
-        final List<ApplicationInfo> data = this.data;
+        final List<ShortcutInfo> data = this.data;
         for (int i = data.size() - 1; i >= 0; i--) {
-            ApplicationInfo info = data.get(i);
-            final ComponentName component = info.intent.getComponent();
-            if (packageName.equals(component.getPackageName())) {
+        	ShortcutInfo info = data.get(i);
+            final String pack = info.intent.getPackage();
+            if (packageName.equals(pack)) {
                 removed.add(info);
                 data.remove(i);
             }
@@ -122,9 +122,10 @@ class AllAppsList {
             // Find disabled/removed activities and remove them from data and add them
             // to the removed list.
             for (int i = data.size() - 1; i >= 0; i--) {
-                final ApplicationInfo applicationInfo = data.get(i);
-                final ComponentName component = applicationInfo.intent.getComponent();
-                if (packageName.equals(component.getPackageName())) {
+                final ShortcutInfo applicationInfo = data.get(i);
+                final String pack = applicationInfo.intent.getPackage();
+                if (packageName.equals(pack)) {
+                	ComponentName component = applicationInfo.intent.getComponent();
                     if (!findActivity(matches, component)) {
                         removed.add(applicationInfo);
                         mIconCache.remove(component);
@@ -138,13 +139,13 @@ class AllAppsList {
             int count = matches.size();
             for (int i = 0; i < count; i++) {
                 final ResolveInfo info = matches.get(i);
-                ApplicationInfo applicationInfo = findApplicationInfoLocked(
+                ShortcutInfo applicationInfo = findApplicationInfoLocked(
                         info.activityInfo.applicationInfo.packageName,
                         info.activityInfo.name);
                 if (applicationInfo == null) {
-                    add(new ApplicationInfo(info, mIconCache));
+                    add(new ShortcutInfo(info, mIconCache));
                 } else {
-                    mIconCache.remove(applicationInfo.componentName);
+                    mIconCache.remove(applicationInfo.intent.getComponent());
                     mIconCache.getTitleAndIcon(applicationInfo, info);
                     modified.add(applicationInfo);
                 }
@@ -152,9 +153,10 @@ class AllAppsList {
         } else {
             // Remove all data for this package.
             for (int i = data.size() - 1; i >= 0; i--) {
-                final ApplicationInfo applicationInfo = data.get(i);
-                final ComponentName component = applicationInfo.intent.getComponent();
-                if (packageName.equals(component.getPackageName())) {
+                final ShortcutInfo applicationInfo = data.get(i);
+                final String pack = applicationInfo.intent.getPackage();
+                if (packageName.equals(pack)) {
+                	final ComponentName component = applicationInfo.intent.getComponent();
                     removed.add(applicationInfo);
                     mIconCache.remove(component);
                     data.remove(i);
@@ -181,6 +183,8 @@ class AllAppsList {
      * Returns whether <em>apps</em> contains <em>component</em>.
      */
     private static boolean findActivity(List<ResolveInfo> apps, ComponentName component) {
+    	if (component == null)
+    		return false;
         final String className = component.getClassName();
         for (ResolveInfo info : apps) {
             final ActivityInfo activityInfo = info.activityInfo;
@@ -194,11 +198,14 @@ class AllAppsList {
     /**
      * Returns whether <em>apps</em> contains <em>component</em>.
      */
-    private static boolean findActivity(ArrayList<ApplicationInfo> apps, ComponentName component) {
+    private static boolean findActivity(ArrayList<ShortcutInfo> apps, ComponentName component) {
+    	if (component == null)
+    		return false;
         final int N = apps.size();
         for (int i=0; i<N; i++) {
-            final ApplicationInfo info = apps.get(i);
-            if (info.componentName.equals(component)) {
+            final ShortcutInfo info = apps.get(i);
+            ComponentName cn = info.intent.getComponent();
+            if (component.equals(cn)) {
                 return true;
             }
         }
@@ -208,10 +215,10 @@ class AllAppsList {
     /**
      * Find an ApplicationInfo object for the given packageName and className.
      */
-    private ApplicationInfo findApplicationInfoLocked(String packageName, String className) {
-        for (ApplicationInfo info: data) {
+    private ShortcutInfo findApplicationInfoLocked(String packageName, String className) {
+        for (ShortcutInfo info: data) {
             final ComponentName component = info.intent.getComponent();
-            if (packageName.equals(component.getPackageName())
+            if (component != null && packageName.equals(component.getPackageName())
                     && className.equals(component.getClassName())) {
                 return info;
             }

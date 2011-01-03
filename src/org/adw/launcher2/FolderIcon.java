@@ -65,8 +65,7 @@ public class FolderIcon extends BubbleTextView implements DropTarget {
             DragView dragView, Object dragInfo) {
         final ItemInfo item = (ItemInfo) dragInfo;
         final int itemType = item.itemType;
-        return (itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION ||
-                itemType == LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT)
+        return itemType == LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT
                 && item.container != mInfo.id;
     }
 
@@ -78,12 +77,7 @@ public class FolderIcon extends BubbleTextView implements DropTarget {
     public void onDrop(DragSource source, int x, int y, int xOffset, int yOffset,
             DragView dragView, Object dragInfo) {
         ShortcutInfo item;
-        if (dragInfo instanceof ApplicationInfo) {
-            // Came from all apps -- make a copy
-            item = ((ApplicationInfo)dragInfo).makeShortcut();
-        } else {
-            item = (ShortcutInfo)dragInfo;
-        }
+        item = (ShortcutInfo)dragInfo;
         mInfo.add(item);
         LauncherModel.addOrMoveItemInDatabase(mLauncher, item, mInfo.id, 0, 0, 0);
     }

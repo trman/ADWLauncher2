@@ -54,11 +54,6 @@ public class AppDB {
 		}
 	}
 
-
-	public void incrementLaunchCounter(ApplicationInfo info) {
-		incrementLaunchCounter(info.componentName);
-	}
-
 	public void incrementLaunchCounter(ShortcutInfo info) {
 		if (info.intent.getAction().equals(Intent.ACTION_MAIN) &&
 				info.intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
@@ -99,6 +94,8 @@ public class AppDB {
 		public static final String ID = "_id";
 		public static final String COMPONENT_NAME = "componentname";
 		public static final String LAUNCH_COUNT = "launchcount";
+		public static final String TITLE = "title";
+		public static final String ICON = "icon";
 	}
 
 	private static class Tables {
@@ -120,6 +117,8 @@ public class AppDB {
 			db.execSQL("CREATE TABLE "+Tables.AppInfos+" (" +
 					Columns.ID + " INTEGER PRIMARY KEY," +
 					Columns.COMPONENT_NAME + " TEXT," +
+					Columns.TITLE + " TEXT," +
+					Columns.ICON + " BLOB," +
 					Columns.LAUNCH_COUNT + " INTEGER" +
                     ");");
 			CreateIndexFor(db, Tables.AppInfos, Columns.COMPONENT_NAME);
