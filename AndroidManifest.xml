@@ -113,6 +113,20 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name="org.adw.launcher2.AppDB"
+                  android:enabled="true"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="android.intent.action.PACKAGE_CHANGED" />
+                <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
+                <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE" />
+				<category android:name="android.intent.category.DEFAULT" />
+	        	<data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
         <!-- The settings provider contains Home's data, like the workspace favorites -->
         <provider
             android:name="org.adw.launcher2.LauncherProvider"

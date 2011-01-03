@@ -1,13 +1,22 @@
 package org.adw.launcher2;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.util.Log;
 
-public class AppDB {
+public class AppDB extends BroadcastReceiver {
 	private static AppDB sInstance = null;
 
 	public static AppDB getInstance() {
@@ -16,7 +25,7 @@ public class AppDB {
 
 	private final Object mLock = new Object();
 
-	private Launcher mLauncher;
+	private Context mContext;
 	private DatabaseHelper mDBHelper;
 
 	public AppDB() {
@@ -25,8 +34,9 @@ public class AppDB {
 
 	void initialize(Launcher launcher) {
 		synchronized (mLock) {
-			mLauncher = launcher;
+			mContext = launcher;
 			mDBHelper = new DatabaseHelper();
+			mDBHelper.getReadableDatabase().close();
 		}
 	}
 
@@ -50,7 +60,7 @@ public class AppDB {
 				db.close();
 			}
 			// still not returned? ok then it is a new entry!
-			return addNewEntry(name);
+			return addNewEntry(name, null);
 		}
 	}
 
@@ -76,10 +86,16 @@ public class AppDB {
 		}
 	}
 
-	private long addNewEntry(ComponentName name) {
+	private long addNewEntry(ComponentName name, ContentValues defaultValues) {
+		if (mDBHelper == null)
+			mDBHelper = new DatabaseHelper();
 		SQLiteDatabase db = mDBHelper.getWritableDatabase();
 		try {
-			ContentValues cvs = new ContentValues();
+			final ContentValues cvs;
+			if (defaultValues == null)
+				cvs = new ContentValues();
+			else
+				cvs = defaultValues;
 			cvs.put(Columns.COMPONENT_NAME, name.toString());
 			cvs.put(Columns.LAUNCH_COUNT, 0);
 			return db.insert(Tables.AppInfos, null, cvs);
@@ -88,6 +104,94 @@ public class AppDB {
 			db.close();
 		}
 	}
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		mContext = context;
+		// This code will run outside of the launcher process!!!!!
+		final String action = intent.getAction();
+
+        if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
+                || Intent.ACTION_PACKAGE_REMOVED.equals(action)
+                || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+            final String packageName = intent.getData().getSchemeSpecificPart();
+            final boolean replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false);
+
+            if (packageName == null || packageName.length() == 0) {
+                // they sent us a bad intent
+                return;
+            }
+
+            if (Intent.ACTION_PACKAGE_CHANGED.equals(action)) {
+                PackageChanged(packageName);
+            } else if (Intent.ACTION_PACKAGE_REMOVED.equals(action)) {
+                if (!replacing) {
+                    PackageRemoved(packageName);
+                }
+                // else, we are replacing the package, so a PACKAGE_ADDED will be sent
+                // later, we will update the package at this time
+            } else if (Intent.ACTION_PACKAGE_ADDED.equals(action)) {
+                if (!replacing) {
+                	PackageAdded(packageName);
+                } else {
+                    PackageChanged(packageName);
+                }
+            }
+        } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
+            String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
+            AvailableAppsChanged(packages, true);
+        } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)) {
+            String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
+            AvailableAppsChanged(packages, false);
+        }
+	}
+
+	private void PackageAdded(String aPackage) {
+		final PackageManager packageManager = mContext.getPackageManager();
+        AddResolveInfos(packageManager, findActivitiesForPackage(packageManager, aPackage));
+	}
+
+	private void PackageChanged(String aPackage) {
+		Log.d("BOOMBULER", "Package changed: "+aPackage);
+	}
+
+	private void PackageRemoved(String aPackage) {
+		Log.d("BOOMBULER", "Package removed: "+aPackage);
+	}
+
+	private void AvailableAppsChanged(String[] packages, boolean active) {
+
+	}
+
+    private List<ResolveInfo> findActivitiesForPackage(PackageManager packageManager, String packageName) {
+        final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        mainIntent.setPackage(packageName);
+
+        final List<ResolveInfo> apps = packageManager.queryIntentActivities(mainIntent, 0);
+        return apps != null ? apps : new ArrayList<ResolveInfo>();
+    }
+
+    private void AddResolveInfos(PackageManager packageManager, List<ResolveInfo> infos) {
+    	for(ResolveInfo info : infos) {
+        	ComponentName componentName = new ComponentName(
+                    info.activityInfo.applicationInfo.packageName,
+                    info.activityInfo.name);
+
+        	String title = info.loadLabel(packageManager).toString();
+        	Log.d("BOOMBULER", "adding: "+title);
+            if (title == null) {
+                title = info.activityInfo.name;
+            }
+            Bitmap icon = Utilities.createIconBitmap(
+                    info.activityInfo.loadIcon(packageManager), mContext);
+
+            ContentValues values = new ContentValues();
+            values.put(Columns.TITLE, title);
+            ItemInfo.writeBitmap(values, icon);
+            addNewEntry(componentName, values);
+        }
+    }
 
 
 	private static class Columns {
@@ -109,11 +213,12 @@ public class AppDB {
 
 
         DatabaseHelper() {
-            super(AppDB.this.mLauncher, DATABASE_NAME, null, DATABASE_VERSION);
+            super(AppDB.this.mContext, DATABASE_NAME, null, DATABASE_VERSION);
         }
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
+			Log.d("BOOMBULER", "creatingDB");
 			db.execSQL("CREATE TABLE "+Tables.AppInfos+" (" +
 					Columns.ID + " INTEGER PRIMARY KEY," +
 					Columns.COMPONENT_NAME + " TEXT," +
@@ -122,6 +227,16 @@ public class AppDB {
 					Columns.LAUNCH_COUNT + " INTEGER" +
                     ");");
 			CreateIndexFor(db, Tables.AppInfos, Columns.COMPONENT_NAME);
+			Thread thrd = new Thread() {
+				@Override
+				public void run() {
+					PackageManager pMan = mContext.getPackageManager();
+		            final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+		            mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+		            AddResolveInfos(pMan, pMan.queryIntentActivities(mainIntent, 0));
+				}
+			};
+			thrd.start();
 		}
 
 		private void CreateIndexFor(SQLiteDatabase db, String table, String column) {
@@ -135,4 +250,6 @@ public class AppDB {
 		}
 
 	}
+
+
 }
