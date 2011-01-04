@@ -95,6 +95,13 @@ class ShortcutInfo extends ItemInfo {
         iconCache.getTitleAndIcon(this, info);
     }
 
+    public ShortcutInfo(CharSequence title, ComponentName componentName, Bitmap icon) {
+    	this.container = ItemInfo.NO_ID;
+    	this.title = title;
+    	this.setActivity(componentName, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+    	this.setIcon(icon);
+    }
+
     public void setIcon(Bitmap b) {
         mIcon = b;
     }

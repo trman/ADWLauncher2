@@ -84,19 +84,6 @@ class AllAppsList {
     }
 
     /**
-     * Add the icons for the supplied apk called packageName.
-     */
-    public void addPackage(Context context, String packageName) {
-        final List<ResolveInfo> matches = findActivitiesForPackage(context, packageName);
-
-        if (matches.size() > 0) {
-            for (ResolveInfo info : matches) {
-                add(new ShortcutInfo(info, mIconCache));
-            }
-        }
-    }
-
-    /**
      * Remove the apps for the given apk identified by packageName.
      */
     public void removePackage(String packageName) {
@@ -117,52 +104,6 @@ class AllAppsList {
      * Add and remove icons for this package which has been updated.
      */
     public void updatePackage(Context context, String packageName) {
-        final List<ResolveInfo> matches = findActivitiesForPackage(context, packageName);
-        if (matches.size() > 0) {
-            // Find disabled/removed activities and remove them from data and add them
-            // to the removed list.
-            for (int i = data.size() - 1; i >= 0; i--) {
-                final ShortcutInfo applicationInfo = data.get(i);
-                final String pack = applicationInfo.intent.getPackage();
-                if (packageName.equals(pack)) {
-                	ComponentName component = applicationInfo.intent.getComponent();
-                    if (!findActivity(matches, component)) {
-                        removed.add(applicationInfo);
-                        mIconCache.remove(component);
-                        data.remove(i);
-                    }
-                }
-            }
-
-            // Find enabled activities and add them to the adapter
-            // Also updates existing activities with new labels/icons
-            int count = matches.size();
-            for (int i = 0; i < count; i++) {
-                final ResolveInfo info = matches.get(i);
-                ShortcutInfo applicationInfo = findApplicationInfoLocked(
-                        info.activityInfo.applicationInfo.packageName,
-                        info.activityInfo.name);
-                if (applicationInfo == null) {
-                    add(new ShortcutInfo(info, mIconCache));
-                } else {
-                    mIconCache.remove(applicationInfo.intent.getComponent());
-                    mIconCache.getTitleAndIcon(applicationInfo, info);
-                    modified.add(applicationInfo);
-                }
-            }
-        } else {
-            // Remove all data for this package.
-            for (int i = data.size() - 1; i >= 0; i--) {
-                final ShortcutInfo applicationInfo = data.get(i);
-                final String pack = applicationInfo.intent.getPackage();
-                if (packageName.equals(pack)) {
-                	final ComponentName component = applicationInfo.intent.getComponent();
-                    removed.add(applicationInfo);
-                    mIconCache.remove(component);
-                    data.remove(i);
-                }
-            }
-        }
     }
 
     /**

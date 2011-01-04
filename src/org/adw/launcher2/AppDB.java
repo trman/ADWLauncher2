@@ -14,6 +14,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 public class AppDB extends BroadcastReceiver {
@@ -96,7 +97,7 @@ public class AppDB extends BroadcastReceiver {
 				cvs = new ContentValues();
 			else
 				cvs = defaultValues;
-			cvs.put(Columns.COMPONENT_NAME, name.toString());
+			cvs.put(Columns.COMPONENT_NAME, name.flattenToString());
 			cvs.put(Columns.LAUNCH_COUNT, 0);
 			return db.insert(Tables.AppInfos, null, cvs);
 		}
@@ -160,7 +161,56 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	private void AvailableAppsChanged(String[] packages, boolean active) {
+		for (String pack : packages) {
+			Log.d("BOOMBULER", "package "+pack+": "+active);
+		}
+	}
 
+	private static Bitmap getIconFromCursor(Cursor c, int iconIndex) {
+        byte[] data = c.getBlob(iconIndex);
+        try {
+            return BitmapFactory.decodeByteArray(data, 0, data.length);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+	public List<ShortcutInfo> getApps() {
+		ArrayList<ShortcutInfo> result = new ArrayList<ShortcutInfo>();
+		DatabaseHelper dbHelper = new DatabaseHelper();
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		try {
+			Cursor c = db.query(Tables.AppInfos, new String[] {
+					Columns.COMPONENT_NAME,
+					Columns.ICON,
+					Columns.TITLE
+			}, null, null, null, null, null);
+			try {
+				c.moveToFirst();
+				while(!c.isAfterLast()) {
+
+					Bitmap icon = getIconFromCursor(c, c.getColumnIndex(Columns.ICON));
+					String cnStr = c.getString(c.getColumnIndex(Columns.COMPONENT_NAME));
+					String title = c.getString(c.getColumnIndex(Columns.TITLE));
+					if (title != null) {
+						ShortcutInfo info = new ShortcutInfo(
+								title,
+								ComponentName.unflattenFromString(cnStr),
+								icon);
+						result.add(info);
+					}
+
+					c.moveToNext();
+				}
+			}
+			finally {
+				c.close();
+			}
+		}
+		finally {
+			db.close();
+		}
+		return result;
 	}
 
     private List<ResolveInfo> findActivitiesForPackage(PackageManager packageManager, String packageName) {
@@ -179,7 +229,7 @@ public class AppDB extends BroadcastReceiver {
                     info.activityInfo.name);
 
         	String title = info.loadLabel(packageManager).toString();
-        	Log.d("BOOMBULER", "adding: "+title);
+
             if (title == null) {
                 title = info.activityInfo.name;
             }
