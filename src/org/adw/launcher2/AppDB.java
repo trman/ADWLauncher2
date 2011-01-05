@@ -159,12 +159,6 @@ public class AppDB extends BroadcastReceiver {
                     PackageChanged(packageName);
                 }
             }
-        } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
-            String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
-            AvailableAppsChanged(packages, true);
-        } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)) {
-            String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
-            AvailableAppsChanged(packages, false);
         }
 	}
 
@@ -179,12 +173,6 @@ public class AppDB extends BroadcastReceiver {
 
 	private void PackageRemoved(String aPackage) {
 		Log.d("BOOMBULER", "Package removed: "+aPackage);
-	}
-
-	private void AvailableAppsChanged(String[] packages, boolean active) {
-		for (String pack : packages) {
-			Log.d("BOOMBULER", "package "+pack+": "+active);
-		}
 	}
 
 	private static Bitmap getIconFromCursor(Cursor c, int iconIndex) {
