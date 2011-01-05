@@ -40,10 +40,7 @@ public class LauncherApplication extends Application {
         mModel = new LauncherModel(this, mIconCache);
 
         // Register intent receivers
-        IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
-        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
-        filter.addDataScheme("package");
+        IntentFilter filter = new IntentFilter(AppDB.INTENT_DB_CHANGED);
         registerReceiver(mModel, filter);
         filter = new IntentFilter();
         filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);

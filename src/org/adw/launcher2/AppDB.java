@@ -25,6 +25,8 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	private static final long INVALID_ID = -1;
+	public static final String INTENT_DB_CHANGED = "org.adw.launcher2.app_db_changed";
+	public static final String EXTRA_ADDED = "added";
 
 	private final Object mLock = new Object();
 
@@ -36,6 +38,13 @@ public class AppDB extends BroadcastReceiver {
 		sInstance = this;
 		mIconCache = iconCache;
 	}
+
+	@Deprecated
+	public AppDB() {
+		mIconCache = null;
+		// Only for Broadcast reciever!
+	}
+
 
 	void initialize(Launcher launcher) {
 		synchronized (mLock) {
@@ -92,10 +101,16 @@ public class AppDB extends BroadcastReceiver {
 		}
 	}
 
-	private long addNewEntry(ComponentName name, ContentValues defaultValues) {
+	private long addNewEntry(SQLiteDatabase db, ComponentName name, ContentValues defaultValues) {
 		if (mDBHelper == null)
 			mDBHelper = new DatabaseHelper();
-		SQLiteDatabase db = mDBHelper.getWritableDatabase();
+		final boolean dbCreated;
+		if (db == null) {
+			db = mDBHelper.getWritableDatabase();
+			dbCreated = true;
+		} else
+			dbCreated = false;
+
 		try {
 			final ContentValues cvs;
 			if (defaultValues == null)
@@ -107,7 +122,8 @@ public class AppDB extends BroadcastReceiver {
 			return db.insert(Tables.AppInfos, null, cvs);
 		}
 		finally {
-			db.close();
+			if (dbCreated)
+				db.close();
 		}
 	}
 
@@ -181,6 +197,24 @@ public class AppDB extends BroadcastReceiver {
     }
 
 	public List<ShortcutInfo> getApps() {
+		return getApps(null);
+	}
+
+	private String getAppIdFilter(long[] appIds) {
+		if (appIds == null)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		for(int i = 0; i < appIds.length; i++) {
+			if (i > 0)
+				sb.append(" or ");
+			sb.append(Columns.ID);
+			sb.append("=");
+			sb.append(appIds[i]);
+		}
+		return sb.toString();
+	}
+
+	public List<ShortcutInfo> getApps(long[] appIds) {
 		ArrayList<ShortcutInfo> result = new ArrayList<ShortcutInfo>();
 		DatabaseHelper dbHelper = new DatabaseHelper();
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -189,7 +223,7 @@ public class AppDB extends BroadcastReceiver {
 					Columns.COMPONENT_NAME,
 					Columns.ICON,
 					Columns.TITLE
-			}, null, null, null, null, null);
+			}, getAppIdFilter(appIds), null, null, null, null);
 			try {
 				c.moveToFirst();
 				while(!c.isAfterLast()) {
@@ -231,24 +265,42 @@ public class AppDB extends BroadcastReceiver {
     }
 
     private void AddResolveInfos(PackageManager packageManager, List<ResolveInfo> infos) {
-    	for(ResolveInfo info : infos) {
-        	ComponentName componentName = new ComponentName(
-                    info.activityInfo.applicationInfo.packageName,
-                    info.activityInfo.name);
+    	long[] added = new long[infos.size()];
+    	int i = 0;
+    	if (mDBHelper == null)
+    		mDBHelper = new DatabaseHelper();
+    	SQLiteDatabase db = mDBHelper.getWritableDatabase();
+    	try
+    	{
+    		db.beginTransaction();
+	    	for(ResolveInfo info : infos) {
+	        	ComponentName componentName = new ComponentName(
+	                    info.activityInfo.applicationInfo.packageName,
+	                    info.activityInfo.name);
 
-        	String title = info.loadLabel(packageManager).toString();
+	        	String title = info.loadLabel(packageManager).toString();
 
-            if (title == null) {
-                title = info.activityInfo.name;
-            }
-            Bitmap icon = Utilities.createIconBitmap(
-                    info.activityInfo.loadIcon(packageManager), mContext);
+	            if (title == null) {
+	                title = info.activityInfo.name;
+	            }
+	            Bitmap icon = Utilities.createIconBitmap(
+	                    info.activityInfo.loadIcon(packageManager), mContext);
 
-            ContentValues values = new ContentValues();
-            values.put(Columns.TITLE, title);
-            ItemInfo.writeBitmap(values, icon);
-            addNewEntry(componentName, values);
-        }
+	            ContentValues values = new ContentValues();
+	            values.put(Columns.TITLE, title);
+	            ItemInfo.writeBitmap(values, icon);
+	            added[i++] = addNewEntry(db, componentName, values);
+	    	}
+	    	db.setTransactionSuccessful();
+    	}
+    	finally {
+    		db.endTransaction();
+    		db.close();
+    	}
+
+    	Intent updateIntent = new Intent(INTENT_DB_CHANGED);
+    	updateIntent.putExtra("added", added);
+    	mContext.sendBroadcast(updateIntent);
     }
 
 
@@ -276,7 +328,6 @@ public class AppDB extends BroadcastReceiver {
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-			Log.d("BOOMBULER", "creatingDB");
 			db.execSQL("CREATE TABLE "+Tables.AppInfos+" (" +
 					Columns.ID + " INTEGER PRIMARY KEY," +
 					Columns.COMPONENT_NAME + " TEXT," +

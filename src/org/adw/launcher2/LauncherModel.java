@@ -289,14 +289,152 @@ public class LauncherModel extends BroadcastReceiver {
         }
     }
 
+    void enqueuePackageUpdated(PackageUpdatedTask task) {
+        sWorker.post(task);
+    }
+
     /**
      * Call from the handler for ACTION_PACKAGE_ADDED, ACTION_PACKAGE_REMOVED and
      * ACTION_PACKAGE_CHANGED.
      */
     @Override
 	public void onReceive(Context context, Intent intent) {
-        // TODO_BOOMBULER: get the AppDB Updates here!
+    	final String action = intent.getAction();
+
+        if (AppDB.INTENT_DB_CHANGED.equals(action)) {
+
+        	if (intent.hasExtra(AppDB.EXTRA_ADDED)) {
+            	long[] added = intent.getLongArrayExtra(AppDB.EXTRA_ADDED);
+            	if (added != null && added.length > 0) {
+            		PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_ADD, added);
+            		enqueuePackageUpdated(put);
+            	}
+            }
+
+        } /* else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
+            // First, schedule to add these apps back in.
+            String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
+            enqueuePackageUpdated(new PackageUpdatedTask(PackageUpdatedTask.OP_ADD, packages));
+            // Then, rebind everything.
+            boolean runLoader = true;
+            if (mCallbacks != null) {
+                Callbacks callbacks = mCallbacks.get();
+                if (callbacks != null) {
+                    // If they're paused, we can skip loading, because they'll do it again anyway
+                    if (callbacks.setLoadOnResume()) {
+                        runLoader = false;
+                    }
+                }
+            }
+            if (runLoader) {
+                startLoader(mApp, false);
+            }
+
+        } else if (Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE.equals(action)) {
+            String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
+            enqueuePackageUpdated(new PackageUpdatedTask(
+                        PackageUpdatedTask.OP_UNAVAILABLE, packages));
+
+        }*/
     }
+
+    private class PackageUpdatedTask implements Runnable {
+        int mOp;
+        long[] mAppIds;
+
+        public static final int OP_ADD = 1;
+     //   public static final int OP_UPDATE = 2;
+     //   public static final int OP_REMOVE = 3;
+        public static final int OP_UNAVAILABLE = 4; // external media unmounted
+
+
+        public PackageUpdatedTask(int op, long[] appIds) {
+            mOp = op;
+            mAppIds = appIds;
+        }
+
+        public void run() {
+            switch (mOp) {
+                case OP_ADD:
+                	List<ShortcutInfo> newApps = AppDB.getInstance().getApps(mAppIds);
+
+                    for (ShortcutInfo info : newApps) {
+                        mAllAppsList.add(info);
+                    }
+                    break;
+                /*case OP_UPDATE:
+                    for (int i=0; i<N; i++) {
+                        mAllAppsList.updatePackage(context, packages[i]);
+                    }
+                    break;
+                case OP_REMOVE:
+                case OP_UNAVAILABLE:
+                    for (int i=0; i<N; i++) {
+                        mAllAppsList.removePackage(packages[i]);
+                    }
+                    break;*/
+            }
+
+            ArrayList<ShortcutInfo> added = null;
+            ArrayList<ShortcutInfo> removed = null;
+            ArrayList<ShortcutInfo> modified = null;
+
+            if (mAllAppsList.added.size() > 0) {
+                added = mAllAppsList.added;
+                mAllAppsList.added = new ArrayList<ShortcutInfo>();
+            }
+            if (mAllAppsList.removed.size() > 0) {
+                removed = mAllAppsList.removed;
+                mAllAppsList.removed = new ArrayList<ShortcutInfo>();
+                for (ShortcutInfo info: removed) {
+                    mIconCache.remove(info.intent.getComponent());
+                }
+            }
+            if (mAllAppsList.modified.size() > 0) {
+                modified = mAllAppsList.modified;
+                mAllAppsList.modified = new ArrayList<ShortcutInfo>();
+            }
+
+            final Callbacks callbacks = mCallbacks != null ? mCallbacks.get() : null;
+            if (callbacks == null) {
+                Log.w(TAG, "Nobody to tell about the new app.  Launcher is probably loading.");
+                return;
+            }
+
+            if (added != null) {
+                final ArrayList<ShortcutInfo> addedFinal = added;
+                mHandler.post(new Runnable() {
+                    public void run() {
+                        if (callbacks == mCallbacks.get()) {
+                            callbacks.bindAppsAdded(addedFinal);
+                        }
+                    }
+                });
+            }
+            if (modified != null) {
+                final ArrayList<ShortcutInfo> modifiedFinal = modified;
+                mHandler.post(new Runnable() {
+                    public void run() {
+                        if (callbacks == mCallbacks.get()) {
+                            callbacks.bindAppsUpdated(modifiedFinal);
+                        }
+                    }
+                });
+            }
+            if (removed != null) {
+                final boolean permanent = mOp != OP_UNAVAILABLE;
+                final ArrayList<ShortcutInfo> removedFinal = removed;
+                mHandler.post(new Runnable() {
+                    public void run() {
+                        if (callbacks == mCallbacks.get()) {
+                            callbacks.bindAppsRemoved(removedFinal, permanent);
+                        }
+                    }
+                });
+            }
+        }
+    }
+
 
     public void startLoader(Context context, boolean isLaunching) {
         synchronized (mLock) {
