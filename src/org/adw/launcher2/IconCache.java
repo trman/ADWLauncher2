@@ -36,20 +36,17 @@ public class IconCache {
     private static class CacheEntry {
         public Bitmap icon;
         public String title;
-        public Bitmap titleBitmap;
     }
 
     private final Bitmap mDefaultIcon;
     private final LauncherApplication mContext;
     private final PackageManager mPackageManager;
-    private final Utilities.BubbleText mBubble;
     private final HashMap<ComponentName, CacheEntry> mCache =
             new HashMap<ComponentName, CacheEntry>(INITIAL_ICON_CACHE_CAPACITY);
 
     public IconCache(LauncherApplication context) {
         mContext = context;
         mPackageManager = context.getPackageManager();
-        mBubble = new Utilities.BubbleText(context);
         mDefaultIcon = makeDefaultIcon();
     }
 
@@ -83,45 +80,48 @@ public class IconCache {
         }
     }
 
-    /**
-     * Fill in "application" with the icon and label for "info."
-     */
-    public void getTitleAndIcon(ShortcutInfo application, ResolveInfo info) {
-        synchronized (mCache) {
-            CacheEntry entry = cacheLocked(application.intent.getComponent(), info);
-            if (entry.titleBitmap == null) {
-                entry.titleBitmap = mBubble.createTextBitmap(entry.title);
-            }
-
-            application.title = entry.title;
-            application.setIcon(entry.icon);
-            //TODO_BOOMBULER:
-            //application.titleBitmap = entry.titleBitmap;
+    public void addToCache(ComponentName componentName, String title, Bitmap icon) {
+        CacheEntry entry = mCache.get(componentName);
+        if (entry == null) {
+            entry = new CacheEntry();
         }
+        mCache.put(componentName, entry);
+
+        entry.title = title;
+        entry.icon = icon;
     }
 
     public Bitmap getIcon(Intent intent) {
         synchronized (mCache) {
-            final ResolveInfo resolveInfo = mPackageManager.resolveActivity(intent, 0);
             ComponentName component = intent.getComponent();
+            if (component == null || !mCache.containsKey(component)) {
+            	final ResolveInfo resolveInfo = mPackageManager.resolveActivity(intent, 0);
 
-            if (resolveInfo == null || component == null) {
-                return mDefaultIcon;
+	            if (resolveInfo == null || component == null) {
+	                return mDefaultIcon;
+	            }
+
+	            CacheEntry entry = cacheLocked(component, resolveInfo);
+	            return entry.icon;
+            } else {
+            	CacheEntry entry = mCache.get(component);
+	            return entry.icon;
             }
-
-            CacheEntry entry = cacheLocked(component, resolveInfo);
-            return entry.icon;
         }
     }
 
     public Bitmap getIcon(ComponentName component, ResolveInfo resolveInfo) {
         synchronized (mCache) {
-            if (resolveInfo == null || component == null) {
-                return null;
+            if (component == null || !mCache.containsKey(component)) {
+	            if (resolveInfo == null || component == null) {
+	                return mDefaultIcon;
+	            }
+	            CacheEntry entry = cacheLocked(component, resolveInfo);
+	            return entry.icon;
+            } else {
+            	CacheEntry entry = mCache.get(component);
+	            return entry.icon;
             }
-
-            CacheEntry entry = cacheLocked(component, resolveInfo);
-            return entry.icon;
         }
     }
 

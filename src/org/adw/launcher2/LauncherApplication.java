@@ -16,16 +16,16 @@
 
 package org.adw.launcher2;
 
-import dalvik.system.VMRuntime;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.os.Handler;
+import dalvik.system.VMRuntime;
 
 public class LauncherApplication extends Application {
-	private LauncherModel mModel;    
+	private LauncherModel mModel;
 	private IconCache mIconCache;
     private AppDB mAppDB;
 
@@ -36,7 +36,7 @@ public class LauncherApplication extends Application {
         super.onCreate();
 
         mIconCache = new IconCache(this);
-        mAppDB = new AppDB();
+        mAppDB = new AppDB(mIconCache);
         mModel = new LauncherModel(this, mIconCache);
 
         // Register intent receivers
@@ -92,7 +92,7 @@ public class LauncherApplication extends Application {
     LauncherModel getModel() {
         return mModel;
     }
-    
+
     AppDB getAppDB() {
     	return mAppDB;
     }

@@ -24,13 +24,17 @@ public class AppDB extends BroadcastReceiver {
 		return sInstance;
 	}
 
+	private static final long INVALID_ID = -1;
+
 	private final Object mLock = new Object();
 
 	private Context mContext;
 	private DatabaseHelper mDBHelper;
+	private final IconCache mIconCache;
 
-	public AppDB() {
+	public AppDB(IconCache iconCache) {
 		sInstance = this;
+		mIconCache = iconCache;
 	}
 
 	void initialize(Launcher launcher) {
@@ -60,8 +64,7 @@ public class AppDB extends BroadcastReceiver {
 			finally {
 				db.close();
 			}
-			// still not returned? ok then it is a new entry!
-			return addNewEntry(name, null);
+			return INVALID_ID;
 		}
 	}
 
@@ -75,14 +78,16 @@ public class AppDB extends BroadcastReceiver {
 	private void incrementLaunchCounter(ComponentName name) {
 		synchronized (mLock) {
 			long id = getId(name);
-			SQLiteDatabase db = mDBHelper.getWritableDatabase();
-			try {
-				db.execSQL("UPDATE  "+Tables.AppInfos+" SET "+
-						Columns.LAUNCH_COUNT + "=" + Columns.LAUNCH_COUNT + " + 1 WHERE "+
-						Columns.ID + "="+ id);
-			}
-			finally {
-				db.close();
+			if (id != INVALID_ID) {
+				SQLiteDatabase db = mDBHelper.getWritableDatabase();
+				try {
+					db.execSQL("UPDATE  "+Tables.AppInfos+" SET "+
+							Columns.LAUNCH_COUNT + "=" + Columns.LAUNCH_COUNT + " + 1 WHERE "+
+							Columns.ID + "="+ id);
+				}
+				finally {
+					db.close();
+				}
 			}
 		}
 	}
@@ -192,10 +197,13 @@ public class AppDB extends BroadcastReceiver {
 					Bitmap icon = getIconFromCursor(c, c.getColumnIndex(Columns.ICON));
 					String cnStr = c.getString(c.getColumnIndex(Columns.COMPONENT_NAME));
 					String title = c.getString(c.getColumnIndex(Columns.TITLE));
+					ComponentName cname = ComponentName.unflattenFromString(cnStr);
+					if (mIconCache != null)
+						mIconCache.addToCache(cname, title, icon);
 					if (title != null) {
 						ShortcutInfo info = new ShortcutInfo(
 								title,
-								ComponentName.unflattenFromString(cnStr),
+								cname,
 								icon);
 						result.add(info);
 					}

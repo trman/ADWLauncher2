@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.util.Log;
 
@@ -78,21 +77,6 @@ class ShortcutInfo extends ItemInfo {
         }
         mIcon = info.mIcon; // TODO: should make a copy here.  maybe we don't need this ctor at all
         customIcon = info.customIcon;
-    }
-
-    /**
-     * Must not hold the Context.
-     */
-    public ShortcutInfo(ResolveInfo info, IconCache iconCache) {
-        ComponentName componentName = new ComponentName(
-                info.activityInfo.applicationInfo.packageName,
-                info.activityInfo.name);
-
-        this.container = ItemInfo.NO_ID;
-        this.setActivity(componentName,
-                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-
-        iconCache.getTitleAndIcon(this, info);
     }
 
     public ShortcutInfo(CharSequence title, ComponentName componentName, Bitmap icon) {
