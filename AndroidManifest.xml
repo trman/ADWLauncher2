@@ -133,4 +133,7 @@
             android:readPermission="com.android.launcher.permission.READ_SETTINGS" />
 
     </application>
+    <supports-screens android:largeScreens="true"
+		android:normalScreens="true" android:smallScreens="true"
+		android:anyDensity="true" />
 </manifest>
