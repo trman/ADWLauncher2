@@ -311,7 +311,17 @@ public class LauncherModel extends BroadcastReceiver {
             	}
             }
 
-        } /* else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
+        	if (intent.hasExtra(AppDB.EXTRA_DELETED)) {
+        		String removed = intent.getStringExtra(AppDB.EXTRA_DELETED);
+        		if (removed != null) {
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE, removed);
+        			enqueuePackageUpdated(put);
+        		}
+        	}
+
+        }
+        // TODO_BOOMBULER
+        /* else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
             // First, schedule to add these apps back in.
             String[] packages = intent.getStringArrayExtra(Intent.EXTRA_CHANGED_PACKAGE_LIST);
             enqueuePackageUpdated(new PackageUpdatedTask(PackageUpdatedTask.OP_ADD, packages));
@@ -341,16 +351,22 @@ public class LauncherModel extends BroadcastReceiver {
     private class PackageUpdatedTask implements Runnable {
         int mOp;
         long[] mAppIds;
+        String mPackageName;
 
         public static final int OP_ADD = 1;
      //   public static final int OP_UPDATE = 2;
-     //   public static final int OP_REMOVE = 3;
+        public static final int OP_REMOVE = 3;
         public static final int OP_UNAVAILABLE = 4; // external media unmounted
 
 
         public PackageUpdatedTask(int op, long[] appIds) {
             mOp = op;
             mAppIds = appIds;
+        }
+
+        public PackageUpdatedTask(int op, String packageName) {
+        	mOp = op;
+        	mPackageName = packageName;
         }
 
         public void run() {
@@ -362,12 +378,14 @@ public class LauncherModel extends BroadcastReceiver {
                         mAllAppsList.add(info);
                     }
                     break;
+                case OP_REMOVE: {
+                	mAllAppsList.removePackage(mPackageName);
+                }
                 /*case OP_UPDATE:
                     for (int i=0; i<N; i++) {
                         mAllAppsList.updatePackage(context, packages[i]);
                     }
                     break;
-                case OP_REMOVE:
                 case OP_UNAVAILABLE:
                     for (int i=0; i<N; i++) {
                         mAllAppsList.removePackage(packages[i]);
@@ -421,6 +439,7 @@ public class LauncherModel extends BroadcastReceiver {
                     }
                 });
             }
+
             if (removed != null) {
                 final boolean permanent = mOp != OP_UNAVAILABLE;
                 final ArrayList<ShortcutInfo> removedFinal = removed;

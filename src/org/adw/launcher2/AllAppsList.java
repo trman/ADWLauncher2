@@ -86,11 +86,14 @@ class AllAppsList {
         final List<ShortcutInfo> data = this.data;
         for (int i = data.size() - 1; i >= 0; i--) {
         	ShortcutInfo info = data.get(i);
-            final String pack = info.intent.getPackage();
-            if (packageName.equals(pack)) {
-                removed.add(info);
-                data.remove(i);
-            }
+        	final ComponentName component = info.intent.getComponent();
+        	if (component != null) {
+	            final String pack = component.getPackageName();
+	            if (packageName.equals(pack)) {
+	                removed.add(info);
+	                data.remove(i);
+	            }
+        	}
         }
         // This is more aggressive than it needs to be.
         mIconCache.flush();

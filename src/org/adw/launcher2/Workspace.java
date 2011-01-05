@@ -1325,7 +1325,9 @@ public class Workspace extends ViewGroup implements DropTarget, DragSource, Drag
         final HashSet<String> packageNames = new HashSet<String>();
         final int appCount = apps.size();
         for (int i = 0; i < appCount; i++) {
-            packageNames.add(apps.get(i).intent.getPackage());
+        	final ComponentName component = apps.get(i).intent.getComponent();
+        	if (component != null)
+        		packageNames.add(component.getPackageName());
         }
 
         for (int i = 0; i < count; i++) {

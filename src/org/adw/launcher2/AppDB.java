@@ -25,8 +25,10 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	private static final long INVALID_ID = -1;
+	private static final String PACKAGE_SEPERATOR = "/";
 	public static final String INTENT_DB_CHANGED = "org.adw.launcher2.app_db_changed";
 	public static final String EXTRA_ADDED = "added";
+	public static final String EXTRA_DELETED = "deleted";
 
 	private final Object mLock = new Object();
 
@@ -172,7 +174,42 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	private void PackageRemoved(String aPackage) {
-		Log.d("BOOMBULER", "Package removed: "+aPackage);
+		if (mDBHelper == null)
+			mDBHelper = new DatabaseHelper();
+		SQLiteDatabase db = mDBHelper.getWritableDatabase();
+		try {
+		    long[] ids = null;
+		    Cursor c = queryAppsFromPackage(db, new String[] { Columns.ID }, aPackage);
+		    try {
+		    	c.moveToFirst();
+				final int count = c.getCount();
+				ids = new long[count];
+				for (int i = 0; i < count; i++) {
+					ids[i] = c.getLong(c.getColumnIndex(Columns.ID));
+					c.moveToNext();
+				}
+			} finally {
+				c.close();
+			}
+
+			String deleteFlt = getAppIdFilter(ids);
+			db.delete(Tables.AppInfos, deleteFlt, null);
+
+			Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
+			deleteIntent.putExtra(EXTRA_DELETED, aPackage);
+			mContext.sendBroadcast(deleteIntent);
+		} finally {
+			db.close();
+		}
+	}
+
+	private Cursor queryAppsFromPackage(SQLiteDatabase db, String[] columns, String aPackage) {
+		aPackage = aPackage + PACKAGE_SEPERATOR;
+		String pkgflt = "substr("+Columns.COMPONENT_NAME + ",1,"+ aPackage.length() +") = ?";
+		return db.query(Tables.AppInfos,
+				columns,
+				pkgflt, new String[] { aPackage },
+				null, null, null);
 	}
 
 	private static Bitmap getIconFromCursor(Cursor c, int iconIndex) {
