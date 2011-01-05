@@ -59,10 +59,7 @@ public class LauncherModel extends BroadcastReceiver {
     static final String TAG = "Launcher.Model";
 
     private static final int ITEMS_CHUNK = 6; // batch size for the workspace icons
-    private final int mBatchSize; // 0 is all apps at once
-    private final int mAllAppsLoadDelay; // milliseconds between batches
 
-    private final LauncherApplication mApp;
     private final Object mLock = new Object();
     private final DeferredHandler mHandler = new DeferredHandler();
     private LoaderTask mLoaderTask;
@@ -105,16 +102,11 @@ public class LauncherModel extends BroadcastReceiver {
     }
 
     LauncherModel(LauncherApplication app, IconCache iconCache) {
-        mApp = app;
         mAllAppsList = new AllAppsList(iconCache);
         mIconCache = iconCache;
 
         mDefaultIcon = Utilities.createIconBitmap(
                 app.getPackageManager().getDefaultActivityIcon(), app);
-
-        mAllAppsLoadDelay = app.getResources().getInteger(R.integer.config_allAppsBatchLoadDelay);
-
-        mBatchSize = app.getResources().getInteger(R.integer.config_allAppsBatchSize);
     }
 
     public Bitmap getFallbackIcon() {

@@ -21,10 +21,6 @@ import java.util.List;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 
 
 /**
@@ -107,36 +103,6 @@ class AllAppsList {
     }
 
     /**
-     * Query the package manager for MAIN/LAUNCHER activities in the supplied package.
-     */
-    private static List<ResolveInfo> findActivitiesForPackage(Context context, String packageName) {
-        final PackageManager packageManager = context.getPackageManager();
-
-        final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        mainIntent.setPackage(packageName);
-
-        final List<ResolveInfo> apps = packageManager.queryIntentActivities(mainIntent, 0);
-        return apps != null ? apps : new ArrayList<ResolveInfo>();
-    }
-
-    /**
-     * Returns whether <em>apps</em> contains <em>component</em>.
-     */
-    private static boolean findActivity(List<ResolveInfo> apps, ComponentName component) {
-    	if (component == null)
-    		return false;
-        final String className = component.getClassName();
-        for (ResolveInfo info : apps) {
-            final ActivityInfo activityInfo = info.activityInfo;
-            if (activityInfo.name.equals(className)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Returns whether <em>apps</em> contains <em>component</em>.
      */
     private static boolean findActivity(ArrayList<ShortcutInfo> apps, ComponentName component) {
@@ -151,19 +117,5 @@ class AllAppsList {
             }
         }
         return false;
-    }
-
-    /**
-     * Find an ApplicationInfo object for the given packageName and className.
-     */
-    private ShortcutInfo findApplicationInfoLocked(String packageName, String className) {
-        for (ShortcutInfo info: data) {
-            final ComponentName component = info.intent.getComponent();
-            if (component != null && packageName.equals(component.getPackageName())
-                    && className.equals(component.getClassName())) {
-                return info;
-            }
-        }
-        return null;
     }
 }
