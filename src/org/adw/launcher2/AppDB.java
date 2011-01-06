@@ -30,7 +30,8 @@ public class AppDB extends BroadcastReceiver {
 	private static final String PACKAGE_SEPERATOR = "/";
 	public static final String INTENT_DB_CHANGED = "org.adw.launcher2.app_db_changed";
 	public static final String EXTRA_ADDED = "added";
-	public static final String EXTRA_DELETED = "deleted";
+	public static final String EXTRA_DELETED_PACKAGE = "deleted_package";
+	public static final String EXTRA_DELETED_COMPONENT_NAMES = "deleted_cnames";
 
 	private final Object mLock = new Object();
 
@@ -180,37 +181,51 @@ public class AppDB extends BroadcastReceiver {
 		SQLiteDatabase db = mDBHelper.getWritableDatabase();
 		try {
 		    long[] ids = null;
-		    Cursor c = queryAppsFromPackage(db, new String[] { Columns.ID }, aPackage);
+		    String[] names = null;
+		    Cursor c = queryAppsFromPackage(db, new String[] { Columns.ID, Columns.COMPONENT_NAME }, aPackage);
 		    try {
 		    	c.moveToFirst();
 				final int count = c.getCount();
 				ids = new long[count];
+				names = new String[count];
+				final int IdIdx = c.getColumnIndex(Columns.ID);
+				final int CnIdx = c.getColumnIndex(Columns.COMPONENT_NAME);
 				for (int i = 0; i < count; i++) {
-					ids[i] = c.getLong(c.getColumnIndex(Columns.ID));
+					ids[i] = c.getLong(IdIdx);
+					names[i] = c.getString(CnIdx);
 					c.moveToNext();
 				}
 			} finally {
 				c.close();
 			}
 
-			String deleteFlt = getAppIdFilter(ids);
-			db.delete(Tables.AppInfos, deleteFlt, null);
+			if (ids != null && names != null) {
+				String deleteFlt = getAppIdFilter(ids);
+				db.delete(Tables.AppInfos, deleteFlt, null);
 
-			RemoveShortcutsFromWorkspace(aPackage);
-			// notify the LauncherModel too!
-			Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
-			deleteIntent.putExtra(EXTRA_DELETED, aPackage);
-			mContext.sendBroadcast(deleteIntent);
+				RemoveShortcutsFromWorkspace(names);
+				// notify the LauncherModel too!
 
-
-
+				Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
+				// remove all items from the package!
+				deleteIntent.putExtra(EXTRA_DELETED_PACKAGE, aPackage);
+				mContext.sendBroadcast(deleteIntent);
+			}
 		} finally {
 			db.close();
 		}
 	}
 
+	static boolean arrayContains(String[] array, String value) {
+		for (String itm : array) {
+			if (itm.equals(value))
+				return true;
+		}
+		return false;
+	}
 
-	private void RemoveShortcutsFromWorkspace(String aPackage) {
+
+	private void RemoveShortcutsFromWorkspace(String[] componentNames) {
 		final ContentResolver cr = mContext.getContentResolver();
 
         Cursor c = cr.query(LauncherSettings.Favorites.CONTENT_URI,
@@ -234,8 +249,8 @@ public class AppDB extends BroadcastReceiver {
 
 		        			ComponentName cname = intent.getComponent();
 		        			if (cname != null ) {
-			        			String packageName = cname.getPackageName();
-			        			if (aPackage.equals(packageName)) {
+			        			String cnameStr = cname.flattenToString();
+			        			if (arrayContains(componentNames, cnameStr)) {
 			        				c.getLong(IDColumnIndex);
 			        				ids[idx++] = c.getLong(IDColumnIndex);
 			        			}else

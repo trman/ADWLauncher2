@@ -100,6 +100,26 @@ class AllAppsList {
     }
 
     /**
+     * Remove the apps for the given list of component names
+     */
+    public void removeComponentNames(String[] componentNames) {
+        final List<ShortcutInfo> data = this.data;
+        for (int i = data.size() - 1; i >= 0; i--) {
+        	ShortcutInfo info = data.get(i);
+        	final ComponentName component = info.intent.getComponent();
+        	if (component != null) {
+	            final String cname = component.flattenToString();
+	            if (AppDB.arrayContains(componentNames, cname)) {
+	                removed.add(info);
+	                data.remove(i);
+	            }
+        	}
+        }
+        // This is more aggressive than it needs to be.
+        mIconCache.flush();
+    }
+
+    /**
      * Add and remove icons for this package which has been updated.
      */
     public void updatePackage(Context context, String packageName) {

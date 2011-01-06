@@ -311,10 +311,18 @@ public class LauncherModel extends BroadcastReceiver {
             	}
             }
 
-        	if (intent.hasExtra(AppDB.EXTRA_DELETED)) {
-        		String removed = intent.getStringExtra(AppDB.EXTRA_DELETED);
+        	if (intent.hasExtra(AppDB.EXTRA_DELETED_COMPONENT_NAMES)) {
+        		String[] removed = intent.getStringArrayExtra(AppDB.EXTRA_DELETED_COMPONENT_NAMES);
         		if (removed != null) {
-        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE, removed);
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE_CNAMES, removed);
+        			enqueuePackageUpdated(put);
+        		}
+        	}
+
+        	if (intent.hasExtra(AppDB.EXTRA_DELETED_PACKAGE)) {
+        		String removed = intent.getStringExtra(AppDB.EXTRA_DELETED_PACKAGE);
+        		if (removed != null) {
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE_PACKAGE, removed);
         			enqueuePackageUpdated(put);
         		}
         	}
@@ -351,12 +359,14 @@ public class LauncherModel extends BroadcastReceiver {
     private class PackageUpdatedTask implements Runnable {
         int mOp;
         long[] mAppIds;
-        String mPackageName;
+        String[] mComponentNames;
+        String mPackage;
 
         public static final int OP_ADD = 1;
      //   public static final int OP_UPDATE = 2;
-        public static final int OP_REMOVE = 3;
-        public static final int OP_UNAVAILABLE = 4; // external media unmounted
+        public static final int OP_REMOVE_CNAMES = 3;
+        public static final int OP_REMOVE_PACKAGE = 4;
+        public static final int OP_UNAVAILABLE = 5; // external media unmounted
 
 
         public PackageUpdatedTask(int op, long[] appIds) {
@@ -364,10 +374,16 @@ public class LauncherModel extends BroadcastReceiver {
             mAppIds = appIds;
         }
 
+        public PackageUpdatedTask(int op, String[] componentNames) {
+        	mOp = op;
+        	mComponentNames = componentNames;
+        }
+
         public PackageUpdatedTask(int op, String packageName) {
         	mOp = op;
-        	mPackageName = packageName;
+        	mPackage = packageName;
         }
+
 
         public void run() {
             switch (mOp) {
@@ -378,8 +394,11 @@ public class LauncherModel extends BroadcastReceiver {
                         mAllAppsList.add(info);
                     }
                     break;
-                case OP_REMOVE: {
-                	mAllAppsList.removePackage(mPackageName);
+                case OP_REMOVE_CNAMES: {
+                	mAllAppsList.removeComponentNames(mComponentNames);
+                }
+                case OP_REMOVE_PACKAGE: {
+                	mAllAppsList.removePackage(mPackage);
                 }
                 /*case OP_UPDATE:
                     for (int i=0; i<N; i++) {
