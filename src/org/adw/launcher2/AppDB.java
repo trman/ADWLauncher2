@@ -37,7 +37,6 @@ public class AppDB extends BroadcastReceiver {
 	private Context mContext;
 	private DatabaseHelper mDBHelper;
 	private final IconCache mIconCache;
-	private boolean mInitialized = false;
 
 	public AppDB(IconCache iconCache) {
 		sInstance = this;
@@ -55,7 +54,6 @@ public class AppDB extends BroadcastReceiver {
 			mContext = launcher;
 			mDBHelper = new DatabaseHelper();
 			mDBHelper.getReadableDatabase().close();
-			mInitialized = true;
 		}
 	}
 
@@ -197,13 +195,14 @@ public class AppDB extends BroadcastReceiver {
 
 			String deleteFlt = getAppIdFilter(ids);
 			db.delete(Tables.AppInfos, deleteFlt, null);
-			if (mInitialized)
-			{ // only if launchermodel knows what to do
-				Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
-				deleteIntent.putExtra(EXTRA_DELETED, aPackage);
-				mContext.sendBroadcast(deleteIntent);
-			} else
-				RemoveShortcutsFromWorkspace(aPackage);
+
+			RemoveShortcutsFromWorkspace(aPackage);
+			// notify the LauncherModel too!
+			Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
+			deleteIntent.putExtra(EXTRA_DELETED, aPackage);
+			mContext.sendBroadcast(deleteIntent);
+
+
 
 		} finally {
 			db.close();
@@ -387,12 +386,11 @@ public class AppDB extends BroadcastReceiver {
     		db.endTransaction();
     		db.close();
     	}
-    	if (mInitialized) {
-    		// Otherwise LauncherModel is not ready!
-    		Intent updateIntent = new Intent(INTENT_DB_CHANGED);
-    		updateIntent.putExtra("added", added);
-    		mContext.sendBroadcast(updateIntent);
-    	}
+
+
+		Intent updateIntent = new Intent(INTENT_DB_CHANGED);
+		updateIntent.putExtra("added", added);
+		mContext.sendBroadcast(updateIntent);
     }
 
 	private static class Columns {
