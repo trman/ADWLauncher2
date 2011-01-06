@@ -1,10 +1,12 @@
 package org.adw.launcher2;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -35,6 +37,7 @@ public class AppDB extends BroadcastReceiver {
 	private Context mContext;
 	private DatabaseHelper mDBHelper;
 	private final IconCache mIconCache;
+	private boolean mInitialized = false;
 
 	public AppDB(IconCache iconCache) {
 		sInstance = this;
@@ -47,12 +50,12 @@ public class AppDB extends BroadcastReceiver {
 		// Only for Broadcast reciever!
 	}
 
-
 	void initialize(Launcher launcher) {
 		synchronized (mLock) {
 			mContext = launcher;
 			mDBHelper = new DatabaseHelper();
 			mDBHelper.getReadableDatabase().close();
+			mInitialized = true;
 		}
 	}
 
@@ -80,25 +83,25 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	public void incrementLaunchCounter(ShortcutInfo info) {
-		if (info.intent.getAction().equals(Intent.ACTION_MAIN) &&
-				info.intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
-			incrementLaunchCounter(info.intent.getComponent());
+		synchronized(mLock) {
+			if (info.intent.getAction().equals(Intent.ACTION_MAIN) &&
+					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
+				incrementLaunchCounter(info.intent.getComponent());
+			}
 		}
 	}
 
 	private void incrementLaunchCounter(ComponentName name) {
-		synchronized (mLock) {
-			long id = getId(name);
-			if (id != INVALID_ID) {
-				SQLiteDatabase db = mDBHelper.getWritableDatabase();
-				try {
-					db.execSQL("UPDATE  "+Tables.AppInfos+" SET "+
-							Columns.LAUNCH_COUNT + "=" + Columns.LAUNCH_COUNT + " + 1 WHERE "+
-							Columns.ID + "="+ id);
-				}
-				finally {
-					db.close();
-				}
+		long id = getId(name);
+		if (id != INVALID_ID) {
+			SQLiteDatabase db = mDBHelper.getWritableDatabase();
+			try {
+				db.execSQL("UPDATE  "+Tables.AppInfos+" SET "+
+						Columns.LAUNCH_COUNT + "=" + Columns.LAUNCH_COUNT + " + 1 WHERE "+
+						Columns.ID + "="+ id);
+			}
+			finally {
+				db.close();
 			}
 		}
 	}
@@ -131,10 +134,10 @@ public class AppDB extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		mContext = context;
+		if (mContext == null)
+			mContext = context;
 		// This code will run outside of the launcher process!!!!!
 		final String action = intent.getAction();
-
         if (Intent.ACTION_PACKAGE_CHANGED.equals(action)
                 || Intent.ACTION_PACKAGE_REMOVED.equals(action)
                 || Intent.ACTION_PACKAGE_ADDED.equals(action)) {
@@ -194,14 +197,74 @@ public class AppDB extends BroadcastReceiver {
 
 			String deleteFlt = getAppIdFilter(ids);
 			db.delete(Tables.AppInfos, deleteFlt, null);
+			if (mInitialized)
+			{ // only if launchermodel knows what to do
+				Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
+				deleteIntent.putExtra(EXTRA_DELETED, aPackage);
+				mContext.sendBroadcast(deleteIntent);
+			} else
+				RemoveShortcutsFromWorkspace(aPackage);
 
-			Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
-			deleteIntent.putExtra(EXTRA_DELETED, aPackage);
-			mContext.sendBroadcast(deleteIntent);
 		} finally {
 			db.close();
 		}
 	}
+
+
+	private void RemoveShortcutsFromWorkspace(String aPackage) {
+		final ContentResolver cr = mContext.getContentResolver();
+
+        Cursor c = cr.query(LauncherSettings.Favorites.CONTENT_URI,
+            new String[] { LauncherSettings.Favorites._ID,
+        		LauncherSettings.Favorites.INTENT },
+        		LauncherSettings.Favorites.INTENT + " is not null", null, null);
+        long[] ids = null;
+        try {
+	        if (c != null && c.moveToFirst()) {
+	        	// prepare the dirty work!
+	        	ids = new long[c.getCount()];
+	        	int IDColumnIndex = c.getColumnIndex(LauncherSettings.Favorites._ID);
+	        	int IntentColumnIndex = c.getColumnIndex(LauncherSettings.Favorites.INTENT);
+	        	int idx = 0;
+	        	while (!c.isAfterLast())
+	        	{
+	        		String intentStr = c.getString(IntentColumnIndex);
+	        		try {
+		        		Intent intent = Intent.parseUri(intentStr, 0);
+		        		if (intent != null) {
+
+		        			ComponentName cname = intent.getComponent();
+		        			if (cname != null ) {
+			        			String packageName = cname.getPackageName();
+			        			if (aPackage.equals(packageName)) {
+			        				c.getLong(IDColumnIndex);
+			        				ids[idx++] = c.getLong(IDColumnIndex);
+			        			}else
+			        				ids[idx++] = INVALID_ID;
+		        			} else {
+		        				ids[idx++] = INVALID_ID;
+		        			}
+		        		} else
+		        			ids[idx++] = INVALID_ID;
+	        		}
+	        		catch(URISyntaxException expt) {
+	        			ids[idx++] = INVALID_ID;
+	        		}
+
+	        		c.moveToNext();
+	        	}
+	        }
+        } finally {
+        	c.close();
+        }
+        if (ids != null) {
+        	for (long id : ids) {
+        		if (id != INVALID_ID)
+        			cr.delete(LauncherSettings.Favorites.getContentUri(id, false), null, null);
+        	}
+        }
+	}
+
 
 	private Cursor queryAppsFromPackage(SQLiteDatabase db, String[] columns, String aPackage) {
 		aPackage = aPackage + PACKAGE_SEPERATOR;
@@ -240,44 +303,46 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	public List<ShortcutInfo> getApps(long[] appIds) {
-		ArrayList<ShortcutInfo> result = new ArrayList<ShortcutInfo>();
-		DatabaseHelper dbHelper = new DatabaseHelper();
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		try {
-			Cursor c = db.query(Tables.AppInfos, new String[] {
-					Columns.COMPONENT_NAME,
-					Columns.ICON,
-					Columns.TITLE
-			}, getAppIdFilter(appIds), null, null, null, null);
+		synchronized(mLock) {
+			ArrayList<ShortcutInfo> result = new ArrayList<ShortcutInfo>();
+			DatabaseHelper dbHelper = new DatabaseHelper();
+			SQLiteDatabase db = dbHelper.getReadableDatabase();
 			try {
-				c.moveToFirst();
-				while(!c.isAfterLast()) {
+				Cursor c = db.query(Tables.AppInfos, new String[] {
+						Columns.COMPONENT_NAME,
+						Columns.ICON,
+						Columns.TITLE
+				}, getAppIdFilter(appIds), null, null, null, null);
+				try {
+					c.moveToFirst();
+					while(!c.isAfterLast()) {
 
-					Bitmap icon = getIconFromCursor(c, c.getColumnIndex(Columns.ICON));
-					String cnStr = c.getString(c.getColumnIndex(Columns.COMPONENT_NAME));
-					String title = c.getString(c.getColumnIndex(Columns.TITLE));
-					ComponentName cname = ComponentName.unflattenFromString(cnStr);
-					if (mIconCache != null)
-						mIconCache.addToCache(cname, title, icon);
-					if (title != null) {
-						ShortcutInfo info = new ShortcutInfo(
-								title,
-								cname,
-								icon);
-						result.add(info);
+						Bitmap icon = getIconFromCursor(c, c.getColumnIndex(Columns.ICON));
+						String cnStr = c.getString(c.getColumnIndex(Columns.COMPONENT_NAME));
+						String title = c.getString(c.getColumnIndex(Columns.TITLE));
+						ComponentName cname = ComponentName.unflattenFromString(cnStr);
+						if (mIconCache != null)
+							mIconCache.addToCache(cname, title, icon);
+						if (title != null) {
+							ShortcutInfo info = new ShortcutInfo(
+									title,
+									cname,
+									icon);
+							result.add(info);
+						}
+
+						c.moveToNext();
 					}
-
-					c.moveToNext();
+				}
+				finally {
+					c.close();
 				}
 			}
 			finally {
-				c.close();
+				db.close();
 			}
+			return result;
 		}
-		finally {
-			db.close();
-		}
-		return result;
 	}
 
     private List<ResolveInfo> findActivitiesForPackage(PackageManager packageManager, String packageName) {
@@ -322,12 +387,13 @@ public class AppDB extends BroadcastReceiver {
     		db.endTransaction();
     		db.close();
     	}
-
-    	Intent updateIntent = new Intent(INTENT_DB_CHANGED);
-    	updateIntent.putExtra("added", added);
-    	mContext.sendBroadcast(updateIntent);
+    	if (mInitialized) {
+    		// Otherwise LauncherModel is not ready!
+    		Intent updateIntent = new Intent(INTENT_DB_CHANGED);
+    		updateIntent.putExtra("added", added);
+    		mContext.sendBroadcast(updateIntent);
+    	}
     }
-
 
 	private static class Columns {
 		public static final String ID = "_id";
