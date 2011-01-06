@@ -40,22 +40,10 @@ class ShortcutInfo extends ItemInfo {
     Intent intent;
 
     /**
-     * Indicates whether the icon comes from an application's resource (if false)
-     * or from a custom Bitmap (if true.)
-     */
-    boolean customIcon;
-
-    /**
      * Indicates whether we're using the default fallback icon instead of something from the
      * app.
      */
     boolean usingFallbackIcon;
-
-    /**
-     * If isShortcut=true and customIcon=false, this contains a reference to the
-     * shortcut icon as an application's resource.
-     */
-    Intent.ShortcutIconResource iconResource;
 
     /**
      * The application icon.
@@ -70,13 +58,7 @@ class ShortcutInfo extends ItemInfo {
         super(info);
         title = info.title.toString();
         intent = new Intent(info.intent);
-        if (info.iconResource != null) {
-            iconResource = new Intent.ShortcutIconResource();
-            iconResource.packageName = info.iconResource.packageName;
-            iconResource.resourceName = info.iconResource.resourceName;
-        }
         mIcon = info.mIcon; // TODO: should make a copy here.  maybe we don't need this ctor at all
-        customIcon = info.customIcon;
     }
 
     public ShortcutInfo(CharSequence title, ComponentName componentName, Bitmap icon) {
@@ -123,23 +105,7 @@ class ShortcutInfo extends ItemInfo {
         String uri = intent != null ? intent.toUri(0) : null;
         values.put(LauncherSettings.BaseLauncherColumns.INTENT, uri);
 
-        if (customIcon) {
-            values.put(LauncherSettings.BaseLauncherColumns.ICON_TYPE,
-                    LauncherSettings.BaseLauncherColumns.ICON_TYPE_BITMAP);
-            writeBitmap(values, mIcon);
-        } else {
-            if (!usingFallbackIcon) {
-                writeBitmap(values, mIcon);
-            }
-            values.put(LauncherSettings.BaseLauncherColumns.ICON_TYPE,
-                    LauncherSettings.BaseLauncherColumns.ICON_TYPE_RESOURCE);
-            if (iconResource != null) {
-                values.put(LauncherSettings.BaseLauncherColumns.ICON_PACKAGE,
-                        iconResource.packageName);
-                values.put(LauncherSettings.BaseLauncherColumns.ICON_RESOURCE,
-                        iconResource.resourceName);
-            }
-        }
+        writeBitmap(values, mIcon);
     }
 
     @Override
@@ -157,8 +123,7 @@ class ShortcutInfo extends ItemInfo {
             ArrayList<ShortcutInfo> list) {
         Log.d(tag, label + " size=" + list.size());
         for (ShortcutInfo info: list) {
-            Log.d(tag, "   title=\"" + info.title + " icon=" + info.mIcon
-                    + " customIcon=" + info.customIcon);
+            Log.d(tag, "   title=\"" + info.title + " icon=" + info.mIcon);
         }
     }
 }

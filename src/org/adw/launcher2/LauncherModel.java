@@ -769,13 +769,9 @@ public class LauncherModel extends BroadcastReceiver {
                                 continue;
                             }
 
-                            info = getShortcutInfo(c, context, iconTypeIndex,
-                                    iconPackageIndex, iconResourceIndex, iconIndex,
-                                    titleIndex);
+                            info = getShortcutInfo(c, context, iconIndex, titleIndex);
 
                             if (info != null) {
-                                updateSavedIcon(context, info, c, iconIndex);
-
                                 info.intent = intent;
                                 info.id = c.getLong(idIndex);
                                 container = c.getInt(containerIndex);
@@ -1199,60 +1195,17 @@ public class LauncherModel extends BroadcastReceiver {
     /**
      * Make an ShortcutInfo object for a shortcut that isn't an application.
      */
-    private ShortcutInfo getShortcutInfo(Cursor c, Context context,
-            int iconTypeIndex, int iconPackageIndex, int iconResourceIndex, int iconIndex,
-            int titleIndex) {
+    private ShortcutInfo getShortcutInfo(Cursor c, Context context, int iconIndex, int titleIndex) {
 
-        Bitmap icon = null;
         final ShortcutInfo info = new ShortcutInfo();
         info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
 
-        // TODO: If there's an explicit component and we can't install that, delete it.
-
         info.title = c.getString(titleIndex);
 
-        int iconType = c.getInt(iconTypeIndex);
-        switch (iconType) {
-        case LauncherSettings.Favorites.ICON_TYPE_RESOURCE:
-            String packageName = c.getString(iconPackageIndex);
-            String resourceName = c.getString(iconResourceIndex);
-            PackageManager packageManager = context.getPackageManager();
-            info.customIcon = false;
-            // the resource
-            try {
-                Resources resources = packageManager.getResourcesForApplication(packageName);
-                if (resources != null) {
-                    final int id = resources.getIdentifier(resourceName, null, null);
-                    icon = Utilities.createIconBitmap(resources.getDrawable(id), context);
-                }
-            } catch (Exception e) {
-                // drop this.  we have other places to look for icons
-            }
-            // the db
-            if (icon == null) {
-                icon = getIconFromCursor(c, iconIndex);
-            }
-            // the fallback icon
-            if (icon == null) {
-                icon = getFallbackIcon();
-                info.usingFallbackIcon = true;
-            }
-            break;
-        case LauncherSettings.Favorites.ICON_TYPE_BITMAP:
-            icon = getIconFromCursor(c, iconIndex);
-            if (icon == null) {
-                icon = getFallbackIcon();
-                info.customIcon = false;
-                info.usingFallbackIcon = true;
-            } else {
-                info.customIcon = true;
-            }
-            break;
-        default:
+        Bitmap icon = getIconFromCursor(c, iconIndex);
+        if (icon == null) {
             icon = getFallbackIcon();
             info.usingFallbackIcon = true;
-            info.customIcon = false;
-            break;
         }
         info.setIcon(icon);
         return info;
@@ -1283,12 +1236,10 @@ public class LauncherModel extends BroadcastReceiver {
         Parcelable bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
 
         Bitmap icon = null;
-        boolean customIcon = false;
         ShortcutIconResource iconResource = null;
 
         if (bitmap != null && bitmap instanceof Bitmap) {
             icon = Utilities.createIconBitmap(new FastBitmapDrawable((Bitmap)bitmap), context);
-            customIcon = true;
         } else {
             Parcelable extra = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE);
             if (extra != null && extra instanceof ShortcutIconResource) {
@@ -1315,8 +1266,6 @@ public class LauncherModel extends BroadcastReceiver {
 
         info.title = name;
         info.intent = intent;
-        info.customIcon = customIcon;
-        info.iconResource = iconResource;
 
         return info;
     }
@@ -1348,38 +1297,6 @@ public class LauncherModel extends BroadcastReceiver {
             liveFolderInfo.icon = Utilities.createIconBitmap(
                     context.getResources().getDrawable(R.drawable.ic_launcher_folder),
                     context);
-        }
-    }
-
-    void updateSavedIcon(Context context, ShortcutInfo info, Cursor c, int iconIndex) {
-        // If this icon doesn't have a custom icon, check to see
-        // what's stored in the DB, and if it doesn't match what
-        // we're going to show, store what we are going to show back
-        // into the DB.  We do this so when we're loading, if the
-        // package manager can't find an icon (for example because
-        // the app is on SD) then we can use that instead.
-        if (!info.customIcon && !info.usingFallbackIcon) {
-            boolean needSave;
-            byte[] data = c.getBlob(iconIndex);
-            try {
-                if (data != null) {
-                    Bitmap saved = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    Bitmap loaded = info.getIcon(mIconCache);
-                    //TODO_BOOMBULER: needSave = !saved.sameAs(loaded);
-                    needSave = !saved.equals(loaded);
-                } else {
-                    needSave = true;
-                }
-            } catch (Exception e) {
-                needSave = true;
-            }
-            if (needSave) {
-                Log.d(TAG, "going to save icon bitmap for info=" + info);
-                // This is slower than is ideal, but this only happens either
-                // after the froyo OTA or when the app is updated with a new
-                // icon.
-                updateItemInDatabase(context, info);
-            }
         }
     }
 
