@@ -222,16 +222,16 @@ public class AppDB extends BroadcastReceiver {
         // Ok we got all needed infos so lets start the party:
         AddResolveInfos(packageManager, addedApps); // adding is easy!
 
-        SQLiteDatabase db = mDBHelper.getWritableDatabase();
+        SQLiteDatabase dbwrite = mDBHelper.getWritableDatabase();
         try {
         	// removing is a little harder:
-        	DestroyItems(db, removedApps);
+        	DestroyItems(dbwrite, removedApps);
         	if (sendIntent)
         		modelIntent.putExtra(EXTRA_DELETED_COMPONENT_NAMES, getPackageNames(removedApps));
         	// ok then updating is left:
         	// TODO_BOOMBULER
         } finally {
-        	db.close();
+        	dbwrite.close();
         }
 
         // Notify Model:
