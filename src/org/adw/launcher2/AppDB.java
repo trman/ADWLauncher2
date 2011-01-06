@@ -2,6 +2,8 @@ package org.adw.launcher2;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import android.content.BroadcastReceiver;
@@ -173,6 +175,76 @@ public class AppDB extends BroadcastReceiver {
 
 	private void PackageChanged(String aPackage) {
 		Log.d("BOOMBULER", "Package changed: "+aPackage);
+		if (mDBHelper == null)
+			mDBHelper = new DatabaseHelper();
+
+		final PackageManager packageManager = mContext.getPackageManager();
+
+		List<ExtResolveInfo> addedApps = new LinkedList<ExtResolveInfo>();
+		List<DBInfo> removedApps = new LinkedList<DBInfo>();
+		HashMap<ExtResolveInfo, DBInfo> updatedApps = new HashMap<ExtResolveInfo, DBInfo>();
+
+        List<ExtResolveInfo> pmInfos = toExtInfos(findActivitiesForPackage(packageManager, aPackage));
+        List<DBInfo> dbInfos = toDBInfos(queryAppsFromPackage(null, new String[] {Columns.ID, Columns.COMPONENT_NAME}, aPackage));
+
+        // find removed / updated apps
+        for(DBInfo dbi : dbInfos) {
+        	boolean found = false;
+        	for (ExtResolveInfo pmi : pmInfos) {
+	        	if (pmi.getComponentName().equals(dbi.getComponentName())) {
+	        		found = true;
+	        		updatedApps.put(pmi, dbi); // update dbi from pmi later
+	        		break;
+	        	}
+        	}
+        	if (!found) {
+        		removedApps.add(dbi); // app is no longer installed!
+        	}
+        }
+        for (ExtResolveInfo pmi : pmInfos) {
+        	if (updatedApps.containsKey(pmi))
+        		continue; // alread in updateable apps
+        	addedApps.add(pmi); // not updated, not removed so it must be added ;-)
+        }
+        Intent modelIntent = new Intent(INTENT_DB_CHANGED);
+        boolean sendIntent = removedApps.size() > 0 || updatedApps.size() > 0;
+
+        // Ok we got all needed infos so lets start the party:
+        AddResolveInfos(packageManager, addedApps); // adding is easy!
+
+        SQLiteDatabase db = mDBHelper.getWritableDatabase();
+        try {
+        	// removing is a little harder:
+        	DestroyItems(db, removedApps);
+        	if (sendIntent)
+        		modelIntent.putExtra(EXTRA_DELETED_COMPONENT_NAMES, getPackageNames(removedApps));
+        	// ok then updating is left:
+        	// TODO_BOOMBULER
+        } finally {
+        	db.close();
+        }
+
+        // Notify Model:
+        mContext.sendBroadcast(modelIntent);
+	}
+
+	private List<ExtResolveInfo> toExtInfos(List<ResolveInfo> list) {
+		List<ExtResolveInfo> result = new ArrayList<ExtResolveInfo>(list.size());
+		for(ResolveInfo info : list) {
+			result.add(new ExtResolveInfo(info));
+		}
+		return result;
+	}
+
+	private List<DBInfo> toDBInfos(Cursor c) {
+		List<DBInfo> result = new LinkedList<DBInfo>();
+		if (c.moveToFirst()) {
+			while(!c.isAfterLast()) {
+				result.add(new DBInfo(c));
+				c.moveToNext();
+			}
+		}
+		return result;
 	}
 
 	private void PackageRemoved(String aPackage) {
@@ -180,39 +252,38 @@ public class AppDB extends BroadcastReceiver {
 			mDBHelper = new DatabaseHelper();
 		SQLiteDatabase db = mDBHelper.getWritableDatabase();
 		try {
-		    long[] ids = null;
-		    String[] names = null;
+		    List<DBInfo> infos = new LinkedList<DBInfo>();
 		    Cursor c = queryAppsFromPackage(db, new String[] { Columns.ID, Columns.COMPONENT_NAME }, aPackage);
 		    try {
 		    	c.moveToFirst();
-				final int count = c.getCount();
-				ids = new long[count];
-				names = new String[count];
-				final int IdIdx = c.getColumnIndex(Columns.ID);
-				final int CnIdx = c.getColumnIndex(Columns.COMPONENT_NAME);
-				for (int i = 0; i < count; i++) {
-					ids[i] = c.getLong(IdIdx);
-					names[i] = c.getString(CnIdx);
+				c.getColumnIndex(Columns.ID);
+				c.getColumnIndex(Columns.COMPONENT_NAME);
+				while(!c.isAfterLast()) {
+					DBInfo info = new DBInfo(c);
+					infos.add(info);
 					c.moveToNext();
 				}
 			} finally {
 				c.close();
 			}
 
-			if (ids != null && names != null) {
-				String deleteFlt = getAppIdFilter(ids);
-				db.delete(Tables.AppInfos, deleteFlt, null);
-
-				RemoveShortcutsFromWorkspace(names);
-				// notify the LauncherModel too!
-
-				Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
-				// remove all items from the package!
-				deleteIntent.putExtra(EXTRA_DELETED_PACKAGE, aPackage);
-				mContext.sendBroadcast(deleteIntent);
-			}
+			DestroyItems(db, infos);
+			// notify the LauncherModel too!
+			Intent deleteIntent = new Intent(INTENT_DB_CHANGED);
+			// remove all items from the package!
+			deleteIntent.putExtra(EXTRA_DELETED_PACKAGE, aPackage);
+			mContext.sendBroadcast(deleteIntent);
 		} finally {
 			db.close();
+		}
+	}
+
+	private void DestroyItems(SQLiteDatabase db, List<DBInfo> infos) {
+		if (infos.size() > 0) {
+			String deleteFlt = getAppIdFilter(getIds(infos));
+			db.delete(Tables.AppInfos, deleteFlt, null);
+
+			RemoveShortcutsFromWorkspace(infos);
 		}
 	}
 
@@ -224,8 +295,31 @@ public class AppDB extends BroadcastReceiver {
 		return false;
 	}
 
+	private static boolean InfosContains(List<DBInfo> infos, String value) {
+		for (DBInfo itm : infos) {
+			if (value.equals(itm.getComponentName()))
+				return true;
+		}
+		return false;
+	}
 
-	private void RemoveShortcutsFromWorkspace(String[] componentNames) {
+	private static long[] getIds(List<DBInfo> infos) {
+		long[] result = new long[infos.size()];
+		for (int i = 0; i < infos.size(); i++) {
+			result[i] = infos.get(i).getId();
+		}
+		return result;
+	}
+
+	private static String[] getPackageNames(List<DBInfo> infos) {
+		String[] result = new String[infos.size()];
+		for (int i = 0; i < infos.size(); i++) {
+			result[i] = infos.get(i).getComponentName();
+		}
+		return result;
+	}
+
+	private void RemoveShortcutsFromWorkspace(List<DBInfo> infos) {
 		final ContentResolver cr = mContext.getContentResolver();
 
         Cursor c = cr.query(LauncherSettings.Favorites.CONTENT_URI,
@@ -250,7 +344,7 @@ public class AppDB extends BroadcastReceiver {
 		        			ComponentName cname = intent.getComponent();
 		        			if (cname != null ) {
 			        			String cnameStr = cname.flattenToString();
-			        			if (arrayContains(componentNames, cnameStr)) {
+			        			if (InfosContains(infos, cnameStr)) {
 			        				c.getLong(IDColumnIndex);
 			        				ids[idx++] = c.getLong(IDColumnIndex);
 			        			}else
@@ -278,7 +372,6 @@ public class AppDB extends BroadcastReceiver {
         	}
         }
 	}
-
 
 	private Cursor queryAppsFromPackage(SQLiteDatabase db, String[] columns, String aPackage) {
 		aPackage = aPackage + PACKAGE_SEPERATOR;
@@ -368,7 +461,7 @@ public class AppDB extends BroadcastReceiver {
         return apps != null ? apps : new ArrayList<ResolveInfo>();
     }
 
-    private void AddResolveInfos(PackageManager packageManager, List<ResolveInfo> infos) {
+    private void AddResolveInfos(PackageManager packageManager, List<?> infos) {
     	long[] added = new long[infos.size()];
     	int i = 0;
     	if (mDBHelper == null)
@@ -377,7 +470,14 @@ public class AppDB extends BroadcastReceiver {
     	try
     	{
     		db.beginTransaction();
-	    	for(ResolveInfo info : infos) {
+	    	for(Object oinfo : infos) {
+	    		final ResolveInfo info;
+	    		if (oinfo instanceof ResolveInfo)
+	    			info = (ResolveInfo)oinfo;
+	    		else if (oinfo instanceof ExtResolveInfo)
+	    			info = ((ExtResolveInfo)oinfo).getResolveInfo();
+	    		else
+	    			continue;
 	        	ComponentName componentName = new ComponentName(
 	                    info.activityInfo.applicationInfo.packageName,
 	                    info.activityInfo.name);
@@ -407,6 +507,44 @@ public class AppDB extends BroadcastReceiver {
 		updateIntent.putExtra("added", added);
 		mContext.sendBroadcast(updateIntent);
     }
+
+    private class ExtResolveInfo {
+    	private final ResolveInfo mResolveInfo;
+    	private final String mComponentName;
+
+    	public ExtResolveInfo(ResolveInfo info) {
+    		mResolveInfo = info;
+        	mComponentName = new ComponentName(
+                    info.activityInfo.applicationInfo.packageName,
+                    info.activityInfo.name).flattenToString();
+    	}
+
+    	public String getComponentName() {
+    		return mComponentName;
+    	}
+    	public ResolveInfo getResolveInfo() {
+    		return mResolveInfo;
+    	}
+    }
+
+    private class DBInfo {
+    	private final long mId;
+    	private final String mComponentName;
+
+    	public DBInfo(Cursor c) {
+    		mId = c.getLong(c.getColumnIndex(Columns.ID));
+    		mComponentName = c.getString(c.getColumnIndex(Columns.COMPONENT_NAME));
+    	}
+
+    	public long getId(){
+    		return mId;
+    	}
+
+    	public String getComponentName() {
+    		return mComponentName;
+    	}
+    }
+
 
 	private static class Columns {
 		public static final String ID = "_id";
@@ -459,10 +597,6 @@ public class AppDB extends BroadcastReceiver {
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			// TODO Auto-generated method stub
-
 		}
-
 	}
-
-
 }
