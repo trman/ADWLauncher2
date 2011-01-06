@@ -185,7 +185,17 @@ public class AppDB extends BroadcastReceiver {
 		HashMap<ExtResolveInfo, DBInfo> updatedApps = new HashMap<ExtResolveInfo, DBInfo>();
 
         List<ExtResolveInfo> pmInfos = toExtInfos(findActivitiesForPackage(packageManager, aPackage));
-        List<DBInfo> dbInfos = toDBInfos(queryAppsFromPackage(null, new String[] {Columns.ID, Columns.COMPONENT_NAME}, aPackage));
+        SQLiteDatabase db = mDBHelper.getReadableDatabase();
+        List<DBInfo> dbInfos = null;
+        try {
+        	dbInfos = toDBInfos(queryAppsFromPackage(db, new String[] {Columns.ID, Columns.COMPONENT_NAME}, aPackage));
+        }
+        finally {
+        	db.close();
+        }
+        if (dbInfos == null)
+        	return; // Something went wrong here!
+
 
         // find removed / updated apps
         for(DBInfo dbi : dbInfos) {
