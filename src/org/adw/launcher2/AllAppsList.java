@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.ComponentName;
-import android.content.Context;
 
 
 /**
@@ -122,7 +121,8 @@ class AllAppsList {
     /**
      * Add and remove icons for this package which has been updated.
      */
-    public void updatePackage(Context context, String packageName) {
+    public void updateFromShortcuts(List<ShortcutInfo> changedItems) {
+    	// maybe update icon / text of unchanged items here!
     }
 
     /**

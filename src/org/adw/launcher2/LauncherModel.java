@@ -327,6 +327,14 @@ public class LauncherModel extends BroadcastReceiver {
         		}
         	}
 
+        	if (intent.hasExtra(AppDB.EXTRA_UPDATED)) {
+        		long[] updated = intent.getLongArrayExtra(AppDB.EXTRA_UPDATED);
+        		if (updated != null && updated.length > 0) {
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_UPDATE, updated);
+        			enqueuePackageUpdated(put);
+        		}
+        	}
+
         }
         // TODO_BOOMBULER
         /* else if (Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(action)) {
@@ -363,7 +371,7 @@ public class LauncherModel extends BroadcastReceiver {
         String mPackage;
 
         public static final int OP_ADD = 1;
-     //   public static final int OP_UPDATE = 2;
+        public static final int OP_UPDATE = 2;
         public static final int OP_REMOVE_CNAMES = 3;
         public static final int OP_REMOVE_PACKAGE = 4;
         public static final int OP_UNAVAILABLE = 5; // external media unmounted
@@ -400,11 +408,11 @@ public class LauncherModel extends BroadcastReceiver {
                 case OP_REMOVE_PACKAGE: {
                 	mAllAppsList.removePackage(mPackage);
                 }
-                /*case OP_UPDATE:
-                    for (int i=0; i<N; i++) {
-                        mAllAppsList.updatePackage(context, packages[i]);
-                    }
+                case OP_UPDATE:
+                	List<ShortcutInfo> updated = AppDB.getInstance().getApps(mAppIds);
+                    mAllAppsList.updateFromShortcuts(updated);
                     break;
+                /*
                 case OP_UNAVAILABLE:
                     for (int i=0; i<N; i++) {
                         mAllAppsList.removePackage(packages[i]);

@@ -34,6 +34,7 @@ public class AppDB extends BroadcastReceiver {
 	public static final String EXTRA_ADDED = "added";
 	public static final String EXTRA_DELETED_PACKAGE = "deleted_package";
 	public static final String EXTRA_DELETED_COMPONENT_NAMES = "deleted_cnames";
+	public static final String EXTRA_UPDATED = "updated";
 
 	private final Object mLock = new Object();
 
@@ -228,8 +229,27 @@ public class AppDB extends BroadcastReceiver {
         	DestroyItems(dbwrite, removedApps);
         	if (sendIntent)
         		modelIntent.putExtra(EXTRA_DELETED_COMPONENT_NAMES, getPackageNames(removedApps));
+
         	// ok then updating is left:
-        	// TODO_BOOMBULER
+        	long[] updatedIds = new long[updatedApps.size()];
+        	int i = 0;
+        	for (ExtResolveInfo pmInfo : updatedApps.keySet()) {
+        		DBInfo dbinfo = updatedApps.get(pmInfo);
+
+        		ResolveInfo rInfo = pmInfo.getResolveInfo();
+	            Bitmap icon = Utilities.createIconBitmap(
+	                    rInfo.loadIcon(packageManager), mContext);
+
+	            ContentValues values = new ContentValues();
+	            values.put(Columns.TITLE, rInfo.loadLabel(packageManager).toString());
+	            ItemInfo.writeBitmap(values, icon);
+
+        		dbwrite.update(Tables.AppInfos, values, Columns.ID + " = ?",
+        				new String[] { String.valueOf(dbinfo.getId()) } );
+        		updatedIds[i++] = dbinfo.getId();
+        	}
+        	if (i > 0)
+        		modelIntent.putExtra(EXTRA_UPDATED, updatedIds);
         } finally {
         	dbwrite.close();
         }
