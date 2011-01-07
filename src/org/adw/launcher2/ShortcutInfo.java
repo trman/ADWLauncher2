@@ -40,15 +40,9 @@ class ShortcutInfo extends ItemInfo {
     Intent intent;
 
     /**
-     * Indicates whether we're using the default fallback icon instead of something from the
-     * app.
-     */
-    boolean usingFallbackIcon;
-
-    /**
      * The application icon.
      */
-    private Bitmap mIcon;
+    private Bitmap mIcon = null;
 
     ShortcutInfo() {
         itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
@@ -61,11 +55,10 @@ class ShortcutInfo extends ItemInfo {
         mIcon = info.mIcon; // TODO: should make a copy here.  maybe we don't need this ctor at all
     }
 
-    public ShortcutInfo(CharSequence title, ComponentName componentName, Bitmap icon) {
+    public ShortcutInfo(CharSequence title, ComponentName componentName) {
     	this.container = ItemInfo.NO_ID;
     	this.title = title;
     	this.setActivity(componentName, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-    	this.setIcon(icon);
     }
 
     public void setIcon(Bitmap b) {
@@ -74,8 +67,7 @@ class ShortcutInfo extends ItemInfo {
 
     public Bitmap getIcon(IconCache iconCache) {
         if (mIcon == null) {
-            mIcon = iconCache.getIcon(this.intent);
-            this.usingFallbackIcon = iconCache.isDefaultIcon(mIcon);
+            return iconCache.getIcon(this.intent);
         }
         return mIcon;
     }
@@ -105,7 +97,14 @@ class ShortcutInfo extends ItemInfo {
         String uri = intent != null ? intent.toUri(0) : null;
         values.put(LauncherSettings.BaseLauncherColumns.INTENT, uri);
 
-        writeBitmap(values, mIcon);
+        if (mIcon == null)
+        	values.put(LauncherSettings.BaseLauncherColumns.ICON_TYPE,
+        			LauncherSettings.BaseLauncherColumns.ICON_TYPE_RESOURCE);
+        else {
+        	values.put(LauncherSettings.BaseLauncherColumns.ICON_TYPE,
+        			LauncherSettings.BaseLauncherColumns.ICON_TYPE_BITMAP);
+        	writeBitmap(values, mIcon);
+        }
     }
 
     @Override

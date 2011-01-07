@@ -463,8 +463,7 @@ public class AppDB extends BroadcastReceiver {
 						if (title != null) {
 							ShortcutInfo info = new ShortcutInfo(
 									title,
-									cname,
-									icon);
+									cname);
 							result.add(info);
 						}
 

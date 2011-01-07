@@ -1150,7 +1150,6 @@ public class LauncherModel extends BroadcastReceiver {
      */
     public ShortcutInfo getShortcutInfo(PackageManager manager, Intent intent, Context context,
             Cursor c, int iconIndex, int titleIndex) {
-        Bitmap icon = null;
         final ShortcutInfo info = new ShortcutInfo();
 
         ComponentName componentName = intent.getComponent();
@@ -1166,21 +1165,8 @@ public class LauncherModel extends BroadcastReceiver {
         // to avoid saving lots of copies of that in the database, and most apps
         // have icons anyway.
         final ResolveInfo resolveInfo = manager.resolveActivity(intent, 0);
-        if (resolveInfo != null) {
-            icon = mIconCache.getIcon(componentName, resolveInfo);
-        }
-        // the db
-        if (icon == null) {
-            if (c != null) {
-                icon = getIconFromCursor(c, iconIndex);
-            }
-        }
-        // the fallback icon
-        if (icon == null) {
-            icon = getFallbackIcon();
-            info.usingFallbackIcon = true;
-        }
-        info.setIcon(icon);
+
+        info.setIcon(getIconFromCursor(c, iconIndex));
 
         // from the resource
         if (resolveInfo != null) {
@@ -1209,13 +1195,7 @@ public class LauncherModel extends BroadcastReceiver {
         info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
 
         info.title = c.getString(titleIndex);
-
-        Bitmap icon = getIconFromCursor(c, iconIndex);
-        if (icon == null) {
-            icon = getFallbackIcon();
-            info.usingFallbackIcon = true;
-        }
-        info.setIcon(icon);
+        info.setIcon(getIconFromCursor(c, iconIndex));
         return info;
     }
 
@@ -1266,10 +1246,6 @@ public class LauncherModel extends BroadcastReceiver {
 
         final ShortcutInfo info = new ShortcutInfo();
 
-        if (icon == null) {
-            icon = getFallbackIcon();
-            info.usingFallbackIcon = true;
-        }
         info.setIcon(icon);
 
         info.title = name;
