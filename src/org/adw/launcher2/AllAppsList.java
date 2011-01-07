@@ -82,6 +82,8 @@ class AllAppsList {
      * Remove the apps for the given apk identified by packageName.
      */
     public void removePackage(String packageName) {
+    	if (packageName == null)
+    		return;
         final List<ShortcutInfo> data = this.data;
         for (int i = data.size() - 1; i >= 0; i--) {
         	ShortcutInfo info = data.get(i);

@@ -131,6 +131,11 @@
             android:authorities="org.adw.launcher2.settings"
             android:writePermission="com.android.launcher.permission.WRITE_SETTINGS"
             android:readPermission="com.android.launcher.permission.READ_SETTINGS" />
+            
+        <provider
+        	android:name="org.adw.launcher2.AppDBProvider"
+        	android:authorities="org.adw.launcher2.appdb" 
+        	android:exported="false" />
 
     </application>
     <supports-screens android:largeScreens="true"
