@@ -28,6 +28,7 @@ public class AppDB extends BroadcastReceiver {
 		return sInstance;
 	}
 
+	private static boolean WITH_TRANSACTIONS = false;
 	private static final long INVALID_ID = -1;
 	private static final String PACKAGE_SEPERATOR = "/";
 	public static final String INTENT_DB_CHANGED = "org.adw.launcher2.app_db_changed";
@@ -98,11 +99,17 @@ public class AppDB extends BroadcastReceiver {
 		if (id != INVALID_ID) {
 			SQLiteDatabase db = mDBHelper.getWritableDatabase();
 			try {
+				if (WITH_TRANSACTIONS)
+					db.beginTransaction();
 				db.execSQL("UPDATE  "+Tables.AppInfos+" SET "+
 						Columns.LAUNCH_COUNT + "=" + Columns.LAUNCH_COUNT + " + 1 WHERE "+
 						Columns.ID + "="+ id);
+				if (WITH_TRANSACTIONS)
+					db.setTransactionSuccessful();
 			}
 			finally {
+				if (WITH_TRANSACTIONS)
+					db.endTransaction();
 				db.close();
 			}
 		}
@@ -225,6 +232,8 @@ public class AppDB extends BroadcastReceiver {
 
         SQLiteDatabase dbwrite = mDBHelper.getWritableDatabase();
         try {
+        	if (WITH_TRANSACTIONS)
+        		dbwrite.beginTransaction();
         	// removing is a little harder:
         	DestroyItems(dbwrite, removedApps);
         	if (sendIntent)
@@ -250,7 +259,11 @@ public class AppDB extends BroadcastReceiver {
         	}
         	if (i > 0)
         		modelIntent.putExtra(EXTRA_UPDATED, updatedIds);
+        	if (WITH_TRANSACTIONS)
+        		dbwrite.setTransactionSuccessful();
         } finally {
+        	if (WITH_TRANSACTIONS)
+        		dbwrite.endTransaction();
         	dbwrite.close();
         }
 
@@ -311,7 +324,17 @@ public class AppDB extends BroadcastReceiver {
 	private void DestroyItems(SQLiteDatabase db, List<DBInfo> infos) {
 		if (infos.size() > 0) {
 			String deleteFlt = getAppIdFilter(getIds(infos));
-			db.delete(Tables.AppInfos, deleteFlt, null);
+			if (WITH_TRANSACTIONS)
+				db.beginTransaction();
+			try {
+				db.delete(Tables.AppInfos, deleteFlt, null);
+				if (WITH_TRANSACTIONS)
+					db.setTransactionSuccessful();
+			} finally {
+				if (WITH_TRANSACTIONS)
+					db.endTransaction();
+			}
+
 
 			RemoveShortcutsFromWorkspace(infos);
 		}
@@ -498,7 +521,8 @@ public class AppDB extends BroadcastReceiver {
     	SQLiteDatabase db = mDBHelper.getWritableDatabase();
     	try
     	{
-    		db.beginTransaction();
+    		if (WITH_TRANSACTIONS)
+    			db.beginTransaction();
 	    	for(Object oinfo : infos) {
 	    		final ResolveInfo info;
 	    		if (oinfo instanceof ResolveInfo)
@@ -524,10 +548,12 @@ public class AppDB extends BroadcastReceiver {
 	            ItemInfo.writeBitmap(values, icon);
 	            added[i++] = addNewEntry(db, componentName, values);
 	    	}
-	    	db.setTransactionSuccessful();
+	    	if (WITH_TRANSACTIONS)
+	    		db.setTransactionSuccessful();
     	}
     	finally {
-    		db.endTransaction();
+    		if (WITH_TRANSACTIONS)
+    			db.endTransaction();
     		db.close();
     	}
 
