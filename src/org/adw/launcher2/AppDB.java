@@ -80,9 +80,12 @@ public class AppDB extends BroadcastReceiver {
 
 	public void incrementLaunchCounter(ShortcutInfo info) {
 		synchronized(mLock) {
-			if (info.intent.getAction().equals(Intent.ACTION_MAIN) &&
-					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
-				incrementLaunchCounter(info.intent.getComponent());
+			if (info != null && info.intent != null) {
+				String action = info.intent.getAction();
+				if (Intent.ACTION_MAIN.equals(action) &&
+						info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
+					incrementLaunchCounter(info.intent.getComponent());
+				}
 			}
 		}
 	}
