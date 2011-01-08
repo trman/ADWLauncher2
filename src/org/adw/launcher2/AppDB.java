@@ -85,7 +85,6 @@ public class AppDB extends BroadcastReceiver {
 				if (Intent.ACTION_MAIN.equals(action) &&
 						info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
 					incrementLaunchCounter(info.intent.getComponent());
-				}
 			}
 		}
 	}
