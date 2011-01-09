@@ -22,7 +22,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.os.Handler;
-//import dalvik.system.VMRuntime;
 
 public class LauncherApplication extends Application {
 	private LauncherModel mModel;
@@ -36,7 +35,7 @@ public class LauncherApplication extends Application {
         super.onCreate();
 
         mIconCache = new IconCache(this);
-        mAppDB = new AppDB(mIconCache);
+        mAppDB = new AppDB(this, mIconCache);
         mModel = new LauncherModel(this, mIconCache);
 
         // Register intent receivers
@@ -77,7 +76,6 @@ public class LauncherApplication extends Application {
     };
 
     LauncherModel setLauncher(Launcher launcher) {
-        mAppDB.initialize(launcher);
         mModel.initialize(launcher);
         return mModel;
     }

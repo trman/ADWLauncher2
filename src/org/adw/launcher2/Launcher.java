@@ -193,6 +193,7 @@ public final class Launcher extends Activity
 
     private LauncherModel mModel;
     private IconCache mIconCache;
+    private AppDB mAppDB;
 
     private static LocaleConfiguration sLocaleConfiguration = null;
 
@@ -214,6 +215,7 @@ public final class Launcher extends Activity
         LauncherApplication app = ((LauncherApplication)getApplication());
         mModel = app.setLauncher(this);
         mIconCache = app.getIconCache();
+        mAppDB = app.getAppDB();
         mDragController = new DragController(this);
         mInflater = getLayoutInflater();
 
@@ -1501,7 +1503,7 @@ public final class Launcher extends Activity
         }
         if (tag instanceof ShortcutInfo) {
         	ShortcutInfo info = (ShortcutInfo)tag;
-        	AppDB.getInstance().incrementLaunchCounter(info);
+        	mAppDB.incrementLaunchCounter(info);
         }
     }
 

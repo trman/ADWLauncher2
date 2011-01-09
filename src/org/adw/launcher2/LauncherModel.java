@@ -306,7 +306,7 @@ public class LauncherModel extends BroadcastReceiver {
         	if (intent.hasExtra(AppDB.EXTRA_ADDED)) {
             	long[] added = intent.getLongArrayExtra(AppDB.EXTRA_ADDED);
             	if (added != null && added.length > 0) {
-            		PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_ADD, added);
+            		PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_ADD, added, context);
             		enqueuePackageUpdated(put);
             	}
             }
@@ -314,7 +314,7 @@ public class LauncherModel extends BroadcastReceiver {
         	if (intent.hasExtra(AppDB.EXTRA_DELETED_COMPONENT_NAMES)) {
         		String[] removed = intent.getStringArrayExtra(AppDB.EXTRA_DELETED_COMPONENT_NAMES);
         		if (removed != null) {
-        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE_CNAMES, removed);
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE_CNAMES, removed, context);
         			enqueuePackageUpdated(put);
         		}
         	}
@@ -322,7 +322,7 @@ public class LauncherModel extends BroadcastReceiver {
         	if (intent.hasExtra(AppDB.EXTRA_DELETED_PACKAGE)) {
         		String removed = intent.getStringExtra(AppDB.EXTRA_DELETED_PACKAGE);
         		if (removed != null) {
-        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE_PACKAGE, removed);
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_REMOVE_PACKAGE, removed, context);
         			enqueuePackageUpdated(put);
         		}
         	}
@@ -330,7 +330,7 @@ public class LauncherModel extends BroadcastReceiver {
         	if (intent.hasExtra(AppDB.EXTRA_UPDATED)) {
         		long[] updated = intent.getLongArrayExtra(AppDB.EXTRA_UPDATED);
         		if (updated != null && updated.length > 0) {
-        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_UPDATE, updated);
+        			PackageUpdatedTask put = new PackageUpdatedTask(PackageUpdatedTask.OP_UPDATE, updated, context);
         			enqueuePackageUpdated(put);
         		}
         	}
@@ -369,6 +369,7 @@ public class LauncherModel extends BroadcastReceiver {
         long[] mAppIds;
         String[] mComponentNames;
         String mPackage;
+        Context mContext;
 
         public static final int OP_ADD = 1;
         public static final int OP_UPDATE = 2;
@@ -377,26 +378,30 @@ public class LauncherModel extends BroadcastReceiver {
         public static final int OP_UNAVAILABLE = 5; // external media unmounted
 
 
-        public PackageUpdatedTask(int op, long[] appIds) {
+        public PackageUpdatedTask(int op, long[] appIds, Context context) {
             mOp = op;
             mAppIds = appIds;
+            mContext = context;
         }
 
-        public PackageUpdatedTask(int op, String[] componentNames) {
+        public PackageUpdatedTask(int op, String[] componentNames, Context context) {
         	mOp = op;
         	mComponentNames = componentNames;
+        	mContext = context;
         }
 
-        public PackageUpdatedTask(int op, String packageName) {
+        public PackageUpdatedTask(int op, String packageName, Context context) {
         	mOp = op;
         	mPackage = packageName;
+        	mContext = context;
         }
 
-
         public void run() {
+            AppDB appDB = new AppDB(mContext, mIconCache);
+
             switch (mOp) {
                 case OP_ADD:
-                	List<ShortcutInfo> newApps = AppDB.getInstance().getApps(mAppIds);
+                	List<ShortcutInfo> newApps = appDB.getApps(mAppIds);
 
                     for (ShortcutInfo info : newApps) {
                         mAllAppsList.add(info);
@@ -409,7 +414,7 @@ public class LauncherModel extends BroadcastReceiver {
                 	mAllAppsList.removePackage(mPackage);
                 }
                 case OP_UPDATE:
-                	List<ShortcutInfo> updated = AppDB.getInstance().getApps(mAppIds);
+                	List<ShortcutInfo> updated = appDB.getApps(mAppIds);
                     mAllAppsList.updateFromShortcuts(updated);
                     break;
                 /*
@@ -1107,7 +1112,7 @@ public class LauncherModel extends BroadcastReceiver {
             }
             long startTime = System.currentTimeMillis();
 
-            List<ShortcutInfo>  apps =  AppDB.getInstance().getApps();
+            List<ShortcutInfo>  apps =  new AppDB(mContext, mIconCache).getApps();
             long endTime = System.currentTimeMillis();
 
             Log.v("BOOMBULER", "found apps: "+apps.size());

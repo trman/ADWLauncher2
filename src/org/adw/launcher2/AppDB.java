@@ -22,12 +22,6 @@ import android.net.Uri;
 import android.util.Log;
 
 public class AppDB extends BroadcastReceiver {
-	private static AppDB sInstance = null;
-
-	public static AppDB getInstance() {
-		return sInstance;
-	}
-
 	private static final long INVALID_ID = -1;
 	private static final String PACKAGE_SEPERATOR = "/";
 	public static final String INTENT_DB_CHANGED = "org.adw.launcher2.app_db_changed";
@@ -36,13 +30,11 @@ public class AppDB extends BroadcastReceiver {
 	public static final String EXTRA_DELETED_COMPONENT_NAMES = "deleted_cnames";
 	public static final String EXTRA_UPDATED = "updated";
 
-	private final Object mLock = new Object();
-
 	private Context mContext;
 	private final IconCache mIconCache;
 
-	public AppDB(IconCache iconCache) {
-		sInstance = this;
+	public AppDB(Context context, IconCache iconCache) {
+		mContext = context;
 		mIconCache = iconCache;
 	}
 
@@ -52,40 +44,31 @@ public class AppDB extends BroadcastReceiver {
 		// Only for Broadcast reciever!
 	}
 
-	void initialize(Launcher launcher) {
-		synchronized (mLock) {
-			mContext = launcher;
-		}
-	}
 
 	public long getId(ComponentName name) {
-		synchronized (mLock) {
-			ContentResolver cr = mContext.getContentResolver();
-			Cursor c = cr.query(AppInfos.CONTENT_URI,
-					new String[] { AppInfos.ID },
-					AppInfos.COMPONENT_NAME + "=?",
-					new String[] { name.toString() }, null);
-			try {
-				c.moveToFirst();
-				if (!c.isAfterLast()) {
-					return c.getLong(0);
-				}
+		ContentResolver cr = mContext.getContentResolver();
+		Cursor c = cr.query(AppInfos.CONTENT_URI,
+				new String[] { AppInfos.ID },
+				AppInfos.COMPONENT_NAME + "=?",
+				new String[] { name.toString() }, null);
+		try {
+			c.moveToFirst();
+			if (!c.isAfterLast()) {
+				return c.getLong(0);
 			}
-			finally {
-				c.close();
-			}
-			return INVALID_ID;
 		}
+		finally {
+			c.close();
+		}
+		return INVALID_ID;
 	}
 
 	public void incrementLaunchCounter(ShortcutInfo info) {
-		synchronized(mLock) {
-			if (info != null && info.intent != null) {
-				String action = info.intent.getAction();
-				if (Intent.ACTION_MAIN.equals(action) &&
-						info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
-					incrementLaunchCounter(info.intent.getComponent());
-			}
+		if (info != null && info.intent != null) {
+			String action = info.intent.getAction();
+			if (Intent.ACTION_MAIN.equals(action) &&
+					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
+				incrementLaunchCounter(info.intent.getComponent());
 		}
 	}
 
@@ -386,42 +369,40 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	public List<ShortcutInfo> getApps(long[] appIds) {
-		synchronized(mLock) {
-			ArrayList<ShortcutInfo> result = new ArrayList<ShortcutInfo>();
-			ContentResolver cr = mContext.getContentResolver();
+		ArrayList<ShortcutInfo> result = new ArrayList<ShortcutInfo>();
+		ContentResolver cr = mContext.getContentResolver();
 
-			Cursor c = cr.query(AppInfos.CONTENT_URI, new String[] {
-					AppInfos.COMPONENT_NAME,
-					AppInfos.ICON,
-					AppInfos.TITLE
-			}, getAppIdFilter(appIds), null, null);
-			try {
-				c.moveToFirst();
-				final int iconIdx = c.getColumnIndex(AppInfos.ICON);
-				final int cnIdx = c.getColumnIndex(AppInfos.COMPONENT_NAME);
-				final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
+		Cursor c = cr.query(AppInfos.CONTENT_URI, new String[] {
+				AppInfos.COMPONENT_NAME,
+				AppInfos.ICON,
+				AppInfos.TITLE
+		}, getAppIdFilter(appIds), null, null);
+		try {
+			c.moveToFirst();
+			final int iconIdx = c.getColumnIndex(AppInfos.ICON);
+			final int cnIdx = c.getColumnIndex(AppInfos.COMPONENT_NAME);
+			final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
 
-				while(!c.isAfterLast()) {
-					Bitmap icon = getIconFromCursor(c, iconIdx);
-					String cnStr = c.getString(cnIdx);
-					String title = c.getString(titleIdx);
-					ComponentName cname = ComponentName.unflattenFromString(cnStr);
-					if (mIconCache != null)
-						mIconCache.addToCache(cname, title, icon);
-					if (title != null) {
-						ShortcutInfo info = new ShortcutInfo(
-								title,
-								cname);
-						result.add(info);
-					}
-					c.moveToNext();
+			while(!c.isAfterLast()) {
+				Bitmap icon = getIconFromCursor(c, iconIdx);
+				String cnStr = c.getString(cnIdx);
+				String title = c.getString(titleIdx);
+				ComponentName cname = ComponentName.unflattenFromString(cnStr);
+				if (mIconCache != null)
+					mIconCache.addToCache(cname, title, icon);
+				if (title != null) {
+					ShortcutInfo info = new ShortcutInfo(
+							title,
+							cname);
+					result.add(info);
 				}
+				c.moveToNext();
 			}
-			finally {
-				c.close();
-			}
-			return result;
 		}
+		finally {
+			c.close();
+		}
+		return result;
 	}
 
     private List<ResolveInfo> findActivitiesForPackage(PackageManager packageManager, String packageName) {
