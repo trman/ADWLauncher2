@@ -1115,11 +1115,12 @@ public class LauncherModel extends BroadcastReceiver {
             List<ShortcutInfo>  apps =  new AppDB(mContext, mIconCache).getApps();
             long endTime = System.currentTimeMillis();
 
-            Log.v("BOOMBULER", "found apps: "+apps.size());
-            Log.v("BOOMBULER", "took: "+(endTime - startTime)+"ms");
+            Log.v(TAG, "found apps: "+apps.size());
+            Log.v(TAG, "took: "+(endTime - startTime)+"ms");
             if (apps.size() == 0)
             	return; // There are no apps?!?
 
+            mAllAppsList.clear();
             for (ShortcutInfo info : apps)
             	mAllAppsList.add(info);
 

@@ -19,7 +19,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 
 public class AppDB extends BroadcastReceiver {
 	private static final long INVALID_ID = -1;
@@ -124,8 +123,6 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	private void PackageChanged(String aPackage) {
-		Log.d("BOOMBULER", "Package changed: "+aPackage);
-
 		final PackageManager packageManager = mContext.getPackageManager();
 
 		List<ExtResolveInfo> addedApps = new LinkedList<ExtResolveInfo>();
