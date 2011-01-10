@@ -88,8 +88,12 @@ public class AppDBProvider extends ContentProvider {
         qb.setTables(args.table);
 
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        Cursor result = qb.query(db, projection, args.where, args.args, null, null, sortOrder);
-        result.setNotificationUri(getContext().getContentResolver(), uri);
+        try {
+          Cursor result = qb.query(db, projection, args.where, args.args, null, null, sortOrder);
+          result.setNotificationUri(getContext().getContentResolver(), uri);
+        } finally {
+        	db.close();
+        }
 
         return result;
 	}
