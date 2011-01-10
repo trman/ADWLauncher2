@@ -1,5 +1,8 @@
 package org.adw.launcher2;
 
+import java.util.List;
+
+import org.adw.launcher2.AppDB.AppInfos;
 import org.adw.launcher2.LauncherProvider.SqlArguments;
 
 import android.content.ContentProvider;
@@ -7,17 +10,29 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.UriMatcher;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 public class AppDBProvider extends ContentProvider {
 	static final String AUTHORITY = "org.adw.launcher2.appdb";
 
+	private static final UriMatcher URI_MATCHER =
+		new UriMatcher(UriMatcher.NO_MATCH);
+
+	private static final int URI_APP_LAUNCHED = 0;
+
+	static {
+		Log.d("BOOMBULER", "adding launch matcher");
+		URI_MATCHER.addURI(AUTHORITY, "launched/*/*", URI_APP_LAUNCHED);
+	}
 
 	private SQLiteOpenHelper mOpenHelper;
 
@@ -68,6 +83,7 @@ public class AppDBProvider extends ContentProvider {
 
 	private void DoBulkInsert(SQLiteDatabase db, String table, ContentValues[] values) {
         int numValues = values.length;
+        Log.d("BOOMBULER", "gonna insert:"+values.toString());
         for (int i = 0; i < numValues; i++) {
             if (db.insert(table, null, values[i]) < 0)
             	return;
@@ -83,19 +99,53 @@ public class AppDBProvider extends ContentProvider {
 	@Override
 	public Cursor query(Uri uri, String[] projection, String selection,
 			String[] selectionArgs, String sortOrder) {
-        SqlArguments args = new SqlArguments(uri, selection, selectionArgs);
-        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
-        qb.setTables(args.table);
+		int match = URI_MATCHER.match(uri);
+        switch (match) {
+                case URI_APP_LAUNCHED: {
+                	// App was launched.
+                	Log.d("BOOMBULER", "app was launched: "+ uri.toString());
 
-        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
-        try {
-          Cursor result = qb.query(db, projection, args.where, args.args, null, null, sortOrder);
-          result.setNotificationUri(getContext().getContentResolver(), uri);
-          return result;
-        } finally {
-        	db.close();
+                	List<String> paths = uri.getPathSegments();
+                	if (paths.size() == 3) {
+                		String cPathName = paths.get(1) + "/" + paths.get(2);
+
+                		SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+                		try {
+                			long curUnixTime = System.currentTimeMillis() / 1000L;
+                			db.execSQL("UPDATE "+AppDB.APPINFOS+" SET "+
+            						AppInfos.LAUNCH_COUNT + "=" + AppInfos.LAUNCH_COUNT + " + 1, " +
+            						AppInfos.LAST_LAUNCHED + " = "+ curUnixTime +
+            						" WHERE substr("+AppInfos.COMPONENT_NAME + ",1,"+ cPathName.length() +") = ?",
+            						new String[] { cPathName.toString() });
+                		} finally {
+                			db.close();
+                		}
+
+                	}
+
+                	/*
+                	 * db.
+                	 */
+
+                	// just return some empty cross process cursor.
+                	return new MatrixCursor(new String[0]);
+                }
+                default: { // Query Data...
+
+			        SqlArguments args = new SqlArguments(uri, selection, selectionArgs);
+			        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+			        qb.setTables(args.table);
+
+			        SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+		        	Cursor result = qb.query(db, projection, args.where, args.args, null, null, sortOrder);
+		        	result.setNotificationUri(getContext().getContentResolver(), uri);
+		        	return result;
+		        	// Would love to close the DB here but that would close the cursor too!
+                }
         }
 	}
+
+
 
 	@Override
 	public int update(Uri uri, ContentValues values, String selection,
@@ -126,13 +176,15 @@ public class AppDBProvider extends ContentProvider {
 					AppDB.AppInfos.COMPONENT_NAME + " TEXT," +
 					AppDB.AppInfos.TITLE + " TEXT," +
 					AppDB.AppInfos.ICON + " BLOB," +
-					AppDB.AppInfos.LAUNCH_COUNT + " INTEGER" +
+					AppDB.AppInfos.LAUNCH_COUNT + " INTEGER," +
+					AppDB.AppInfos.LAST_LAUNCHED + " INTEGER" +
                     ");");
 			CreateIndexFor(db, AppDB.APPINFOS, AppDB.AppInfos.COMPONENT_NAME);
 
 			PackageManager packageManager = mContext.getPackageManager();
             final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
             mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            Log.d("BOOMBULER", "empty db gonna fill it now!");
             DoBulkInsert(db, AppDB.APPINFOS,
             	AppDB.ResolveInfosToContentValues(mContext,
             		packageManager.queryIntentActivities(mainIntent, 0)));

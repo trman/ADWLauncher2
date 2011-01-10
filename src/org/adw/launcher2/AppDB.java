@@ -72,14 +72,13 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	private void incrementLaunchCounter(ComponentName name) {
-		long id = getId(name);
-		if (id != INVALID_ID) {
-			ContentResolver cr = mContext.getContentResolver();
-			ContentValues cvs = new ContentValues();
-			cvs.put(AppInfos.LAUNCH_COUNT, 1 /* + Current Value */);
-			cr.update(AppInfos.CONTENT_URI, cvs,
-					AppInfos.ID + "=" + String.valueOf(id), null);
-		}
+		ContentResolver cr = mContext.getContentResolver();
+		Cursor c = cr.query(
+				AppInfos.APP_LAUNCHED_URI.buildUpon()
+					.appendEncodedPath(name.flattenToString()).build(),
+				null, null, null, null);
+		if (c != null)
+			c.close();
 	}
 
 	@Override
@@ -505,11 +504,15 @@ public class AppDB extends BroadcastReceiver {
 		public static final String ID = "_id";
 		public static final String COMPONENT_NAME = "componentname";
 		public static final String LAUNCH_COUNT = "launchcount";
+		public static final String LAST_LAUNCHED = "lastlaunched";
 		public static final String TITLE = "title";
 		public static final String ICON = "icon";
 
         static final Uri CONTENT_URI = Uri.parse("content://" +
                 AppDBProvider.AUTHORITY + "/" + APPINFOS);
+
+        static final Uri APP_LAUNCHED_URI = Uri.parse("content://"+
+        		AppDBProvider.AUTHORITY + "/launched");
 
         /**
          * The content:// style URL for a given row, identified by its id.
