@@ -91,11 +91,10 @@ public class AppDBProvider extends ContentProvider {
         try {
           Cursor result = qb.query(db, projection, args.where, args.args, null, null, sortOrder);
           result.setNotificationUri(getContext().getContentResolver(), uri);
+          return result;
         } finally {
         	db.close();
         }
-
-        return result;
 	}
 
 	@Override
