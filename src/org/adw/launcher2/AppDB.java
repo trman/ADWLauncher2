@@ -130,10 +130,11 @@ public class AppDB extends BroadcastReceiver {
 
         List<ExtResolveInfo> pmInfos = toExtInfos(findActivitiesForPackage(packageManager, aPackage));
         ContentResolver cr = mContext.getContentResolver();
-        List<DBInfo> dbInfos = toDBInfos(
-        		queryAppsFromPackage(
-        				new String[] {AppInfos.ID, AppInfos.COMPONENT_NAME},
-        				aPackage));
+        Cursor c = queryAppsFromPackage(
+				new String[] {AppInfos.ID, AppInfos.COMPONENT_NAME},
+				aPackage);
+        List<DBInfo> dbInfos = toDBInfos(c);
+        c.close();
 
         // find removed / updated apps
         for(DBInfo dbi : dbInfos) {
