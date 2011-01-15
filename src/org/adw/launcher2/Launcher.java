@@ -304,6 +304,8 @@ public final class Launcher extends Activity
             new Thread("WriteLocaleConfiguration") {
                 @Override
 				public void run() {
+                	mIconCache.flush();
+                	mAppDB.updateLocale(locale);
                     writeConfiguration(Launcher.this, localeConfiguration);
                 }
             }.start();
@@ -601,6 +603,14 @@ public final class Launcher extends Activity
         dismissPreview(mPreviousView);
         dismissPreview(mNextView);
         mDragController.cancelDrag();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+    	checkForLocaleChange();
+
+    	super.onConfigurationChanged(newConfig);
     }
 
     @Override

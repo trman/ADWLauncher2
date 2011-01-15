@@ -73,7 +73,8 @@
             android:clearTaskOnLaunch="true"
             android:stateNotNeeded="true"
             android:theme="@style/Theme"
-            android:screenOrientation="nosensor"
+            android:screenOrientation="user"
+            android:configChanges="locale|keyboardHidden|orientation"
             android:windowSoftInputMode="stateUnspecified|adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

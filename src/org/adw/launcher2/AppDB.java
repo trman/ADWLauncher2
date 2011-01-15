@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -19,6 +20,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.util.Log;
 
 public class AppDB extends BroadcastReceiver {
 	private static final long INVALID_ID = -1;
@@ -402,6 +404,53 @@ public class AppDB extends BroadcastReceiver {
 		return result;
 	}
 
+	public void updateLocale(String newLocale) {
+		Log.d("BOOMBULER", "locale changed!");
+
+		ContentResolver resolver = mContext.getContentResolver();
+		PackageManager pm = mContext.getPackageManager();
+		// Query all infos with a different locale:
+		final Cursor c = resolver.query(AppInfos.CONTENT_URI,
+				new String[] { AppInfos.ID, AppInfos.COMPONENT_NAME }, AppInfos.LOCALE + " <> ?",
+				new String[] { newLocale }, null);
+		try {
+			if (c.moveToFirst()) {
+				long[] updatedIds = new long[c.getCount()];
+				int idx = 0;
+
+
+				int idCol = c.getColumnIndex(AppInfos.ID);
+				int cnCol = c.getColumnIndex(AppInfos.COMPONENT_NAME);
+
+				while(!c.isAfterLast()) {
+					long id = c.getLong(idCol);
+					ComponentName cn = ComponentName.unflattenFromString(c.getString(cnCol));
+					if (cn != null) {
+				        final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+				        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+				        mainIntent.setComponent(cn);
+				        ResolveInfo ri = pm.resolveActivity(mainIntent, 0);
+
+						ContentValues cv = new ContentValues();
+						String title = ri.loadLabel(pm).toString();
+						cv.put(AppInfos.TITLE, title);
+						cv.put(AppInfos.LOCALE, newLocale);
+						resolver.update(AppInfos.getContentUri(id), cv, null, null);
+						updatedIds[idx++] = id;
+					}
+					c.moveToNext();
+				}
+
+				Intent updateIntent = new Intent(INTENT_DB_CHANGED);
+				updateIntent.putExtra(EXTRA_UPDATED, updatedIds);
+				mContext.sendBroadcast(updateIntent);
+			}
+		} finally {
+			c.close();
+		}
+	}
+
+
     private List<ResolveInfo> findActivitiesForPackage(PackageManager packageManager, String packageName) {
         final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -413,7 +462,7 @@ public class AppDB extends BroadcastReceiver {
 
     static ContentValues[] ResolveInfosToContentValues(Context context, List<?> infos) {
     	PackageManager packageManager = context.getPackageManager();
-
+    	String curLocale = Locale.getDefault().toString();
     	ContentValues[] result = new ContentValues[infos.size()];
     	int i = 0;
     	for(Object oinfo : infos) {
@@ -439,6 +488,7 @@ public class AppDB extends BroadcastReceiver {
 
             ContentValues values = new ContentValues();
             values.put(AppInfos.TITLE, title);
+            values.put(AppInfos.LOCALE, curLocale);
             ItemInfo.writeBitmap(values, icon);
             values.put(AppInfos.COMPONENT_NAME, componentName.flattenToString());
 			values.put(AppInfos.LAUNCH_COUNT, 0);
@@ -508,6 +558,7 @@ public class AppDB extends BroadcastReceiver {
 		public static final String LAST_LAUNCHED = "lastlaunched";
 		public static final String TITLE = "title";
 		public static final String ICON = "icon";
+		public static final String LOCALE = "locale";
 
         static final Uri CONTENT_URI = Uri.parse("content://" +
                 AppDBProvider.AUTHORITY + "/" + APPINFOS);

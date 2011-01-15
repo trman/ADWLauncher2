@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.ComponentName;
+import android.util.Log;
 
 
 /**
@@ -55,7 +56,7 @@ class AllAppsList {
      * If the app is already in the list, doesn't add it.
      */
     public void add(ShortcutInfo info) {
-        if (findActivity(data, info.intent.getComponent())) {
+        if (containsActivity(data, info.intent.getComponent())) {
             return;
         }
         data.add(info);
@@ -123,23 +124,42 @@ class AllAppsList {
      * Add and remove icons for this package which has been updated.
      */
     public void updateFromShortcuts(List<ShortcutInfo> changedItems) {
+    	for(ShortcutInfo updated : changedItems) {
+    		if (updated.intent != null) {
+    			ComponentName name = updated.intent.getComponent();
+    			if (name != null) {
+    				ShortcutInfo oldEntry = findActivity(data, name);
+    				if (oldEntry != null) {
+    					oldEntry.title = updated.title;
+    					modified.add(oldEntry);
+    				}
+    			}
+    		}
+    	}
+
+    	Log.d("BOOMBULER", "should Update Icons here: " + changedItems.size());
     	// maybe update icon / text of unchanged items here!
     }
 
-    /**
-     * Returns whether <em>apps</em> contains <em>component</em>.
-     */
-    private static boolean findActivity(ArrayList<ShortcutInfo> apps, ComponentName component) {
+
+    private static ShortcutInfo findActivity(ArrayList<ShortcutInfo> apps, ComponentName component) {
     	if (component == null)
-    		return false;
+    		return null;
         final int N = apps.size();
         for (int i=0; i<N; i++) {
             final ShortcutInfo info = apps.get(i);
             ComponentName cn = info.intent.getComponent();
             if (component.equals(cn)) {
-                return true;
+                return info;
             }
         }
-        return false;
+        return null;
+    }
+
+    /**
+     * Returns whether <em>apps</em> contains <em>component</em>.
+     */
+    private static boolean containsActivity(ArrayList<ShortcutInfo> apps, ComponentName component) {
+    	return findActivity(apps, component) != null;
     }
 }

@@ -175,6 +175,7 @@ public class AppDBProvider extends ContentProvider {
 					AppDB.AppInfos.ID + " INTEGER PRIMARY KEY," +
 					AppDB.AppInfos.COMPONENT_NAME + " TEXT," +
 					AppDB.AppInfos.TITLE + " TEXT," +
+					AppDB.AppInfos.LOCALE + " TEXT," +
 					AppDB.AppInfos.ICON + " BLOB," +
 					AppDB.AppInfos.LAUNCH_COUNT + " INTEGER," +
 					AppDB.AppInfos.LAST_LAUNCHED + " INTEGER" +
