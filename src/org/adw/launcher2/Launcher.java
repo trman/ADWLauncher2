@@ -2393,16 +2393,15 @@ public final class Launcher extends Activity
         //setContentView(R.layout.launcher);
         //setupViews();
         //mModel.startLoader(this, false);
+        mAppWidgetHost.stopListening();
         for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
             final int appWidgetId = w.appWidgetId;
             final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
             if(!mWorkspace.isWidgetScrollable(appWidgetId)){
                 //AppWidgetProviderInfo p=w.hostView.getAppWidgetInfo();
                 CellLayout screen= (CellLayout) workspace.getChildAt(w.screen);
-                screen.removeView(w.hostView);
+                screen.removeViewInLayout(w.hostView);
                 w.unbind();
-                setLoadOnResume();
-
                 w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
 
                 w.hostView.setAppWidget(appWidgetId, appWidgetInfo);
@@ -2410,10 +2409,10 @@ public final class Launcher extends Activity
 
                 workspace.addInScreen(w.hostView, w.screen, w.cellX,
                         w.cellY, w.spanX, w.spanY, false);
-
-                workspace.requestLayout();
             }
         }
+        mAppWidgetHost.startListening();
+        workspace.requestLayout();
         workspace.postDelayed(new Runnable() {
             @Override
             public void run() {
