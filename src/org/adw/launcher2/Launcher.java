@@ -601,14 +601,6 @@ public final class Launcher extends Activity
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig)
-    {
-    	checkForLocaleChange();
-
-    	super.onConfigurationChanged(newConfig);
-    }
-
-    @Override
     public Object onRetainNonConfigurationInstance() {
         // Flag the loader to stop early before switching
         mModel.stopLoader();
@@ -2363,6 +2355,7 @@ public final class Launcher extends Activity
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+
         final int currScreen=mWorkspace.getCurrentScreen();
         checkForLocaleChange();
         setWallpaperDimension();
