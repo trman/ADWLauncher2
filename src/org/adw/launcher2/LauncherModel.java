@@ -36,7 +36,6 @@ import android.content.Intent;
 import android.content.Intent.ShortcutIconResource;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
-import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -1145,8 +1144,8 @@ public class LauncherModel extends BroadcastReceiver {
      * This is called from the code that adds shortcuts from the intent receiver.  This
      * doesn't have a Cursor, but
      */
-    public ShortcutInfo getShortcutInfo(PackageManager manager, Intent intent, Context context) {
-        return getShortcutInfo(manager, intent, context, null, -1, -1);
+    public ShortcutInfo getShortcutInfo(Intent intent, Context context) {
+        return getShortcutInfo(intent, context, null, -1, -1);
     }
 
     /**
@@ -1154,7 +1153,7 @@ public class LauncherModel extends BroadcastReceiver {
      *
      * If c is not null, then it will be used to fill in missing data like the title and icon.
      */
-    public ShortcutInfo getShortcutInfo(PackageManager manager, Intent intent, Context context,
+    public ShortcutInfo getShortcutInfo(Intent intent, Context context,
             Cursor c, int iconIndex, int titleIndex) {
         final ShortcutInfo info = new ShortcutInfo();
 
@@ -1170,23 +1169,12 @@ public class LauncherModel extends BroadcastReceiver {
         // but don't worry about that.  All we're doing with usingFallbackIcon is
         // to avoid saving lots of copies of that in the database, and most apps
         // have icons anyway.
-        final ResolveInfo resolveInfo = manager.resolveActivity(intent, 0);
 
         info.setIcon(getIconFromCursor(c, iconIndex));
 
-        // from the resource
-        if (resolveInfo != null) {
-            info.title = resolveInfo.activityInfo.loadLabel(manager);
-        }
         // from the db
-        if (info.title == null) {
-            if (c != null) {
-                info.title =  c.getString(titleIndex);
-            }
-        }
-        // fall back to the class name of the activity
-        if (info.title == null) {
-            info.title = componentName.getClassName();
+        if (c != null) {
+            info.setTitle(c.getString(titleIndex));
         }
         info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
         return info;
@@ -1200,7 +1188,7 @@ public class LauncherModel extends BroadcastReceiver {
         final ShortcutInfo info = new ShortcutInfo();
         info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
 
-        info.title = c.getString(titleIndex);
+        info.setTitle(c.getString(titleIndex));
         info.setIcon(getIconFromCursor(c, iconIndex));
         return info;
     }
@@ -1254,7 +1242,7 @@ public class LauncherModel extends BroadcastReceiver {
 
         info.setIcon(icon);
 
-        info.title = name;
+        info.setTitle(name);
         info.intent = intent;
 
         return info;
@@ -1321,11 +1309,14 @@ public class LauncherModel extends BroadcastReceiver {
     }
 
     private static final Collator sCollator = Collator.getInstance();
-    public static final Comparator<ShortcutInfo> APP_NAME_COMPARATOR
-            = new Comparator<ShortcutInfo>() {
-        public final int compare(ShortcutInfo a, ShortcutInfo b) {
-            return sCollator.compare(a.title.toString(), b.title.toString());
-        }
-    };
+    public static Comparator<ShortcutInfo> getAppNameComperator(IconCache iconCache)
+    {
+    	final IconCache myIconCache = iconCache;
+    	return new Comparator<ShortcutInfo>() {
+    		public final int compare(ShortcutInfo a, ShortcutInfo b) {
+    			return sCollator.compare(a.getTitle(myIconCache), b.getTitle(myIconCache));
+    		}
+    	};
+    }
 
 }

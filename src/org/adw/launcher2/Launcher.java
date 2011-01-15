@@ -852,7 +852,7 @@ public final class Launcher extends Activity
         favorite.setCompoundDrawablesWithIntrinsicBounds(null,
                 new FastBitmapDrawable(info.getIcon(mIconCache)),
                 null, null);
-        favorite.setText(info.title);
+        favorite.setText(info.getTitle(mIconCache));
         favorite.setTag(info);
         favorite.setOnClickListener(this);
 
@@ -869,8 +869,7 @@ public final class Launcher extends Activity
         cellInfo.screen = mWorkspace.getCurrentScreen();
         if (!findSingleSlot(cellInfo)) return;
 
-        final ShortcutInfo info = mModel.getShortcutInfo(context.getPackageManager(),
-                data, context);
+        final ShortcutInfo info = mModel.getShortcutInfo(data, context);
 
         if (info != null) {
             info.setActivity(data.getComponent(), Intent.FLAG_ACTIVITY_NEW_TASK |

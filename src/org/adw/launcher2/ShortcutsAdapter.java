@@ -49,7 +49,7 @@ public class ShortcutsAdapter  extends ArrayAdapter<ShortcutInfo> {
         final TextView textView = (TextView) convertView;
         textView.setCompoundDrawablesWithIntrinsicBounds(null,
                 new FastBitmapDrawable(info.getIcon(mIconCache)), null, null);
-        textView.setText(info.title);
+        textView.setText(info.getTitle(mIconCache));
 
         return convertView;
     }

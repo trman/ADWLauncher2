@@ -107,7 +107,7 @@ public class AllApps2D
             }
             icon.setDensity(Bitmap.DENSITY_NONE);
             textView.setCompoundDrawablesWithIntrinsicBounds(null, new BitmapDrawable(icon), null, null);
-            textView.setText(info.title);
+            textView.setText(info.getTitle(mLauncher.getIconCache()));
 
             return convertView;
         }
@@ -268,7 +268,7 @@ public class AllApps2D
         for (int i=0; i<N; i++) {
             final ShortcutInfo item = list.get(i);
             int index = Collections.binarySearch(mAllAppsList, item,
-                    LauncherModel.APP_NAME_COMPARATOR);
+                    LauncherModel.getAppNameComperator(mLauncher.getIconCache()));
             if (index < 0) {
                 index = -(index+1);
             }

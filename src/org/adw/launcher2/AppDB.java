@@ -390,9 +390,7 @@ public class AppDB extends BroadcastReceiver {
 				if (mIconCache != null)
 					mIconCache.addToCache(cname, title, icon);
 				if (title != null) {
-					ShortcutInfo info = new ShortcutInfo(
-							title,
-							cname);
+					ShortcutInfo info = new ShortcutInfo(cname);
 					result.add(info);
 				}
 				c.moveToNext();

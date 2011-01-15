@@ -125,6 +125,40 @@ public class IconCache {
         }
     }
 
+    public CharSequence getTitle(Intent intent) {
+        synchronized (mCache) {
+            ComponentName component = intent.getComponent();
+            if (component == null || !mCache.containsKey(component)) {
+            	final ResolveInfo resolveInfo = mPackageManager.resolveActivity(intent, 0);
+
+	            if (resolveInfo == null || component == null) {
+	                return component.getClassName();
+	            }
+
+	            CacheEntry entry = cacheLocked(component, resolveInfo);
+	            return entry.title;
+            } else {
+            	CacheEntry entry = mCache.get(component);
+	            return entry.title;
+            }
+        }
+    }
+
+    public CharSequence getTitle(ComponentName component, ResolveInfo resolveInfo) {
+        synchronized (mCache) {
+            if (component == null || !mCache.containsKey(component)) {
+	            if (resolveInfo == null || component == null) {
+	                return component.getClassName();
+	            }
+	            CacheEntry entry = cacheLocked(component, resolveInfo);
+	            return entry.title;
+            } else {
+            	CacheEntry entry = mCache.get(component);
+	            return entry.title;
+            }
+        }
+    }
+
     public boolean isDefaultIcon(Bitmap icon) {
         return mDefaultIcon == icon;
     }

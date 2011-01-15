@@ -1457,7 +1457,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                         	ShortcutInfo app = apps.get(k);
                         	ComponentName cname = app.intent.getComponent();
                             if (name.equals(cname)) {
-                                info.setIcon(mIconCache.getIcon(info.intent));
+                            	((TextView)view).setText(info.getTitle(mIconCache));
                                 ((TextView)view).setCompoundDrawablesWithIntrinsicBounds(null,
                                         new FastBitmapDrawable(info.getIcon(mIconCache)),
                                         null, null);

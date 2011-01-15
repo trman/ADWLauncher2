@@ -32,7 +32,7 @@ class ShortcutInfo extends ItemInfo {
     /**
      * The application name.
      */
-    CharSequence title;
+    private CharSequence mTitle;
 
     /**
      * The intent used to start the application.
@@ -50,14 +50,14 @@ class ShortcutInfo extends ItemInfo {
 
     public ShortcutInfo(ShortcutInfo info) {
         super(info);
-        title = info.title.toString();
+        mTitle = info.mTitle;
         intent = new Intent(info.intent);
         mIcon = info.mIcon; // TODO: should make a copy here.  maybe we don't need this ctor at all
     }
 
-    public ShortcutInfo(CharSequence title, ComponentName componentName) {
+    public ShortcutInfo(ComponentName componentName) {
     	this.container = ItemInfo.NO_ID;
-    	this.title = title;
+    	this.mTitle = null;
     	this.setActivity(componentName, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
     }
 
@@ -91,7 +91,7 @@ class ShortcutInfo extends ItemInfo {
     void onAddToDatabase(ContentValues values) {
         super.onAddToDatabase(values);
 
-        String titleStr = title != null ? title.toString() : null;
+        String titleStr = mTitle != null ? mTitle.toString() : null;
         values.put(LauncherSettings.BaseLauncherColumns.TITLE, titleStr);
 
         String uri = intent != null ? intent.toUri(0) : null;
@@ -109,7 +109,7 @@ class ShortcutInfo extends ItemInfo {
 
     @Override
     public String toString() {
-        return "ShortcutInfo(title=" + title.toString() + ")";
+        return "ShortcutInfo(title=" + mTitle + ")";
     }
 
     @Override
@@ -117,12 +117,21 @@ class ShortcutInfo extends ItemInfo {
         super.unbind();
     }
 
+    public CharSequence getTitle(IconCache mIconCache) {
+    	if (mTitle == null)
+    		return mIconCache.getTitle(this.intent);
+    	return mTitle;
+    }
+
+    public void setTitle(CharSequence value) {
+    	mTitle = value;
+    }
 
     public static void dumpShortcutInfoList(String tag, String label,
             ArrayList<ShortcutInfo> list) {
         Log.d(tag, label + " size=" + list.size());
         for (ShortcutInfo info: list) {
-            Log.d(tag, "   title=\"" + info.title + " icon=" + info.mIcon);
+            Log.d(tag, "   title=\"" + info.mTitle + " icon=" + info.mIcon);
         }
     }
 }

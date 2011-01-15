@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.ComponentName;
-import android.util.Log;
 
 
 /**
@@ -130,15 +129,11 @@ class AllAppsList {
     			if (name != null) {
     				ShortcutInfo oldEntry = findActivity(data, name);
     				if (oldEntry != null) {
-    					oldEntry.title = updated.title;
     					modified.add(oldEntry);
     				}
     			}
     		}
     	}
-
-    	Log.d("BOOMBULER", "should Update Icons here: " + changedItems.size());
-    	// maybe update icon / text of unchanged items here!
     }
 
 
