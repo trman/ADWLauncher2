@@ -2356,12 +2356,36 @@ public final class Launcher extends Activity
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        final int currScreen=mWorkspace.getCurrentScreen();
+        final Workspace workspace = mWorkspace;
+        final int currScreen=workspace.getCurrentScreen();
         checkForLocaleChange();
         setWallpaperDimension();
-        final int count=mWorkspace.getChildCount();
+        final int count=workspace.getChildCount();
+        //get icons properties
+        final Resources r=getResources();
+        final int margintop=r.getDimensionPixelSize(R.dimen.icon_layout_marginTop);
+        final int marginbottom=r.getDimensionPixelSize(R.dimen.icon_layout_marginBottom);
+        final int marginleft=r.getDimensionPixelSize(R.dimen.icon_layout_marginLeft);
+        final int marginright=r.getDimensionPixelSize(R.dimen.icon_layout_marginRight);
+        final int paddingtop=r.getDimensionPixelSize(R.dimen.icon_paddingTop);
+        final int paddingbottom=r.getDimensionPixelSize(R.dimen.icon_paddingBottom);
+        final int paddingleft=r.getDimensionPixelSize(R.dimen.icon_paddingLeft);
+        final int paddingright=r.getDimensionPixelSize(R.dimen.icon_paddingRight);
+        final int drawablePadding=r.getDimensionPixelSize(R.dimen.icon_drawablePadding);
+
         for(int i=0;i<count;i++){
-            CellLayout screen= (CellLayout) mWorkspace.getChildAt(i);
+            CellLayout screen= (CellLayout) workspace.getChildAt(i);
+            for(int j=0;j<screen.getChildCount();j++){
+                if(screen.getChildAt(j) instanceof BubbleTextView){
+                    final BubbleTextView v= (BubbleTextView) screen.getChildAt(j);
+                    CellLayout.LayoutParams lp= (CellLayout.LayoutParams) v.getLayoutParams();
+                    lp.topMargin=margintop;
+                    lp.bottomMargin=marginbottom;
+                    v.setLayoutParams(lp);
+                    v.setPadding(paddingleft,paddingtop,paddingright,paddingbottom);
+                    v.setCompoundDrawablePadding(drawablePadding);
+                }
+            }
             screen.reMeasure(this);
         }
         //setContentView(R.layout.launcher);
@@ -2372,13 +2396,10 @@ public final class Launcher extends Activity
             final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
             if(!mWorkspace.isWidgetScrollable(appWidgetId)){
                 //AppWidgetProviderInfo p=w.hostView.getAppWidgetInfo();
-                CellLayout screen= (CellLayout) mWorkspace.getChildAt(w.screen);
+                CellLayout screen= (CellLayout) workspace.getChildAt(w.screen);
                 screen.removeView(w.hostView);
                 w.unbind();
                 setLoadOnResume();
-
-                final Workspace workspace = mWorkspace;
-
 
                 w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
 
@@ -2391,11 +2412,10 @@ public final class Launcher extends Activity
                 workspace.requestLayout();
             }
         }
-
-        mWorkspace.postDelayed(new Runnable() {
+        workspace.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mWorkspace.snapToScreen(currScreen);
+                workspace.snapToScreen(currScreen);
             }
         },500);
     }
