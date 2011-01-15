@@ -2381,6 +2381,8 @@ public final class Launcher extends Activity
                     CellLayout.LayoutParams lp= (CellLayout.LayoutParams) v.getLayoutParams();
                     lp.topMargin=margintop;
                     lp.bottomMargin=marginbottom;
+                    lp.leftMargin=marginleft;
+                    lp.rightMargin=marginright;
                     v.setLayoutParams(lp);
                     v.setPadding(paddingleft,paddingtop,paddingright,paddingbottom);
                     v.setCompoundDrawablePadding(drawablePadding);
