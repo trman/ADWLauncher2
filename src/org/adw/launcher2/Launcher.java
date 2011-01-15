@@ -2298,8 +2298,14 @@ public final class Launcher extends Activity
             mSavedState = null;
         }
 
-        if (mSavedInstanceState != null) {
-            super.onRestoreInstanceState(mSavedInstanceState);
+    	if (mSavedInstanceState != null) {
+            //ADW: sometimes on rotating the phone,
+    		//     some widgets fail to restore its states.... so... damn.
+    		//     In more detail: The scrollable widget fail.
+    		//     Would be nice to have a good workaround here!
+            try{
+                super.onRestoreInstanceState(mSavedInstanceState);
+            }catch(Exception e){}
             mSavedInstanceState = null;
         }
 
