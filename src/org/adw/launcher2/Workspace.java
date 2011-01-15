@@ -506,7 +506,12 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 	protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         computeScroll();
-        mDragController.setWindowToken(getWindowToken());
+        //TODO: ADW check why this crashes after rotate
+        try{
+            mDragController.setWindowToken(getWindowToken());
+        }catch (NullPointerException e){
+            
+        }
     }
 
     @Override

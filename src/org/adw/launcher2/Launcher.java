@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import android.widget.*;
 import mobi.intuitit.android.content.LauncherIntent;
 import mobi.intuitit.android.content.LauncherMetadata;
 import android.app.Activity;
@@ -76,12 +77,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.TextView;
-import android.widget.Toast;
 
 
 /**
@@ -774,7 +769,6 @@ public final class Launcher extends Activity
         mPreviousView.setOnLongClickListener(this);
         mNextView.setHapticFeedbackEnabled(false);
         mNextView.setOnLongClickListener(this);
-
         workspace.setOnLongClickListener(this);
         workspace.setDragController(dragController);
         workspace.setLauncher(this);
@@ -2364,5 +2358,52 @@ public final class Launcher extends Activity
             mWorkspace.removeItems(apps);
         }
         mAllAppsGrid.removeApps(apps);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        final int currScreen=mWorkspace.getCurrentScreen();
+        checkForLocaleChange();
+        setWallpaperDimension();
+        final int count=mWorkspace.getChildCount();
+        for(int i=0;i<count;i++){
+            CellLayout screen= (CellLayout) mWorkspace.getChildAt(i);
+            screen.reMeasure(this);
+        }
+        //setContentView(R.layout.launcher);
+        //setupViews();
+        //mModel.startLoader(this, false);
+        for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
+            final int appWidgetId = w.appWidgetId;
+            final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
+            if(!mWorkspace.isWidgetScrollable(appWidgetId)){
+                //AppWidgetProviderInfo p=w.hostView.getAppWidgetInfo();
+                CellLayout screen= (CellLayout) mWorkspace.getChildAt(w.screen);
+                screen.removeView(w.hostView);
+                w.unbind();
+                setLoadOnResume();
+
+                final Workspace workspace = mWorkspace;
+
+
+                w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
+
+                w.hostView.setAppWidget(appWidgetId, appWidgetInfo);
+                w.hostView.setTag(w);
+
+                workspace.addInScreen(w.hostView, w.screen, w.cellX,
+                        w.cellY, w.spanX, w.spanY, false);
+
+                workspace.requestLayout();
+            }
+        }
+
+        mWorkspace.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mWorkspace.snapToScreen(currScreen);
+            }
+        },500);
     }
 }

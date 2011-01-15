@@ -35,14 +35,14 @@ import android.view.ViewGroup;
 public class CellLayout extends ViewGroup {
     private boolean mPortrait;
 
-    private final int mCellWidth;
-    private final int mCellHeight;
+    private int mCellWidth;
+    private int mCellHeight;
 
-    private final int mLongAxisStartPadding;
-    private final int mLongAxisEndPadding;
+    private int mLongAxisStartPadding;
+    private int mLongAxisEndPadding;
 
-    private final int mShortAxisStartPadding;
-    private final int mShortAxisEndPadding;
+    private int mShortAxisStartPadding;
+    private int mShortAxisEndPadding;
 
     private final int mShortAxisCells;
     private final int mLongAxisCells;
@@ -104,7 +104,15 @@ public class CellLayout extends ViewGroup {
 
         mWallpaperManager = WallpaperManager.getInstance(getContext());
     }
-
+    public void reMeasure(Context context){
+        mCellWidth = context.getResources().getDimensionPixelSize(R.dimen.workspace_cell_width);
+        mCellHeight = context.getResources().getDimensionPixelSize(R.dimen.workspace_cell_height);
+        //mLongAxisStartPadding =65;
+        //mLongAxisEndPadding =65;
+        //mShortAxisStartPadding =0;
+        //mShortAxisEndPadding =0;
+        requestLayout();
+    }
     @Override
     public void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
@@ -469,7 +477,6 @@ public class CellLayout extends ViewGroup {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // TODO: currently ignoring padding
-
         int widthSpecMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSpecSize =  MeasureSpec.getSize(widthMeasureSpec);
 
