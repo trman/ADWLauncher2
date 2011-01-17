@@ -38,11 +38,11 @@ public class CellLayout extends ViewGroup {
     private int mCellWidth;
     private int mCellHeight;
 
-    private int mLongAxisStartPadding;
-    private int mLongAxisEndPadding;
+    private final int mLongAxisStartPadding;
+    private final int mLongAxisEndPadding;
 
-    private int mShortAxisStartPadding;
-    private int mShortAxisEndPadding;
+    private final int mShortAxisStartPadding;
+    private final int mShortAxisEndPadding;
 
     private final int mShortAxisCells;
     private final int mLongAxisCells;
@@ -911,7 +911,7 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
         }
 
         public LayoutParams(int cellX, int cellY, int cellHSpan, int cellVSpan) {
-            super(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+            super(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
             this.cellX = cellX;
             this.cellY = cellY;
             this.cellHSpan = cellHSpan;

@@ -18,12 +18,14 @@ package org.adw.launcher2;
 
 import android.app.Application;
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.os.Handler;
 
 public class LauncherApplication extends Application {
+	private static final String ACTION_EXTERNAL_APPLICATIONS_AVAILABLE = "android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE";
+	private static final String ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE = "android.intent.action.EXTERNAL_APPLICATIONS_UNAVAILABLE";
+
 	private LauncherModel mModel;
 	private IconCache mIconCache;
     private AppDB mAppDB;
@@ -42,8 +44,8 @@ public class LauncherApplication extends Application {
         IntentFilter filter = new IntentFilter(AppDB.INTENT_DB_CHANGED);
         registerReceiver(mModel, filter);
         filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
-        filter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
+        filter.addAction(ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
+        filter.addAction(ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
         registerReceiver(mModel, filter);
 
         // Register for changes to the favorites

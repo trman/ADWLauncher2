@@ -1784,6 +1784,7 @@ public final class Launcher extends Activity
         return super.onCreateDialog(id);
     }
 
+
     @Override
     protected void onPrepareDialog(int id, Dialog dialog) {
         switch (id) {
@@ -1812,6 +1813,7 @@ public final class Launcher extends Activity
         showDialog(DIALOG_CREATE_SHORTCUT);
     }
 
+
     private void pickShortcut() {
         Bundle bundle = new Bundle();
 
@@ -1836,6 +1838,7 @@ public final class Launcher extends Activity
         private EditText mInput;
 
         Dialog createDialog() {
+        	mWaitingForResult = true;
             final View layout = View.inflate(Launcher.this, R.layout.rename_folder, null);
             mInput = (EditText) layout.findViewById(R.id.folder_name);
 
@@ -1865,15 +1868,6 @@ public final class Launcher extends Activity
             builder.setView(layout);
 
             final AlertDialog dialog = builder.create();
-            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                public void onShow(DialogInterface dialog) {
-                    mWaitingForResult = true;
-                    mInput.requestFocus();
-                    InputMethodManager inputManager = (InputMethodManager)
-                            getSystemService(Context.INPUT_METHOD_SERVICE);
-                    inputManager.showSoftInput(mInput, 0);
-                }
-            });
 
             return dialog;
         }
@@ -1995,12 +1989,12 @@ public final class Launcher extends Activity
      * appropriate activity.
      */
     private class CreateShortcut implements DialogInterface.OnClickListener,
-            DialogInterface.OnCancelListener, DialogInterface.OnDismissListener,
-            DialogInterface.OnShowListener {
+            DialogInterface.OnCancelListener, DialogInterface.OnDismissListener {
 
         private AddAdapter mAdapter;
 
         Dialog createDialog() {
+        	mWaitingForResult = true;
             mAdapter = new AddAdapter(Launcher.this);
 
             final AlertDialog.Builder builder = new AlertDialog.Builder(Launcher.this);
@@ -2012,7 +2006,6 @@ public final class Launcher extends Activity
             AlertDialog dialog = builder.create();
             dialog.setOnCancelListener(this);
             dialog.setOnDismissListener(this);
-            dialog.setOnShowListener(this);
 
             return dialog;
         }
@@ -2087,10 +2080,6 @@ public final class Launcher extends Activity
                     break;
                 }
             }
-        }
-
-        public void onShow(DialogInterface dialog) {
-            mWaitingForResult = true;
         }
     }
 

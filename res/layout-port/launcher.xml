@@ -19,16 +19,16 @@
     xmlns:launcher="http://schemas.android.com/apk/res/org.adw.launcher2"
 
     android:id="@+id/drag_layer"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
 
     <include layout="@layout/all_apps" />
 
     <!-- The workspace contains 3 screens of cells -->
     <org.adw.launcher2.Workspace
         android:id="@+id/workspace"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         launcher:defaultScreen="2">
 
         <include android:id="@+id/cell1" layout="@layout/workspace_screen" />

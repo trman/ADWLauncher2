@@ -682,35 +682,31 @@ public class LauncherProvider extends ContentProvider {
         private boolean addAppShortcut(SQLiteDatabase db, ContentValues values, TypedArray a,
                 PackageManager packageManager, Intent intent) {
 
-            ActivityInfo info;
+            ActivityInfo info = null;
             String packageName = a.getString(R.styleable.Favorite_packageName);
             String className = a.getString(R.styleable.Favorite_className);
+            ComponentName cn = null;
             try {
-                ComponentName cn;
-                try {
-                    cn = new ComponentName(packageName, className);
-                    info = packageManager.getActivityInfo(cn, 0);
-                } catch (PackageManager.NameNotFoundException nnfe) {
-                    String[] packages = packageManager.currentToCanonicalPackageNames(
-                        new String[] { packageName });
-                    cn = new ComponentName(packages[0], className);
-                    info = packageManager.getActivityInfo(cn, 0);
-                }
-
-                intent.setComponent(cn);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                        Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                values.put(Favorites.INTENT, intent.toUri(0));
-                values.put(Favorites.TITLE, info.loadLabel(packageManager).toString());
-                values.put(Favorites.ITEM_TYPE, Favorites.ITEM_TYPE_SHORTCUT);
-                values.put(Favorites.SPANX, 1);
-                values.put(Favorites.SPANY, 1);
-                db.insert(TABLE_FAVORITES, null, values);
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.w(TAG, "Unable to add favorite: " + packageName +
-                        "/" + className, e);
-                return false;
+                cn = new ComponentName(packageName, className);
+                info = packageManager.getActivityInfo(cn, 0);
+            } catch (PackageManager.NameNotFoundException nnfe) {
+                Log.e(TAG, "failed to add a shortcut!");
+                nnfe.printStackTrace();
             }
+
+            if (cn == null || info == null)
+            	return false;
+
+            intent.setComponent(cn);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+            values.put(Favorites.INTENT, intent.toUri(0));
+            values.put(Favorites.TITLE, info.loadLabel(packageManager).toString());
+            values.put(Favorites.ITEM_TYPE, Favorites.ITEM_TYPE_SHORTCUT);
+            values.put(Favorites.SPANX, 1);
+            values.put(Favorites.SPANY, 1);
+            db.insert(TABLE_FAVORITES, null, values);
+
             return true;
         }
 
@@ -751,14 +747,7 @@ public class LauncherProvider extends ContentProvider {
             try {
                 packageManager.getReceiverInfo(cn, 0);
             } catch (Exception e) {
-                String[] packages = packageManager.currentToCanonicalPackageNames(
-                        new String[] { packageName });
-                cn = new ComponentName(packages[0], className);
-                try {
-                    packageManager.getReceiverInfo(cn, 0);
-                } catch (Exception e1) {
-                    hasPackage = false;
-                }
+                hasPackage = false;
             }
 
             if (hasPackage) {

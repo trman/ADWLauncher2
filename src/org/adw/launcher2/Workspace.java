@@ -510,7 +510,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         try{
             mDragController.setWindowToken(getWindowToken());
         }catch (NullPointerException e){
-            
+
         }
     }
 
@@ -762,8 +762,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     }
 
     private void onSecondaryPointerUp(MotionEvent ev) {
-        final int pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
-                MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+        final int pointerIndex = ev.getAction() >> MotionEvent.ACTION_POINTER_ID_SHIFT;
         final int pointerId = ev.getPointerId(pointerIndex);
         if (pointerId == mActivePointerId) {
             // This was our active pointer going up. Choose a new
@@ -899,7 +898,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             if (mTouchState == TOUCH_STATE_SCROLLING) {
                 final VelocityTracker velocityTracker = mVelocityTracker;
                 velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
-                final int velocityX = (int) velocityTracker.getXVelocity(mActivePointerId);
+                final int velocityX = (int) velocityTracker.getXVelocity();
 
                 final int screenWidth = getWidth();
                 final int whichScreen = (getScrollX() + (screenWidth / 2)) / screenWidth;
