@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import android.widget.*;
 import mobi.intuitit.android.content.LauncherIntent;
 import mobi.intuitit.android.content.LauncherMetadata;
 import android.app.Activity;
@@ -77,6 +76,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.TextView;
+import android.widget.Toast;
 
 
 /**
@@ -933,6 +938,7 @@ public final class Launcher extends Activity
             mWorkspace.addInCurrentScreen(launcherInfo.hostView, xy[0], xy[1],
                     launcherInfo.spanX, launcherInfo.spanY, isWorkspaceLocked());
 
+            mModel.mAppWidgets.add(launcherInfo);
             // finish load a widget, send it an intent
             if(appWidgetInfo!=null)
             	appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
@@ -2381,6 +2387,7 @@ public final class Launcher extends Activity
         }
         //setContentView(R.layout.launcher);
         //setupViews();
+
         //mModel.startLoader(this, false);
         mAppWidgetHost.stopListening();
         for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
