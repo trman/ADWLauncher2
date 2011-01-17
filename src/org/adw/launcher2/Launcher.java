@@ -947,6 +947,7 @@ public final class Launcher extends Activity
 
     public void removeAppWidget(LauncherAppWidgetInfo launcherInfo) {
         mDesktopItems.remove(launcherInfo);
+        mModel.mAppWidgets.remove(launcherInfo);
         launcherInfo.hostView = null;
     }
 
