@@ -2355,11 +2355,10 @@ public final class Launcher extends Activity
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mWorkspaceLoading = true;
-        final Workspace workspace = mWorkspace;
-        final int currScreen=workspace.getCurrentScreen();
+        final int currScreen=mWorkspace.getCurrentScreen();
         checkForLocaleChange();
         setWallpaperDimension();
-        final int count=workspace.getChildCount();
+        final int count=mWorkspace.getChildCount();
         //get icons properties
         final Resources r=getResources();
         final int margintop=r.getDimensionPixelSize(R.dimen.icon_layout_marginTop);
@@ -2373,7 +2372,7 @@ public final class Launcher extends Activity
         final int drawablePadding=r.getDimensionPixelSize(R.dimen.icon_drawablePadding);
 
         for(int i=0;i<count;i++){
-            CellLayout screen= (CellLayout) workspace.getChildAt(i);
+            CellLayout screen= (CellLayout) mWorkspace.getChildAt(i);
             for(int j=0;j<screen.getChildCount();j++){
                 if(screen.getChildAt(j) instanceof BubbleTextView){
                     final BubbleTextView v= (BubbleTextView) screen.getChildAt(j);
@@ -2400,7 +2399,7 @@ public final class Launcher extends Activity
             if(mWorkspace.isWidgetScrollable(appWidgetId))
             	mWorkspace.unbindWidgetScrollableId(appWidgetId);
 
-            CellLayout screen= (CellLayout) workspace.getChildAt(w.screen);
+            CellLayout screen= (CellLayout) mWorkspace.getChildAt(w.screen);
             screen.removeViewInLayout(w.hostView);
             w.unbind();
             w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
@@ -2408,25 +2407,32 @@ public final class Launcher extends Activity
             w.hostView.setAppWidget(appWidgetId, appWidgetInfo);
             w.hostView.setTag(w);
 
-            workspace.addInScreen(w.hostView, w.screen, w.cellX,
+            mWorkspace.addInScreen(w.hostView, w.screen, w.cellX,
                     w.cellY, w.spanX, w.spanY, false);
         }
+
         mAppWidgetHost.startListening();
-        workspace.requestLayout();
-        workspace.postDelayed(new Runnable() {
+    	final Workspace workspace = mWorkspace;
+    	mWorkspace.setAfterLayoutListener(new Runnable() {
             @Override
             public void run() {
-                workspace.setCurrentScreen(currScreen);
-                for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
-                	if(w.hostView != null) {
-                		AppWidgetProviderInfo info = w.hostView.getAppWidgetInfo();
-                		if (info != null && info.provider != null) {
-                			appwidgetReadyBroadcast(w.appWidgetId, info.provider);
-                		}
-                	}
-                }
-                mWorkspaceLoading = false;
+            	if (!workspace.isLayoutRequested()) {
+	                workspace.setCurrentScreen(currScreen);
+	                for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
+	                	if(w.hostView != null) {
+	                		AppWidgetProviderInfo info = w.hostView.getAppWidgetInfo();
+	                		if (info != null && info.provider != null) {
+	                			appwidgetReadyBroadcast(w.appWidgetId, info.provider);
+	                		}
+	                	}
+	                }
+
+	                workspace.setAfterLayoutListener(null);
+	                mWorkspaceLoading = false;
+            	}
             }
-        },500);
+        });
+        workspace.requestLayout();
+
     }
 }

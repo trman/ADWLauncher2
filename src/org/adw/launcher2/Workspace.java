@@ -125,6 +125,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     private float mSmoothingTime;
     private float mTouchX;
 
+    private Runnable mAfterLayout = null;
+
     private WorkspaceOvershootInterpolator mScrollInterpolator;
 
     private static final float BASELINE_FLING_VELOCITY = 2500.f;
@@ -558,6 +560,13 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                 childLeft += childWidth;
             }
         }
+        if (mAfterLayout != null) {
+        	this.post(mAfterLayout);
+        }
+    }
+
+    public void setAfterLayoutListener(Runnable afterLayout) {
+    	mAfterLayout = afterLayout;
     }
 
     @Override

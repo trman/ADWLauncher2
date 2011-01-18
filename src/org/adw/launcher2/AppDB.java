@@ -20,7 +20,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 
 public class AppDB extends BroadcastReceiver {
 	private static final long INVALID_ID = -1;
@@ -403,8 +402,6 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	public void updateLocale(String newLocale) {
-		Log.d("BOOMBULER", "locale changed!");
-
 		ContentResolver resolver = mContext.getContentResolver();
 		PackageManager pm = mContext.getPackageManager();
 		// Query all infos with a different locale:

@@ -19,7 +19,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 public class AppDBProvider extends ContentProvider {
 	static final String AUTHORITY = "org.adw.launcher2.appdb";
@@ -30,7 +29,6 @@ public class AppDBProvider extends ContentProvider {
 	private static final int URI_APP_LAUNCHED = 0;
 
 	static {
-		Log.d("BOOMBULER", "adding launch matcher");
 		URI_MATCHER.addURI(AUTHORITY, "launched/*/*", URI_APP_LAUNCHED);
 	}
 
@@ -83,7 +81,6 @@ public class AppDBProvider extends ContentProvider {
 
 	private void DoBulkInsert(SQLiteDatabase db, String table, ContentValues[] values) {
         int numValues = values.length;
-        Log.d("BOOMBULER", "gonna insert:"+values.toString());
         for (int i = 0; i < numValues; i++) {
             if (db.insert(table, null, values[i]) < 0)
             	return;
@@ -103,8 +100,6 @@ public class AppDBProvider extends ContentProvider {
         switch (match) {
                 case URI_APP_LAUNCHED: {
                 	// App was launched.
-                	Log.d("BOOMBULER", "app was launched: "+ uri.toString());
-
                 	List<String> paths = uri.getPathSegments();
                 	if (paths.size() == 3) {
                 		String cPathName = paths.get(1) + "/" + paths.get(2);
@@ -185,7 +180,6 @@ public class AppDBProvider extends ContentProvider {
 			PackageManager packageManager = mContext.getPackageManager();
             final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
             mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-            Log.d("BOOMBULER", "empty db gonna fill it now!");
             DoBulkInsert(db, AppDB.APPINFOS,
             	AppDB.ResolveInfosToContentValues(mContext,
             		packageManager.queryIntentActivities(mainIntent, 0)));
