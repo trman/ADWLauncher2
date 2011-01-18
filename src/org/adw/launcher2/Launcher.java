@@ -946,6 +946,9 @@ public final class Launcher extends Activity
     }
 
     public void removeAppWidget(LauncherAppWidgetInfo launcherInfo) {
+    	int appWidgetId = launcherInfo.appWidgetId;
+        if(mWorkspace.isWidgetScrollable(appWidgetId))
+        	mWorkspace.unbindWidgetScrollableId(appWidgetId);
         mDesktopItems.remove(launcherInfo);
         mModel.mAppWidgets.remove(launcherInfo);
         launcherInfo.hostView = null;
@@ -2394,19 +2397,21 @@ public final class Launcher extends Activity
         for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
             final int appWidgetId = w.appWidgetId;
             final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
-            if(!mWorkspace.isWidgetScrollable(appWidgetId)){
-                //AppWidgetProviderInfo p=w.hostView.getAppWidgetInfo();
-                CellLayout screen= (CellLayout) workspace.getChildAt(w.screen);
-                screen.removeViewInLayout(w.hostView);
-                w.unbind();
-                w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
+            if(mWorkspace.isWidgetScrollable(appWidgetId))
+            	mWorkspace.unbindWidgetScrollableId(appWidgetId);
 
-                w.hostView.setAppWidget(appWidgetId, appWidgetInfo);
-                w.hostView.setTag(w);
+            CellLayout screen= (CellLayout) workspace.getChildAt(w.screen);
+            screen.removeViewInLayout(w.hostView);
+            w.unbind();
+            w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
 
-                workspace.addInScreen(w.hostView, w.screen, w.cellX,
-                        w.cellY, w.spanX, w.spanY, false);
-            }
+            w.hostView.setAppWidget(appWidgetId, appWidgetInfo);
+            w.hostView.setTag(w);
+
+            workspace.addInScreen(w.hostView, w.screen, w.cellX,
+                    w.cellY, w.spanX, w.spanY, false);
+            appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
+
         }
         mAppWidgetHost.startListening();
         workspace.requestLayout();

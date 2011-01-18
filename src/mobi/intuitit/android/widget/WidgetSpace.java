@@ -461,7 +461,10 @@ public abstract class WidgetSpace extends ViewGroup {
 
             String error = "unknow action";
             if (TextUtils.equals(action, LauncherIntent.Action.ACTION_SCROLL_WIDGET_START)) {
-                error = makeScrollable(context, intent, widgetView);
+            	// Drop the old stuff first!
+            	error = releaseScrollable(context, intent, widgetView);
+            	if (error == null)
+            		error = makeScrollable(context, intent, widgetView);
 
             } else if (TextUtils.equals(action,
                     LauncherIntent.Action.ACTION_SCROLL_WIDGET_SELECT_ITEM)) {
@@ -651,6 +654,8 @@ public abstract class WidgetSpace extends ViewGroup {
                         .getStringExtra(LauncherIntent.Extra.Scroll.EXTRA_DATA_URI);
                 ScrollViewInfos listViewInfos = mScrollViewCursorInfos.get(cursorDataUriString);
                 if (listViewInfos != null) {
+                	if (listViewInfos.lv != null)
+                		listViewInfos.lv.setAdapter(null);
                     listViewInfos.lv = null;
                     context.getContentResolver().unregisterContentObserver(listViewInfos.obs);
                     listViewInfos.obsHandler = null;
