@@ -2351,8 +2351,6 @@ public final class Launcher extends Activity
         mAllAppsGrid.removeApps(apps);
     }
 
-    private Thread mRotationThread = null;
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -2396,65 +2394,32 @@ public final class Launcher extends Activity
 
         //mModel.startLoader(this, false);
         mAppWidgetHost.stopListening();
-        if (mRotationThread != null) {
-        	try {
-        		mRotationThread.stop();
-        	}
-        	catch(SecurityException secexp){}
+        for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
+            final int appWidgetId = w.appWidgetId;
+            final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
+            if(mWorkspace.isWidgetScrollable(appWidgetId))
+            	mWorkspace.unbindWidgetScrollableId(appWidgetId);
+
+            CellLayout screen= (CellLayout) workspace.getChildAt(w.screen);
+            screen.removeViewInLayout(w.hostView);
+            w.unbind();
+            w.hostView = mAppWidgetHost.createView(this, appWidgetId, appWidgetInfo);
+
+            w.hostView.setAppWidget(appWidgetId, appWidgetInfo);
+            w.hostView.setTag(w);
+
+            workspace.addInScreen(w.hostView, w.screen, w.cellX,
+                    w.cellY, w.spanX, w.spanY, false);
+            appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
+
         }
-
-
-        mRotationThread = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				mWorkspaceLoading = true;
-		        for(LauncherAppWidgetInfo w:mModel.mAppWidgets) {
-		        	final LauncherAppWidgetInfo widgetInfo = w;
-		            final int appWidgetId = widgetInfo.appWidgetId;
-		            final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
-		            final CellLayout screen= (CellLayout) workspace.getChildAt(widgetInfo.screen);
-		            workspace.post(new Runnable() {
-			            @Override
-			            public void run() {
-				            if(mWorkspace.isWidgetScrollable(appWidgetId))
-				            	mWorkspace.unbindWidgetScrollableId(appWidgetId);
-				            screen.removeViewInLayout(widgetInfo.hostView);
-			            }
-			        });
-
-
-
-		            widgetInfo.unbind();
-		            widgetInfo.hostView = mAppWidgetHost.createView(Launcher.this, appWidgetId, appWidgetInfo);
-
-		            widgetInfo.hostView.setAppWidget(appWidgetId, appWidgetInfo);
-		            widgetInfo.hostView.setTag(w);
-
-		            workspace.post(new Runnable() {
-			            @Override
-			            public void run() {
-				            workspace.addInScreen(widgetInfo.hostView,  widgetInfo.screen,
-				            		widgetInfo.cellX, widgetInfo.cellY,
-				            		widgetInfo.spanX, widgetInfo.spanY, false);
-			            }
-			        });
-		            appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
-
-		        }
-		        mAppWidgetHost.startListening();
-
-		        workspace.postDelayed(new Runnable() {
-		            @Override
-		            public void run() {
-		            	workspace.requestLayout();
-		            	mWorkspaceLoading = false;
-		                workspace.snapToScreen(currScreen);
-		            }
-		        }, 500);
-
-			}
-        }, "rotationThread");
-        mRotationThread.start();
+        mAppWidgetHost.startListening();
+        workspace.requestLayout();
+        workspace.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                workspace.snapToScreen(currScreen);
+            }
+        },500);
     }
 }
