@@ -2354,7 +2354,7 @@ public final class Launcher extends Activity
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
+        mWorkspaceLoading = true;
         final Workspace workspace = mWorkspace;
         final int currScreen=workspace.getCurrentScreen();
         checkForLocaleChange();
@@ -2410,15 +2410,22 @@ public final class Launcher extends Activity
 
             workspace.addInScreen(w.hostView, w.screen, w.cellX,
                     w.cellY, w.spanX, w.spanY, false);
-            appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
-
         }
         mAppWidgetHost.startListening();
         workspace.requestLayout();
         workspace.postDelayed(new Runnable() {
             @Override
             public void run() {
-                workspace.snapToScreen(currScreen);
+                workspace.setCurrentScreen(currScreen);
+                for(LauncherAppWidgetInfo w:mModel.mAppWidgets){
+                	if(w.hostView != null) {
+                		AppWidgetProviderInfo info = w.hostView.getAppWidgetInfo();
+                		if (info != null && info.provider != null) {
+                			appwidgetReadyBroadcast(w.appWidgetId, info.provider);
+                		}
+                	}
+                }
+                mWorkspaceLoading = false;
             }
         },500);
     }
