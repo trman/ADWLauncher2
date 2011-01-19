@@ -1028,7 +1028,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         mDragInfo.screen = mCurrentScreen;
 
         CellLayout current = ((CellLayout) getChildAt(mCurrentScreen));
-
+        final ItemInfo info = (ItemInfo)child.getTag();
+        mLauncher.showActions(info, child);
         current.onDragChild(child);
         mDragController.startDrag(child, this, child.getTag(), DragController.DRAG_ACTION_MOVE);
         invalidate();

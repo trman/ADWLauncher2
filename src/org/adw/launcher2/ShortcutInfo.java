@@ -17,17 +17,19 @@
 package org.adw.launcher2;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.view.View;
 
 /**
  * Represents a launchable icon on the workspaces and in folders.
  */
-class ShortcutInfo extends ItemInfo {
+class ShortcutInfo extends ItemInfo implements EditableWorkspaceIcon {
 
     /**
      * The application name.
@@ -134,5 +136,37 @@ class ShortcutInfo extends ItemInfo {
             Log.d(tag, "   title=\"" + info.mTitle + " icon=" + info.mIcon);
         }
     }
+
+    private static final int ACTION_DELETE = 1;
+    private static final int ACTION_UNINSTALL = 2;
+
+	@Override
+	public void executeAction(EditAction action, View view, Launcher launcher) {
+		switch(action.getId()) {
+			case ACTION_DELETE: {
+				launcher.removeDesktopItem(this);
+				LauncherModel.deleteItemFromDatabase(launcher, this);
+			} break;
+			case ACTION_UNINSTALL: {
+				launcher.UninstallPackage(launcher.getPackageNameFromIntent(intent));
+			}
+		}
+
+	}
+
+	@Override
+	public List<EditAction> getAvailableActions(View view) {
+		List<EditAction> result = new ArrayList<EditAction>(1);
+		result.add(new EditAction(ACTION_DELETE,
+				android.R.drawable.ic_menu_delete,
+				R.string.menu_delete
+		));
+		result.add(new EditAction(ACTION_UNINSTALL,
+				android.R.drawable.ic_menu_manage,
+				R.string.menu_uninstall
+		));
+
+		return result;
+	}
 }
 

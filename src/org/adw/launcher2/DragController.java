@@ -33,6 +33,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
+import com.devoteam.quickaction.QuickActionWindow;
+
 
 /**
  * Class for initiating a drag within a view or across multiple views.
@@ -45,6 +47,8 @@ public class DragController {
 
     /** Indicates the drag is a copy.  */
     public static int DRAG_ACTION_COPY = 1;
+
+    private static final int QA_HIDE_OFFSET = 20;
 
     private static final int SCROLL_DELAY = 600;
     private static final int VIBRATE_DURATION = 35;
@@ -120,6 +124,8 @@ public class DragController {
     private RectF mDeleteRegion;
     private DropTarget mLastDropTarget;
 
+    private Object mTagPopup;
+
     private InputMethodManager mInputMethodManager;
 
     /**
@@ -166,7 +172,7 @@ public class DragController {
      */
     public void startDrag(View v, DragSource source, Object dragInfo, int dragAction) {
         mOriginator = v;
-
+        mTagPopup=v.getTag(R.id.TAG_PREVIEW);
         Bitmap b = getViewBitmap(v);
 
         if (b == null) {
@@ -413,8 +419,18 @@ public class DragController {
                         (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
                 }
             }
-            mLastDropTarget = dropTarget;
 
+            mLastDropTarget = dropTarget;
+            if(mTagPopup!=null){
+            	final float movX = Math.abs(screenX-mMotionDownX);
+            	final float movY = Math.abs(screenY-mMotionDownY);
+
+                if(movX>QA_HIDE_OFFSET || movY>QA_HIDE_OFFSET){
+                    final QuickActionWindow qa=(QuickActionWindow) mTagPopup;
+                    qa.dismiss();
+                    mTagPopup=null;
+                }
+            }
             // Scroll, maybe, but not if we're in the delete region.
             boolean inDeleteRegion = false;
             if (mDeleteRegion != null) {

@@ -27,6 +27,9 @@ import java.util.List;
 
 import mobi.intuitit.android.content.LauncherIntent;
 import mobi.intuitit.android.content.LauncherMetadata;
+
+import org.adw.launcher2.EditableWorkspaceIcon.EditAction;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -74,6 +77,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -82,6 +86,8 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.devoteam.quickaction.QuickActionWindow;
 
 
 /**
@@ -366,6 +372,10 @@ public final class Launcher extends Activity
 
     public IconCache getIconCache() {
     	return mIconCache;
+    }
+
+    public LauncherModel getModel() {
+    	return mModel;
     }
 
     static int getScreen() {
@@ -891,6 +901,47 @@ public final class Launcher extends Activity
         }
     }
 
+    /**
+     * Remove an item from the desktop
+     * @param info
+     */
+    void removeDesktopItem(ItemInfo info) {
+    	if(info instanceof LauncherAppWidgetInfo)
+    		removeAppWidget((LauncherAppWidgetInfo)info);
+    	else
+    	{
+	        if(mDesktopItems!=null)
+	        	mDesktopItems.remove(info);
+	        View view = mWorkspace.getViewForTag(info);
+	        if (view != null)
+	        	((ViewGroup) view.getParent()).removeView(view);
+    	}
+    }
+
+    public String getPackageNameFromIntent(Intent intent) {
+		String pName = intent.getPackage();
+		if (pName == null) {
+			ComponentName cName = intent.getComponent();
+			if (cName != null)
+				pName = cName.getPackageName();
+		}
+
+		if (pName == null) {
+			PackageManager mgr = getPackageManager();
+            ResolveInfo res = mgr.resolveActivity(intent, 0);
+            if (res != null)
+            	pName = res.activityInfo.packageName;
+		}
+		return pName;
+    }
+
+    public boolean UninstallPackage(String aPackage) {
+    	 if (aPackage == null || this.getClass().getPackage().getName().equals(aPackage))
+             return false;
+    	 Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, Uri.parse("package:"+aPackage));
+         startActivity(uninstallIntent);
+         return true;
+    }
 
     /**
      * Add a widget to the workspace.
@@ -2349,6 +2400,42 @@ public final class Launcher extends Activity
             mWorkspace.removeItems(apps);
         }
         mAllAppsGrid.removeApps(apps);
+    }
+
+    public void showActions(ItemInfo info, View view) {
+    	if (info == null || view == null|| !(info instanceof EditableWorkspaceIcon))
+    		return;
+
+    	final EditableWorkspaceIcon editInfos = (EditableWorkspaceIcon)info;
+    	List<EditAction> actions = editInfos.getAvailableActions(view);
+    	if (actions.size() <= 0)
+    		return;
+    	final View finalview = view;
+    	int[] xy = new int[2];
+        //fills the array with the computed coordinates
+        view.getLocationInWindow(xy);
+        //rectangle holding the clicked view area
+        Rect rect = new Rect(xy[0], xy[1], xy[0]+view.getWidth(), xy[1]+view.getHeight());
+
+        //a new QuickActionWindow object
+        final QuickActionWindow qa = new QuickActionWindow(this, view, rect);
+        view.setTag(org.adw.launcher2.R.id.TAG_PREVIEW, qa);
+
+        //adds an item to the badge and defines the quick action to be triggered
+        //when the item is clicked on
+        for(EditAction action : actions) {
+        	final EditAction finalaction = action;
+        	qa.addItem(getResources().getDrawable(action.getIconResourceId()),
+        		action.getTitleResourceId(), new OnClickListener() {
+	        		public void onClick(View v) {
+	        			editInfos.executeAction(finalaction, finalview, Launcher.this);
+	                    qa.dismiss();
+	        		}
+        		}
+        	);
+        }
+        //shows the quick action window on the screen
+        qa.show();
     }
 
     @Override

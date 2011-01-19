@@ -151,4 +151,12 @@
     <string name="default_browser_url" translatable="false">
         http://www.google.com/m?client=ms-{CID}&amp;source=android-home-hotseat</string>
 
+
+	<!-- ADW Added Strings -->
+	
+	<!-- QuickActions -->
+	<string name="menu_delete">Remove</string>
+	<string name="menu_uninstall">Uninstall</string>
+	
+
 </resources>
