@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.appwidget.AppWidgetHostView;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.ContentValues;
 import android.view.View;
 import android.view.ViewGroup;
@@ -66,8 +67,9 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
 
     private static final int ACTION_DELETE = 1;
     private static final int ACTION_RESIZE = 2;
+    private static final int ACTION_UNINSTALL = 3;
 
-    private static final int COUNT_ACTIONS = 2;
+    private static final int COUNT_ACTIONS = 3;
 
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -79,7 +81,13 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
 			} break;
 			case ACTION_RESIZE: {
 				launcher.editWidget(view);
-			}
+			} break;
+			case ACTION_UNINSTALL: {
+				AppWidgetProviderInfo info = hostView.getAppWidgetInfo();
+				if (info != null && info.provider != null) {
+					launcher.UninstallPackage(info.provider.getPackageName());
+				}
+			} break;
 		}
 	}
 
@@ -91,8 +99,12 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
 				R.string.menu_delete));
 
 		result.add(new EditAction(ACTION_RESIZE,
-				android.R.drawable.ic_menu_directions,
+				android.R.drawable.ic_menu_crop,
 				R.string.menu_resize));
+		result.add(new EditAction(ACTION_UNINSTALL,
+				android.R.drawable.ic_menu_manage,
+				R.string.menu_uninstall
+		));
 		return result;
 	}
 }
