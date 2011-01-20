@@ -156,7 +156,7 @@ class ShortcutInfo extends ItemInfo implements EditableWorkspaceIcon {
 
 	@Override
 	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = new ArrayList<EditAction>(1);
+		List<EditAction> result = new ArrayList<EditAction>(2);
 		result.add(new EditAction(ACTION_DELETE,
 				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete
