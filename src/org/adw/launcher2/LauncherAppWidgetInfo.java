@@ -16,20 +16,25 @@
 
 package org.adw.launcher2;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.appwidget.AppWidgetHostView;
 import android.content.ContentValues;
+import android.view.View;
+import android.view.ViewGroup;
 
 /**
  * Represents a widget, which just contains an identifier.
  */
-class LauncherAppWidgetInfo extends ItemInfo {
+class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
 
     /**
      * Identifier for this widget when talking with
      * {@link android.appwidget.AppWidgetManager} for updates.
      */
     int appWidgetId;
-    
+
     /**
      * View that holds this widget after it's been created.  This view isn't created
      * until Launcher knows it's needed.
@@ -40,7 +45,7 @@ class LauncherAppWidgetInfo extends ItemInfo {
         itemType = LauncherSettings.Favorites.ITEM_TYPE_APPWIDGET;
         this.appWidgetId = appWidgetId;
     }
-    
+
     @Override
     void onAddToDatabase(ContentValues values) {
         super.onAddToDatabase(values);
@@ -58,4 +63,27 @@ class LauncherAppWidgetInfo extends ItemInfo {
         super.unbind();
         hostView = null;
     }
+
+    private static final int ACTION_DELETE = 1;
+
+    private static final int COUNT_ACTIONS = 1;
+
+	@Override
+	public void executeAction(EditAction action, View view, Launcher launcher) {
+		switch(action.getId()) {
+			case ACTION_DELETE: {
+				((ViewGroup) hostView.getParent()).removeView(hostView);
+				launcher.removeAppWidget(this);
+				LauncherModel.deleteItemFromDatabase(launcher, this);
+			} break;
+		}
+	}
+
+	@Override
+	public List<EditAction> getAvailableActions(View view) {
+		List<EditAction> result = new ArrayList<EditAction>(COUNT_ACTIONS);
+		result.add(new EditAction(ACTION_DELETE, android.R.drawable.ic_menu_delete,
+				R.string.menu_delete));
+		return result;
+	}
 }

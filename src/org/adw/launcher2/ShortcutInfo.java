@@ -150,7 +150,7 @@ class ShortcutInfo extends ItemInfo implements EditableWorkspaceIcon {
 			} break;
 			case ACTION_UNINSTALL: {
 				launcher.UninstallPackage(launcher.getPackageNameFromIntent(intent));
-			}
+			} break;
 		}
 
 	}
