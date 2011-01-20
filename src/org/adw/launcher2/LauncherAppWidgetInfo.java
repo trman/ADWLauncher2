@@ -65,8 +65,9 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
     }
 
     private static final int ACTION_DELETE = 1;
+    private static final int ACTION_RESIZE = 2;
 
-    private static final int COUNT_ACTIONS = 1;
+    private static final int COUNT_ACTIONS = 2;
 
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -76,14 +77,22 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
 				launcher.removeAppWidget(this);
 				LauncherModel.deleteItemFromDatabase(launcher, this);
 			} break;
+			case ACTION_RESIZE: {
+				launcher.editWidget(view);
+			}
 		}
 	}
 
 	@Override
 	public List<EditAction> getAvailableActions(View view) {
 		List<EditAction> result = new ArrayList<EditAction>(COUNT_ACTIONS);
-		result.add(new EditAction(ACTION_DELETE, android.R.drawable.ic_menu_delete,
+		result.add(new EditAction(ACTION_DELETE,
+				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete));
+
+		result.add(new EditAction(ACTION_RESIZE,
+				android.R.drawable.ic_menu_directions,
+				R.string.menu_resize));
 		return result;
 	}
 }

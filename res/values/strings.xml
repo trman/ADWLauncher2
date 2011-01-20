@@ -157,6 +157,7 @@
 	<!-- QuickActions -->
 	<string name="menu_delete">Remove</string>
 	<string name="menu_uninstall">Uninstall</string>
+	<string name="menu_resize">Resize</string>
 	
 
 </resources>

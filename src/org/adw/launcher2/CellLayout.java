@@ -1100,6 +1100,10 @@ out:            for (int i = x; i < x + spanX - 1 && x < xCount; i++) {
     public boolean lastDownOnOccupiedCell() {
         return mLastDownOnOccupiedCell;
     }
+
+    protected int getScreen() {
+        return mCellInfo.screen;
+    }
 }
 
 

@@ -35,6 +35,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.SearchManager;
 import android.app.WallpaperManager;
+import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ActivityNotFoundException;
@@ -55,6 +56,7 @@ import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -191,6 +193,9 @@ public final class Launcher extends Activity
     private SpannableStringBuilder mDefaultKeySsb = null;
 
     private boolean mWorkspaceLoading = true;
+    private boolean mIsWidgetEditMode = false;
+    private ResizeViewHandler mScreensEditor=null;
+    private LauncherAppWidgetInfo mEditingAppWidget = null;
 
     private boolean mPaused = true;
     private boolean mRestoring;
@@ -203,6 +208,7 @@ public final class Launcher extends Activity
     private IconCache mIconCache;
     private AppDB mAppDB;
 
+    private DragLayer mDragLayer;
     private static LocaleConfiguration sLocaleConfiguration = null;
 
     private final ArrayList<ItemInfo> mDesktopItems = new ArrayList<ItemInfo>();
@@ -736,21 +742,21 @@ public final class Launcher extends Activity
     private void setupViews() {
         DragController dragController = mDragController;
 
-        DragLayer dragLayer = (DragLayer) findViewById(R.id.drag_layer);
-        dragLayer.setDragController(dragController);
+        mDragLayer = (DragLayer) findViewById(R.id.drag_layer);
+        mDragLayer.setDragController(dragController);
 
-        mAllAppsGrid = (AllAppsView)dragLayer.findViewById(R.id.all_apps_view);
+        mAllAppsGrid = (AllAppsView)mDragLayer.findViewById(R.id.all_apps_view);
         mAllAppsGrid.setLauncher(this);
         mAllAppsGrid.setDragController(dragController);
         ((View) mAllAppsGrid).setWillNotDraw(false); // We don't want a hole punched in our window.
         // Manage focusability manually since this thing is always visible
         ((View) mAllAppsGrid).setFocusable(false);
 
-        mWorkspace = (Workspace) dragLayer.findViewById(R.id.workspace);
+        mWorkspace = (Workspace) mDragLayer.findViewById(R.id.workspace);
         final Workspace workspace = mWorkspace;
         workspace.setHapticFeedbackEnabled(false);
 
-        DeleteZone deleteZone = (DeleteZone) dragLayer.findViewById(R.id.delete_zone);
+        DeleteZone deleteZone = (DeleteZone) mDragLayer.findViewById(R.id.delete_zone);
         mDeleteZone = deleteZone;
 
         mHandleView = (HandleView) findViewById(R.id.all_apps_button);
@@ -765,8 +771,8 @@ public final class Launcher extends Activity
         hotseatRight.setContentDescription(mHotseatLabels[1]);
         hotseatRight.setImageDrawable(mHotseatIcons[1]);
 
-        mPreviousView = (ImageView) dragLayer.findViewById(R.id.previous_screen);
-        mNextView = (ImageView) dragLayer.findViewById(R.id.next_screen);
+        mPreviousView = (ImageView) mDragLayer.findViewById(R.id.previous_screen);
+        mNextView = (ImageView) mDragLayer.findViewById(R.id.next_screen);
 
         Drawable previous = mPreviousView.getDrawable();
         Drawable next = mNextView.getDrawable();
@@ -786,7 +792,7 @@ public final class Launcher extends Activity
 
         dragController.setDragScoller(workspace);
         dragController.setDragListener(deleteZone);
-        dragController.setScrollView(dragLayer);
+        dragController.setScrollView(mDragLayer);
         dragController.setMoveTarget(workspace);
 
         // The order here is bottom to top.
@@ -1198,7 +1204,7 @@ public final class Launcher extends Activity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
-
+        if(mIsWidgetEditMode)return false;
         // If all apps is animating, don't show the menu, because we don't know
         // which one to show.
         if (mAllAppsGrid.isVisible() && !mAllAppsGrid.isOpaque()) {
@@ -1470,6 +1476,14 @@ public final class Launcher extends Activity
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_HOME:
                     return true;
+                case KeyEvent.KEYCODE_BACK: {
+                	if (!event.isCanceled()) {
+                        if(mIsWidgetEditMode){
+                            stopWidgetEdit();
+                        }
+                	}
+                	return true;
+                }
             }
         }
 
@@ -2520,6 +2534,134 @@ public final class Launcher extends Activity
             }
         });
         workspace.requestLayout();
-
     }
+
+
+    protected void editWidget(final View widget){
+        if(mWorkspace!=null){
+            mIsWidgetEditMode=true;
+            final CellLayout screen=(CellLayout) mWorkspace.getChildAt(mWorkspace.getCurrentScreen());
+            if(screen!=null){
+            	mEditingAppWidget = (LauncherAppWidgetInfo) widget.getTag();
+            	final long itemId = mEditingAppWidget.id;
+
+                final Intent motosize = new Intent("com.motorola.blur.home.ACTION_SET_WIDGET_SIZE");
+                final int appWidgetId = ((AppWidgetHostView)widget).getAppWidgetId();
+                final AppWidgetProviderInfo appWidgetInfo = mAppWidgetManager.getAppWidgetInfo(appWidgetId);
+                if(appWidgetInfo!=null){
+                    motosize.setComponent(appWidgetInfo.provider);
+                }
+                motosize.putExtra("appWidgetId",appWidgetId );
+                motosize.putExtra("com.motorola.blur.home.EXTRA_NEW_WIDGET", true);
+                final int minw=(mWorkspace.getWidth()-screen.getLeftPadding()-screen.getRightPadding())/screen.getCountX();
+                final int minh=(mWorkspace.getHeight()-screen.getBottomPadding()-screen.getTopPadding())/screen.getCountY();
+                mScreensEditor=new ResizeViewHandler(this);
+                // Create a default HightlightView if we found no face in the picture.
+                int width = (mEditingAppWidget.spanX*minw);
+                int height = (mEditingAppWidget.spanY*minh);
+
+                final Rect screenRect = new Rect(0, 0, mWorkspace.getWidth()-screen.getRightPadding(), mWorkspace.getHeight()-screen.getBottomPadding());
+                final int x=mEditingAppWidget.cellX*minw;
+                final int y=mEditingAppWidget.cellY*minh;
+                final int[]spans=new int[]{1,1};
+                final int[] position=new int[]{1,1};
+                final CellLayout.LayoutParams lp = (CellLayout.LayoutParams) widget.getLayoutParams();
+                RectF widgetRect = new RectF(x,y, x + width, y + height);
+                mScreensEditor.setup(null, screenRect, widgetRect, false,false,minw-10,minh-10);
+                mDragLayer.addView(mScreensEditor);
+                mScreensEditor.setOnValidateSizingRect(new ResizeViewHandler.OnSizeChangedListener() {
+
+					@Override
+					public void onTrigger(RectF r) {
+                        if(r!=null){
+                            final float left = Math.round(r.left/minw) * minw;
+                            final float top = Math.round(r.top/minh) * minh;
+                            final float right = left + (Math.max(Math.round(r.width()/(minw)),1) * minw);
+                            final float bottom = top + (Math.max(Math.round(r.height()/(minh)),1) * minh);
+
+                            r.set(left, top, right, bottom);
+                        }
+					}
+				});
+                final Rect checkRect=new Rect();
+                (mScreensEditor).setOnSizeChangedListener(new ResizeViewHandler.OnSizeChangedListener() {
+                    @Override
+                    public void onTrigger(RectF r) {
+                        int[]tmpspans={
+                                Math.max(Math.round(r.width()/(minw)),1),
+                                Math.max(Math.round(r.height()/(minh)),1)
+                        };
+                        int[] tmpposition={
+                                Math.round(r.left/minw),
+                                Math.round(r.top/minh)
+                        };
+                        checkRect.set(tmpposition[0],tmpposition[1],tmpposition[0]+tmpspans[0],tmpposition[1]+tmpspans[1]);
+                        boolean ocupada=ocuppiedArea(screen.getScreen(), itemId,checkRect);
+                        if(!ocupada){
+                            (mScreensEditor).setColliding(false);
+                        }else{
+                            (mScreensEditor).setColliding(true);
+                        }
+                        if(tmpposition[0]!=position[0] ||tmpposition[1]!=position[1]||
+                                        tmpspans[0]!=spans[0]||tmpspans[1]!=spans[1]){
+                            if(!ocupada){
+                                position[0]=tmpposition[0];
+                                position[1]=tmpposition[1];
+                                spans[0]=tmpspans[0];
+                                spans[1]=tmpspans[1];
+                                lp.cellX = position[0];
+                                lp.cellY = position[1];
+                                lp.cellHSpan = spans[0];
+                                lp.cellVSpan = spans[1];
+                                widget.setLayoutParams(lp);
+                                mEditingAppWidget.cellX=lp.cellX;
+                                mEditingAppWidget.cellY=lp.cellY;
+                                mEditingAppWidget.spanX=lp.cellHSpan;
+                                mEditingAppWidget.spanY=lp.cellVSpan;
+                                widget.setTag(mEditingAppWidget);
+                                //send the broadcast
+                                motosize.putExtra("spanX", spans[0]);
+                                motosize.putExtra("spanY", spans[1]);
+                                Launcher.this.sendBroadcast(motosize);
+                                Log.d("RESIZEHANDLER","sent resize broadcast");
+                            }
+                        }
+                    }
+                });
+            }
+        }
+	}
+	private void stopWidgetEdit(){
+	    mIsWidgetEditMode=false;
+	    if(mEditingAppWidget!=null){
+            LauncherModel.resizeItemInDatabase(this, mEditingAppWidget,
+                    LauncherSettings.Favorites.CONTAINER_DESKTOP,
+                    mEditingAppWidget.screen,
+                    mEditingAppWidget.cellX,
+                    mEditingAppWidget.cellY,
+                    mEditingAppWidget.spanX,
+                    mEditingAppWidget.spanY);
+            mEditingAppWidget=null;
+	    }
+	    //Remove the resizehandler view
+        if(mScreensEditor!=null){
+            mDragLayer.removeView(mScreensEditor);
+            mScreensEditor=null;
+        }
+	}
+
+    boolean ocuppiedArea(int screen,long ignoreItemId,Rect rect){
+        final ArrayList<ItemInfo>desktopItems= mDesktopItems;
+        Rect r=new Rect();
+        for (ItemInfo it : desktopItems) {
+            if(it.screen==screen && it.id != ignoreItemId){
+                r.set(it.cellX,it.cellY,it.cellX+it.spanX,it.cellY+it.spanY);
+                if(rect.intersect(r)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }
