@@ -18,23 +18,26 @@ package org.adw.launcher2;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.ContentValues;
 import android.graphics.Bitmap;
 import android.util.Log;
+import android.view.View;
 
 /**
  * Represents an item in the launcher.
  */
 class ItemInfo {
-    
+
     static final int NO_ID = -1;
-    
+
     /**
      * The id in the settings database for this item
      */
     long id = NO_ID;
-    
+
     /**
      * One of {@link LauncherSettings.Favorites#ITEM_TYPE_APPLICATION},
      * {@link LauncherSettings.Favorites#ITEM_TYPE_SHORTCUT},
@@ -42,20 +45,20 @@ class ItemInfo {
      * {@link LauncherSettings.Favorites#ITEM_TYPE_APPWIDGET}.
      */
     int itemType;
-    
+
     /**
-     * The id of the container that holds this item. For the desktop, this will be 
+     * The id of the container that holds this item. For the desktop, this will be
      * {@link LauncherSettings.Favorites#CONTAINER_DESKTOP}. For the all applications folder it
      * will be {@link #NO_ID} (since it is not stored in the settings DB). For user folders
      * it will be the id of the folder.
      */
     long container = NO_ID;
-    
+
     /**
      * Iindicates the screen in which the shortcut appears.
      */
     int screen = -1;
-    
+
     /**
      * Indicates the X position of the associated cell.
      */
@@ -97,10 +100,10 @@ class ItemInfo {
 
     /**
      * Write the fields of this item to the DB
-     * 
+     *
      * @param values
      */
-    void onAddToDatabase(ContentValues values) { 
+    void onAddToDatabase(ContentValues values) {
         values.put(LauncherSettings.BaseLauncherColumns.ITEM_TYPE, itemType);
         if (!isGesture) {
             values.put(LauncherSettings.Favorites.CONTAINER, container);
@@ -134,7 +137,7 @@ class ItemInfo {
             values.put(LauncherSettings.Favorites.ICON, data);
         }
     }
-    
+
     void unbind() {
     }
 
@@ -142,4 +145,41 @@ class ItemInfo {
     public String toString() {
         return "Item(id=" + this.id + " type=" + this.itemType + ")";
     }
+
+
+	class EditAction {
+		private final int mIcon;
+		private final int mTitle;
+		private final int mId;
+
+		public EditAction(int id, int icon, int title) {
+			mId = id;
+			mIcon = icon;
+			mTitle = title;
+		}
+
+		public int getIconResourceId() {
+			return mIcon;
+		}
+
+		public int getTitleResourceId() {
+			return mTitle;
+		}
+
+		public int getId() {
+			return mId;
+		}
+	}
+
+	public List<EditAction> getAvailableActions(View view) {
+		return new ArrayList<EditAction>();
+	}
+
+	public void executeAction(EditAction action, View view, Launcher launcher) {
+
+	}
+
+
+
+
 }

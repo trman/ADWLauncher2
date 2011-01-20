@@ -16,10 +16,13 @@
 
 package org.adw.launcher2;
 
+import java.util.List;
+
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.view.View;
 
 class LiveFolderInfo extends FolderInfo {
 
@@ -67,4 +70,26 @@ class LiveFolderInfo extends FolderInfo {
             values.put(LauncherSettings.Favorites.ICON_RESOURCE, iconResource.resourceName);
         }
     }
+
+    private static final int ACTION_UNINSTALL = 2;
+
+    @Override
+	public void executeAction(EditAction action, View view, Launcher launcher) {
+		switch(action.getId()) {
+			case ACTION_UNINSTALL: {
+				launcher.UninstallPackage(launcher.getPackageNameFromIntent(baseIntent));
+			} break;
+			default:
+				super.executeAction(action, view, launcher);
+		}
+	}
+
+	@Override
+	public List<EditAction> getAvailableActions(View view) {
+		List<EditAction> result = super.getAvailableActions(view);
+		result.add(new EditAction(ACTION_UNINSTALL,
+				android.R.drawable.ic_menu_manage,
+				R.string.menu_uninstall));
+		return result;
+	}
 }

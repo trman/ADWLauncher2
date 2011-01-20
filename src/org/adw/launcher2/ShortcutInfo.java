@@ -29,7 +29,7 @@ import android.view.View;
 /**
  * Represents a launchable icon on the workspaces and in folders.
  */
-class ShortcutInfo extends ItemInfo implements EditableWorkspaceIcon {
+class ShortcutInfo extends ItemInfo {
 
     /**
      * The application name.
@@ -139,7 +139,6 @@ class ShortcutInfo extends ItemInfo implements EditableWorkspaceIcon {
 
 	private static final int ACTION_DELETE = 1;
 	private static final int ACTION_UNINSTALL = 2;
-	private static final int COUNT_ACTIONS = 2;
 
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -152,12 +151,11 @@ class ShortcutInfo extends ItemInfo implements EditableWorkspaceIcon {
 				launcher.UninstallPackage(launcher.getPackageNameFromIntent(intent));
 			} break;
 		}
-
 	}
 
 	@Override
 	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = new ArrayList<EditAction>(COUNT_ACTIONS);
+		List<EditAction> result = super.getAvailableActions(view);
 		result.add(new EditAction(ACTION_DELETE,
 				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete

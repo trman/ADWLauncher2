@@ -16,7 +16,6 @@
 
 package org.adw.launcher2;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import android.appwidget.AppWidgetHostView;
@@ -28,7 +27,7 @@ import android.view.ViewGroup;
 /**
  * Represents a widget, which just contains an identifier.
  */
-class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
+class LauncherAppWidgetInfo extends ItemInfo {
 
     /**
      * Identifier for this widget when talking with
@@ -69,8 +68,6 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
     private static final int ACTION_RESIZE = 2;
     private static final int ACTION_UNINSTALL = 3;
 
-    private static final int COUNT_ACTIONS = 3;
-
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
 		switch(action.getId()) {
@@ -93,7 +90,7 @@ class LauncherAppWidgetInfo extends ItemInfo implements EditableWorkspaceIcon{
 
 	@Override
 	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = new ArrayList<EditAction>(COUNT_ACTIONS);
+		List<EditAction> result = super.getAvailableActions(view);
 		result.add(new EditAction(ACTION_DELETE,
 				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete));

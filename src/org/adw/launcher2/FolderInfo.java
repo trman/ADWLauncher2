@@ -16,12 +16,16 @@
 
 package org.adw.launcher2;
 
+import java.util.List;
+
+import android.view.View;
+
 
 /**
  * Represents a folder containing shortcuts or apps.
  */
 class FolderInfo extends ItemInfo {
-    
+
     /**
      * Whether this folder has been opened
      */
@@ -31,4 +35,25 @@ class FolderInfo extends ItemInfo {
      * The folder name.
      */
     CharSequence title;
+
+    private static final int ACTION_DELETE = 1;
+
+    @Override
+	public void executeAction(EditAction action, View view, Launcher launcher) {
+		switch(action.getId()) {
+			case ACTION_DELETE: {
+				launcher.removeDesktopItem(this);
+				LauncherModel.deleteItemFromDatabase(launcher, this);
+			} break;
+		}
+	}
+
+	@Override
+	public List<EditAction> getAvailableActions(View view) {
+		List<EditAction> result = super.getAvailableActions(view);
+		result.add(new EditAction(ACTION_DELETE,
+				android.R.drawable.ic_menu_delete,
+				R.string.menu_delete));
+		return result;
+	}
 }

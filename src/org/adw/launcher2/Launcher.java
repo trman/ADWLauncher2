@@ -28,7 +28,7 @@ import java.util.List;
 import mobi.intuitit.android.content.LauncherIntent;
 import mobi.intuitit.android.content.LauncherMetadata;
 
-import org.adw.launcher2.EditableWorkspaceIcon.EditAction;
+import org.adw.launcher2.ItemInfo.EditAction;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -2417,14 +2417,14 @@ public final class Launcher extends Activity
     }
 
     public void showActions(ItemInfo info, View view) {
-    	if (info == null || view == null|| !(info instanceof EditableWorkspaceIcon))
+    	if (info == null || view == null)
     		return;
 
-    	final EditableWorkspaceIcon editInfos = (EditableWorkspaceIcon)info;
-    	List<EditAction> actions = editInfos.getAvailableActions(view);
+    	List<EditAction> actions = info.getAvailableActions(view);
     	if (actions.size() <= 0)
     		return;
     	final View finalview = view;
+    	final ItemInfo finalInfo = info;
     	int[] xy = new int[2];
         //fills the array with the computed coordinates
         view.getLocationInWindow(xy);
@@ -2442,7 +2442,7 @@ public final class Launcher extends Activity
         	qa.addItem(getResources().getDrawable(action.getIconResourceId()),
         		action.getTitleResourceId(), new OnClickListener() {
 	        		public void onClick(View v) {
-	        			editInfos.executeAction(finalaction, finalview, Launcher.this);
+	        			finalInfo.executeAction(finalaction, finalview, Launcher.this);
 	                    qa.dismiss();
 	        		}
         		}
