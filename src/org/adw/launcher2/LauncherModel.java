@@ -279,6 +279,14 @@ public class LauncherModel extends BroadcastReceiver {
                 LauncherSettings.Favorites.CONTAINER + "=" + info.id, null);
     }
 
+    public ItemInfo getItemInfoById(long id) {
+    	for(ItemInfo ii : mItems) {
+    		if (ii.id == id)
+    			return ii;
+    	}
+    	return null;
+    }
+
     /**
      * Set this as the current Launcher activity object for the loader.
      */

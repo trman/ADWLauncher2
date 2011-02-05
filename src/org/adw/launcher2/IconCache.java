@@ -19,6 +19,7 @@ package org.adw.launcher2;
 import java.util.HashMap;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -39,12 +40,12 @@ public class IconCache {
     }
 
     private final Bitmap mDefaultIcon;
-    private final LauncherApplication mContext;
+    private final Context mContext;
     private final PackageManager mPackageManager;
     private final HashMap<ComponentName, CacheEntry> mCache =
             new HashMap<ComponentName, CacheEntry>(INITIAL_ICON_CACHE_CAPACITY);
 
-    public IconCache(LauncherApplication context) {
+    public IconCache(Context context) {
         mContext = context;
         mPackageManager = context.getPackageManager();
         mDefaultIcon = makeDefaultIcon();

@@ -38,9 +38,11 @@ public class AddAdapter extends BaseAdapter {
     private final ArrayList<ListItem> mItems = new ArrayList<ListItem>();
 
     public static final int ITEM_SHORTCUT = 0;
-    public static final int ITEM_APPWIDGET = 1;
-    public static final int ITEM_LIVE_FOLDER = 2;
-    public static final int ITEM_WALLPAPER = 3;
+    public static final int ITEM_ANYCUT = 1;
+    public static final int ITEM_APPWIDGET = 2;
+    public static final int ITEM_LIVE_FOLDER = 3;
+    public static final int ITEM_WALLPAPER = 4;
+
 
     /**
      * Specific item in our list.
@@ -71,6 +73,9 @@ public class AddAdapter extends BaseAdapter {
 
         mItems.add(new ListItem(res, R.string.group_shortcuts,
                 R.drawable.ic_launcher_shortcut, ITEM_SHORTCUT));
+
+        mItems.add(new ListItem(res, R.string.group_shortcuts,
+                R.drawable.ic_launcher_shortcut, ITEM_ANYCUT));
 
         mItems.add(new ListItem(res, R.string.group_widgets,
                 R.drawable.ic_launcher_appwidget, ITEM_APPWIDGET));

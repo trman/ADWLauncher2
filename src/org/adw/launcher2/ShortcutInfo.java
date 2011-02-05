@@ -139,6 +139,7 @@ class ShortcutInfo extends ItemInfo {
 
 	private static final int ACTION_DELETE = 1;
 	private static final int ACTION_UNINSTALL = 2;
+	private static final int ACTION_EDIT = 3;
 
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -146,6 +147,12 @@ class ShortcutInfo extends ItemInfo {
 			case ACTION_DELETE: {
 				launcher.removeDesktopItem(this);
 				LauncherModel.deleteItemFromDatabase(launcher, this);
+			} break;
+			case ACTION_EDIT: {
+				Intent edit = new Intent(Intent.ACTION_EDIT);
+				edit.setClass(launcher, CustomShirtcutActivity.class);
+				edit.putExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, id);
+				launcher.startActivityForResult(edit, Launcher.REQUEST_EDIT_SHIRTCUT);
 			} break;
 			case ACTION_UNINSTALL: {
 				launcher.UninstallPackage(launcher.getPackageNameFromIntent(intent));
@@ -160,6 +167,9 @@ class ShortcutInfo extends ItemInfo {
 				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete
 		));
+		result.add(new EditAction(ACTION_EDIT,
+				android.R.drawable.ic_menu_edit,
+				R.string.menu_edit));
 		result.add(new EditAction(ACTION_UNINSTALL,
 				android.R.drawable.ic_menu_manage,
 				R.string.menu_uninstall

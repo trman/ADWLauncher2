@@ -123,6 +123,8 @@ public final class Launcher extends Activity
     private static final int REQUEST_PICK_LIVE_FOLDER = 8;
     private static final int REQUEST_PICK_APPWIDGET = 9;
     private static final int REQUEST_PICK_WALLPAPER = 10;
+    private static final int REQUEST_PICK_ANYCUT=11;
+    static final int REQUEST_EDIT_SHIRTCUT = 12;
 
     static final String EXTRA_SHORTCUT_DUPLICATE = "duplicate";
 
@@ -564,6 +566,11 @@ public final class Launcher extends Activity
         // For example, the user would PICK_SHORTCUT for "Music playlist", and we
         // launch over to the Music app to actually CREATE_SHORTCUT.
 
+        if (resultCode == RESULT_OK && requestCode == REQUEST_EDIT_SHIRTCUT) {
+        	completeEditShirtcut(data);
+        	return;
+        }
+
         if (resultCode == RESULT_OK && mAddItemCellInfo != null) {
             switch (requestCode) {
                 case REQUEST_PICK_APPLICATION:
@@ -572,6 +579,7 @@ public final class Launcher extends Activity
                 case REQUEST_PICK_SHORTCUT:
                     processShortcut(data);
                     break;
+                case REQUEST_PICK_ANYCUT:
                 case REQUEST_CREATE_SHORTCUT:
                     completeAddShortcut(data, mAddItemCellInfo);
                     break;
@@ -630,6 +638,29 @@ public final class Launcher extends Activity
         mAllAppsGrid.surrender();
         return Boolean.TRUE;
     }
+
+    private void completeEditShirtcut(Intent data) {
+		if (!data.hasExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO))
+			return;
+		long appInfoId = data.getLongExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, 0);
+		ItemInfo ii = mModel.getItemInfoById(appInfoId);
+		if (ii != null && ii instanceof ShortcutInfo) {
+			ShortcutInfo info = (ShortcutInfo)ii;
+			Bitmap bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
+
+	        if (bitmap != null) {
+		        info.setIcon(bitmap);
+	        }
+            info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
+			info.setTitle(data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME));
+			info.intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
+			LauncherModel.updateItemInDatabase(this, info);
+			ArrayList<ShortcutInfo> updateLst = new ArrayList<ShortcutInfo>();
+			updateLst.add(info);
+
+			mWorkspace.updateShortcuts(updateLst);
+		}
+	}
 
     // We can't hide the IME if it was forced open.  So don't bother
     /*
@@ -2150,7 +2181,12 @@ public final class Launcher extends Activity
                     startActivityForResult(pickIntent, REQUEST_PICK_LIVE_FOLDER);
                     break;
                 }
-
+                case AddAdapter.ITEM_ANYCUT: {
+                	Intent anycutIntent=new Intent();
+                	anycutIntent.setClass(Launcher.this, CustomShirtcutActivity.class);
+                	startActivityForResult(anycutIntent, REQUEST_PICK_ANYCUT);
+                    break;
+                }
                 case AddAdapter.ITEM_WALLPAPER: {
                     startWallpaper();
                     break;

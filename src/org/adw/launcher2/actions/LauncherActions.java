@@ -55,7 +55,7 @@ public class LauncherActions {
 
 
 
-	Intent getIntentForAction(Action action) {
+	public Intent getIntentForAction(Action action) {
 		Intent result = new Intent(RunActionActivity.ACTION_LAUNCHERACTION);
 		result.setClass(mLauncher, RunActionActivity.class);
 		action.putIntentExtras(result);

@@ -101,7 +101,11 @@
         		<action android:name="org.adw.launcher2.ACTION_LAUNCHERACTION" />
         	</intent-filter>
         </activity>
-        	
+        
+		<activity 
+			android:name=".CustomShirtcutActivity"
+			android:theme="@android:style/Theme.Dialog"
+		/>
 
         <!-- Intent received used to install shortcuts from other applications -->
         <receiver
