@@ -152,6 +152,6 @@ public class Folder extends LinearLayout implements DragSource, OnItemLongClickL
 
     void bind(FolderInfo info) {
         mInfo = info;
-        mCloseButton.setText(info.title);
+        mCloseButton.setText(info.getTitle(mLauncher.getIconCache()));
     }
 }

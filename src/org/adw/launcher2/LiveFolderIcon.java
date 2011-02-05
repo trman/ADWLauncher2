@@ -33,23 +33,29 @@ public class LiveFolderIcon extends FolderIcon {
         super(context);
     }
 
+    public void update(LiveFolderInfo folderInfo) {
+    	final Resources resources = mLauncher.getResources();
+        Bitmap b = folderInfo.getIcon(mLauncher.getIconCache());
+        if (b == null || folderInfo.usesDefaultIcon()) {
+            b = Utilities.createIconBitmap(resources.getDrawable(R.drawable.ic_launcher_folder),
+            		mLauncher);
+        }
+        setCompoundDrawablesWithIntrinsicBounds(null, new FastBitmapDrawable(b), null, null);
+        setText(folderInfo.getTitle(mLauncher.getIconCache()));
+        setTag(folderInfo);
+        setOnClickListener(mLauncher);
+    }
+
     static LiveFolderIcon fromXml(int resId, Launcher launcher, ViewGroup group,
             LiveFolderInfo folderInfo) {
 
         LiveFolderIcon icon = (LiveFolderIcon)
                 LayoutInflater.from(launcher).inflate(resId, group, false);
-
-        final Resources resources = launcher.getResources();
-        Bitmap b = folderInfo.icon;
-        if (b == null) {
-            b = Utilities.createIconBitmap(resources.getDrawable(R.drawable.ic_launcher_folder),
-                    launcher);
-        }
-        icon.setCompoundDrawablesWithIntrinsicBounds(null, new FastBitmapDrawable(b), null, null);
-        icon.setText(folderInfo.title);
+        icon.mLauncher = launcher;
+    	launcher.getResources();
+    	icon.updateFromItemInfo(launcher.getIconCache(), folderInfo);
         icon.setTag(folderInfo);
         icon.setOnClickListener(launcher);
-
         return icon;
     }
 

@@ -201,7 +201,7 @@ public class LauncherModel extends BroadcastReceiver {
                         break;
                 }
 
-                folderInfo.title = c.getString(titleIndex);
+                folderInfo.setTitle(c.getString(titleIndex));
                 folderInfo.id = id;
                 folderInfo.container = c.getInt(containerIndex);
                 folderInfo.screen = c.getInt(screenIndex);
@@ -745,9 +745,9 @@ public class LauncherModel extends BroadcastReceiver {
                 final int iconTypeIndex = c.getColumnIndexOrThrow(
                         LauncherSettings.Favorites.ICON_TYPE);
                 final int iconIndex = c.getColumnIndexOrThrow(LauncherSettings.Favorites.ICON);
-                final int iconPackageIndex = c.getColumnIndexOrThrow(
+                c.getColumnIndexOrThrow(
                         LauncherSettings.Favorites.ICON_PACKAGE);
-                final int iconResourceIndex = c.getColumnIndexOrThrow(
+                c.getColumnIndexOrThrow(
                         LauncherSettings.Favorites.ICON_RESOURCE);
                 final int containerIndex = c.getColumnIndexOrThrow(
                         LauncherSettings.Favorites.CONTAINER);
@@ -832,7 +832,7 @@ public class LauncherModel extends BroadcastReceiver {
                             id = c.getLong(idIndex);
                             UserFolderInfo folderInfo = findOrMakeUserFolder(mFolders, id);
 
-                            folderInfo.title = c.getString(titleIndex);
+                            folderInfo.setTitle(c.getString(titleIndex));
 
                             folderInfo.id = id;
                             container = c.getInt(containerIndex);
@@ -879,7 +879,7 @@ public class LauncherModel extends BroadcastReceiver {
                                     }
                                 }
 
-                                liveFolderInfo.title = c.getString(titleIndex);
+                                liveFolderInfo.setTitle(c.getString(titleIndex));
                                 liveFolderInfo.id = id;
                                 liveFolderInfo.uri = uri;
                                 container = c.getInt(containerIndex);
@@ -895,8 +895,7 @@ public class LauncherModel extends BroadcastReceiver {
                                     break;
                                 }
 
-                                loadLiveFolderIcon(context, c, iconTypeIndex, iconPackageIndex,
-                                        iconResourceIndex, liveFolderInfo);
+                                loadLiveFolderIcon(context, c, iconTypeIndex, iconIndex, liveFolderInfo);
 
                                 switch (container) {
                                     case LauncherSettings.Favorites.CONTAINER_DESKTOP:
@@ -1201,7 +1200,7 @@ public class LauncherModel extends BroadcastReceiver {
         return info;
     }
 
-    Bitmap getIconFromCursor(Cursor c, int iconIndex) {
+    static Bitmap getIconFromCursor(Cursor c, int iconIndex) {
         byte[] data = c.getBlob(iconIndex);
         try {
             return BitmapFactory.decodeByteArray(data, 0, data.length);
@@ -1257,33 +1256,13 @@ public class LauncherModel extends BroadcastReceiver {
     }
 
     private static void loadLiveFolderIcon(Context context, Cursor c, int iconTypeIndex,
-            int iconPackageIndex, int iconResourceIndex, LiveFolderInfo liveFolderInfo) {
+            int iconBitmapIndex, LiveFolderInfo liveFolderInfo) {
 
         int iconType = c.getInt(iconTypeIndex);
-        switch (iconType) {
-        case LauncherSettings.Favorites.ICON_TYPE_RESOURCE:
-            String packageName = c.getString(iconPackageIndex);
-            String resourceName = c.getString(iconResourceIndex);
-            PackageManager packageManager = context.getPackageManager();
-            try {
-                Resources resources = packageManager.getResourcesForApplication(packageName);
-                final int id = resources.getIdentifier(resourceName, null, null);
-                liveFolderInfo.icon = Utilities.createIconBitmap(resources.getDrawable(id),
-                        context);
-            } catch (Exception e) {
-                liveFolderInfo.icon = Utilities.createIconBitmap(
-                        context.getResources().getDrawable(R.drawable.ic_launcher_folder),
-                        context);
-            }
-            liveFolderInfo.iconResource = new Intent.ShortcutIconResource();
-            liveFolderInfo.iconResource.packageName = packageName;
-            liveFolderInfo.iconResource.resourceName = resourceName;
-            break;
-        default:
-            liveFolderInfo.icon = Utilities.createIconBitmap(
-                    context.getResources().getDrawable(R.drawable.ic_launcher_folder),
-                    context);
-        }
+        if (iconType == LauncherSettings.Favorites.ICON_TYPE_BITMAP)
+            liveFolderInfo.setIcon(getIconFromCursor(c,iconBitmapIndex));
+        else
+        	liveFolderInfo.setIcon(null);
     }
 
     /**

@@ -51,6 +51,14 @@ public class IconCache {
         mDefaultIcon = makeDefaultIcon();
     }
 
+    public Bitmap getDefaultIcon() {
+    	return mDefaultIcon;
+    }
+
+    public Context getContext() {
+    	return mContext;
+    }
+
     private Bitmap makeDefaultIcon() {
         Drawable d = mPackageManager.getDefaultActivityIcon();
         Bitmap b = Bitmap.createBitmap(Math.max(d.getIntrinsicWidth(), 1),

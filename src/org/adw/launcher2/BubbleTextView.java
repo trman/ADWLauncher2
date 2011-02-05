@@ -59,6 +59,12 @@ public class BubbleTextView extends TextView {
         init();
     }
 
+    public void updateFromItemInfo(IconCache iCache, IconItemInfo info) {
+
+    	setCompoundDrawablesWithIntrinsicBounds(null, new FastBitmapDrawable(info.getIcon(iCache)), null, null);
+    	setText(info.getTitle(iCache));
+    }
+
     private void init() {
         setFocusable(true);
         mBackground = getBackground();

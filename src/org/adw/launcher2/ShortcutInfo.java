@@ -29,22 +29,11 @@ import android.view.View;
 /**
  * Represents a launchable icon on the workspaces and in folders.
  */
-class ShortcutInfo extends ItemInfo {
-
-    /**
-     * The application name.
-     */
-    private CharSequence mTitle;
-
+class ShortcutInfo extends IconItemInfo {
     /**
      * The intent used to start the application.
      */
     Intent intent;
-
-    /**
-     * The application icon.
-     */
-    private Bitmap mIcon = null;
 
     ShortcutInfo() {
         itemType = LauncherSettings.BaseLauncherColumns.ITEM_TYPE_SHORTCUT;
@@ -52,9 +41,7 @@ class ShortcutInfo extends ItemInfo {
 
     public ShortcutInfo(ShortcutInfo info) {
         super(info);
-        mTitle = info.mTitle;
         intent = new Intent(info.intent);
-        mIcon = info.mIcon; // TODO: should make a copy here.  maybe we don't need this ctor at all
     }
 
     public ShortcutInfo(ComponentName componentName) {
@@ -63,10 +50,7 @@ class ShortcutInfo extends ItemInfo {
     	this.setActivity(componentName, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
     }
 
-    public void setIcon(Bitmap b) {
-        mIcon = b;
-    }
-
+    @Override
     public Bitmap getIcon(IconCache iconCache) {
         if (mIcon == null) {
             return iconCache.getIcon(this.intent);
@@ -93,20 +77,8 @@ class ShortcutInfo extends ItemInfo {
     void onAddToDatabase(ContentValues values) {
         super.onAddToDatabase(values);
 
-        String titleStr = mTitle != null ? mTitle.toString() : null;
-        values.put(LauncherSettings.BaseLauncherColumns.TITLE, titleStr);
-
         String uri = intent != null ? intent.toUri(0) : null;
         values.put(LauncherSettings.BaseLauncherColumns.INTENT, uri);
-
-        if (mIcon == null)
-        	values.put(LauncherSettings.BaseLauncherColumns.ICON_TYPE,
-        			LauncherSettings.BaseLauncherColumns.ICON_TYPE_RESOURCE);
-        else {
-        	values.put(LauncherSettings.BaseLauncherColumns.ICON_TYPE,
-        			LauncherSettings.BaseLauncherColumns.ICON_TYPE_BITMAP);
-        	writeBitmap(values, mIcon);
-        }
     }
 
     @Override
@@ -119,14 +91,11 @@ class ShortcutInfo extends ItemInfo {
         super.unbind();
     }
 
-    public CharSequence getTitle(IconCache mIconCache) {
+    @Override
+	public CharSequence getTitle(IconCache mIconCache) {
     	if (mTitle == null)
     		return mIconCache.getTitle(this.intent);
     	return mTitle;
-    }
-
-    public void setTitle(CharSequence value) {
-    	mTitle = value;
     }
 
     public static void dumpShortcutInfoList(String tag, String label,
@@ -139,7 +108,7 @@ class ShortcutInfo extends ItemInfo {
 
 	private static final int ACTION_DELETE = 1;
 	private static final int ACTION_UNINSTALL = 2;
-	private static final int ACTION_EDIT = 3;
+
 
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -148,15 +117,10 @@ class ShortcutInfo extends ItemInfo {
 				launcher.removeDesktopItem(this);
 				LauncherModel.deleteItemFromDatabase(launcher, this);
 			} break;
-			case ACTION_EDIT: {
-				Intent edit = new Intent(Intent.ACTION_EDIT);
-				edit.setClass(launcher, CustomShirtcutActivity.class);
-				edit.putExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, id);
-				launcher.startActivityForResult(edit, Launcher.REQUEST_EDIT_SHIRTCUT);
-			} break;
 			case ACTION_UNINSTALL: {
 				launcher.UninstallPackage(launcher.getPackageNameFromIntent(intent));
 			} break;
+			default: super.executeAction(action, view, launcher);
 		}
 	}
 
@@ -167,9 +131,6 @@ class ShortcutInfo extends ItemInfo {
 				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete
 		));
-		result.add(new EditAction(ACTION_EDIT,
-				android.R.drawable.ic_menu_edit,
-				R.string.menu_edit));
 		result.add(new EditAction(ACTION_UNINSTALL,
 				android.R.drawable.ic_menu_manage,
 				R.string.menu_uninstall

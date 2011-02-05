@@ -16,8 +16,6 @@
 
 package org.adw.launcher2;
 
-import android.content.ContentValues;
-
 import java.util.ArrayList;
 
 /**
@@ -25,35 +23,29 @@ import java.util.ArrayList;
  */
 class UserFolderInfo extends FolderInfo {
     /**
-     * The apps and shortcuts 
+     * The apps and shortcuts
      */
     ArrayList<ShortcutInfo> contents = new ArrayList<ShortcutInfo>();
-    
+
     UserFolderInfo() {
         itemType = LauncherSettings.Favorites.ITEM_TYPE_USER_FOLDER;
     }
-    
+
     /**
      * Add an app or shortcut
-     * 
+     *
      * @param item
      */
     public void add(ShortcutInfo item) {
         contents.add(item);
     }
-    
+
     /**
      * Remove an app or shortcut. Does not change the DB.
-     * 
+     *
      * @param item
      */
     public void remove(ShortcutInfo item) {
         contents.remove(item);
-    }
-    
-    @Override
-    void onAddToDatabase(ContentValues values) { 
-        super.onAddToDatabase(values);
-        values.put(LauncherSettings.Favorites.TITLE, title.toString());
     }
 }

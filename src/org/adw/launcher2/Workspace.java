@@ -18,6 +18,7 @@ package org.adw.launcher2;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import mobi.intuitit.android.widget.WidgetSpace;
 import android.app.Activity;
@@ -1450,7 +1451,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         }
     }
 
-    void updateShortcuts(ArrayList<ShortcutInfo> apps) {
+    void updateShortcuts(List<ShortcutInfo> apps) {
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);
@@ -1468,8 +1469,10 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                     if (Intent.ACTION_MAIN.equals(intent.getAction()) && name != null) {
                         final int appCount = apps.size();
                         for (int k=0; k<appCount; k++) {
-                        	ShortcutInfo app = apps.get(k);
-                        	ComponentName cname = app.intent.getComponent();
+                        	IconItemInfo app = apps.get(k);
+                        	ComponentName cname = null;
+                        	if (app instanceof ShortcutInfo)
+                        		cname = ((ShortcutInfo)app).intent.getComponent();
                             if (name.equals(cname)) {
                             	((TextView)view).setText(info.getTitle(mIconCache));
                                 ((TextView)view).setCompoundDrawablesWithIntrinsicBounds(null,

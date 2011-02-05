@@ -644,21 +644,21 @@ public final class Launcher extends Activity
 			return;
 		long appInfoId = data.getLongExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, 0);
 		ItemInfo ii = mModel.getItemInfoById(appInfoId);
-		if (ii != null && ii instanceof ShortcutInfo) {
-			ShortcutInfo info = (ShortcutInfo)ii;
+		if (ii != null && ii instanceof IconItemInfo) {
+			IconItemInfo info = (IconItemInfo)ii;
 			Bitmap bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
 
 	        if (bitmap != null) {
 		        info.setIcon(bitmap);
 	        }
-            info.itemType = LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
 			info.setTitle(data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME));
-			info.intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
+			if (data.hasExtra(Intent.EXTRA_SHORTCUT_INTENT) && info instanceof ShortcutInfo)
+				((ShortcutInfo)info).intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
 			LauncherModel.updateItemInDatabase(this, info);
-			ArrayList<ShortcutInfo> updateLst = new ArrayList<ShortcutInfo>();
-			updateLst.add(info);
-
-			mWorkspace.updateShortcuts(updateLst);
+			// Need to update the icon here!
+			View v = mWorkspace.findViewWithTag(info);
+			if (v instanceof BubbleTextView)
+				((BubbleTextView)v).updateFromItemInfo(mIconCache, info);
 		}
 	}
 
@@ -1354,7 +1354,7 @@ public final class Launcher extends Activity
 
     void addFolder() {
         UserFolderInfo folderInfo = new UserFolderInfo();
-        folderInfo.title = getText(R.string.folder_name);
+        folderInfo.setTitle(getText(R.string.folder_name));
 
         CellLayout.CellInfo cellInfo = mAddItemCellInfo;
         cellInfo.screen = mWorkspace.getCurrentScreen();
@@ -1391,7 +1391,7 @@ public final class Launcher extends Activity
         }
     }
 
-    static LiveFolderInfo addLiveFolder(Context context, Intent data,
+    LiveFolderInfo addLiveFolder(Context context, Intent data,
             CellLayout.CellInfo cellInfo, boolean notify) {
 
         Intent baseIntent = data.getParcelableExtra(LiveFolders.EXTRA_LIVE_FOLDER_BASE_INTENT);
@@ -1419,9 +1419,8 @@ public final class Launcher extends Activity
         }
 
         final LiveFolderInfo info = new LiveFolderInfo();
-        info.icon = Utilities.createIconBitmap(icon, context);
-        info.title = name;
-        info.iconResource = iconResource;
+        info.setIcon(Utilities.createIconBitmap(icon, context));
+        info.setTitle(name);
         info.uri = data.getData();
         info.baseIntent = baseIntent;
         info.displayMode = data.getIntExtra(LiveFolders.EXTRA_LIVE_FOLDER_DISPLAY_MODE,
@@ -1430,6 +1429,7 @@ public final class Launcher extends Activity
         LauncherModel.addItemToDatabase(context, info, LauncherSettings.Favorites.CONTAINER_DESKTOP,
                 cellInfo.screen, cellInfo.cellX, cellInfo.cellY, notify);
         sFolders.put(info.id, info);
+        mModel.mItems.add(info);
 
         return info;
     }
@@ -1900,7 +1900,7 @@ public final class Launcher extends Activity
             case DIALOG_RENAME_FOLDER:
                 if (mFolderInfo != null) {
                     EditText input = (EditText) dialog.findViewById(R.id.folder_name);
-                    final CharSequence text = mFolderInfo.title;
+                    final CharSequence text = mFolderInfo.getTitle(mIconCache);
                     input.setText(text);
                     input.setSelection(0, text.length());
                 }
@@ -1984,7 +1984,7 @@ public final class Launcher extends Activity
             if (!TextUtils.isEmpty(name)) {
                 // Make sure we have the right folder info
                 mFolderInfo = sFolders.get(mFolderInfo.id);
-                mFolderInfo.title = name;
+                mFolderInfo.setTitle(name);
                 LauncherModel.updateItemInDatabase(Launcher.this, mFolderInfo);
 
                 if (mWorkspaceLoading) {

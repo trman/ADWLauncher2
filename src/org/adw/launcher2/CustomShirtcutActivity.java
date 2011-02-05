@@ -35,6 +35,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
+import android.widget.TextView;
 
 public class CustomShirtcutActivity extends Activity implements OnClickListener {
 	private static final String ACTION_ADW_PICK_ICON="org.adw.launcher.icons.ACTION_PICK_ICON";
@@ -52,6 +53,7 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 	private ImageButton btPickIcon;
 	private Button btOk;
 	private EditText edLabel;
+	private TextView tvHead;
 	//private ActivityInfo mInfo;
 	private Bitmap mBitmap;
 	PackageManager mPackageManager;
@@ -103,12 +105,13 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 		btOk.setEnabled(false);
 		btOk.setOnClickListener(this);
 		edLabel=(EditText) findViewById(R.id.shirtcut_label);
+		tvHead=(TextView)findViewById(R.id.header);
 		mPackageManager=getPackageManager();
 		mIconSize=(int) getResources().getDimension(android.R.dimen.app_icon_size);
 		loadFromShortcutInfo(getShortcutInfo());
 	}
 
-	private ShortcutInfo getShortcutInfo() {
+	private IconItemInfo getShortcutInfo() {
 		final Intent intent = getIntent();
 		if (intent != null && intent.getAction() != null &&
 				intent.getAction().equals(Intent.ACTION_EDIT)
@@ -118,44 +121,51 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 			LauncherApplication app = (LauncherApplication)this.getApplication();
 
 			ItemInfo info = app.getModel().getItemInfoById(id);
-			if (info instanceof ShortcutInfo)
-				return (ShortcutInfo)info;
+			if (info instanceof IconItemInfo)
+				return (IconItemInfo)info;
 		}
 		return null;
 	}
 
-	private void loadFromShortcutInfo(ShortcutInfo info) {
+	private void loadFromShortcutInfo(IconItemInfo info) {
 		if (info == null)
 			return;
 		edLabel.setText(info.getTitle(mIconCache));
-		mIntent = info.intent;
+		if (info instanceof ShortcutInfo)
+			mIntent = ((ShortcutInfo)info).intent;
+		else {
+			btPickActivity.setVisibility(View.GONE);
+			tvHead.setText(getString(R.string.shirtcut_header_folder));
+		}
 		btPickIcon.setImageBitmap(info.getIcon(mIconCache));
 		btPickIcon.setEnabled(true);
 		btOk.setEnabled(true);
-		ComponentName component = mIntent.getComponent();
-		if (component != null) {
-			if (component.getClassName().equals(RunActionActivity.class.getName()) &&
-				mIntent.getAction().equals(RunActionActivity.ACTION_LAUNCHERACTION)){
+		if (mIntent != null) {
+			ComponentName component = mIntent.getComponent();
+			if (component != null) {
+				if (component.getClassName().equals(RunActionActivity.class.getName()) &&
+					mIntent.getAction().equals(RunActionActivity.ACTION_LAUNCHERACTION)){
+				}
+				else
+				{
+			        ActivityInfo activityInfo = null;
+			        try {
+			            activityInfo = mPackageManager.getActivityInfo(component, 0);
+			        } catch (NameNotFoundException e) {
+			        }
+			        String title=null;
+			        if (activityInfo != null) {
+			            title = activityInfo.loadLabel(mPackageManager).toString();
+			            if (title == null) {
+			                title = activityInfo.name;
+			            }
+						btPickActivity.setText(title);
+			        }
+				}
 			}
 			else
-			{
-		        ActivityInfo activityInfo = null;
-		        try {
-		            activityInfo = mPackageManager.getActivityInfo(component, 0);
-		        } catch (NameNotFoundException e) {
-		        }
-		        String title=null;
-		        if (activityInfo != null) {
-		            title = activityInfo.loadLabel(mPackageManager).toString();
-		            if (title == null) {
-		                title = activityInfo.name;
-		            }
-					btPickActivity.setText(title);
-		        }
-			}
+				btPickActivity.setText(info.getTitle(mIconCache));
 		}
-		else
-			btPickActivity.setText(info.getTitle(mIconCache));
 	}
 
 
@@ -344,7 +354,8 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 			showDialog(DIALOG_ICON_TYPE);
 		}else if(v.equals(btOk)){
 	        Intent mReturnData = new Intent();
-	        mReturnData.putExtra(Intent.EXTRA_SHORTCUT_INTENT, mIntent);
+	        if (mIntent != null)
+	        	mReturnData.putExtra(Intent.EXTRA_SHORTCUT_INTENT, mIntent);
 	        mReturnData.putExtra(Intent.EXTRA_SHORTCUT_NAME, edLabel.getText().toString());
 	        Intent intent = getIntent();
 			if (intent != null && intent.getAction() != null &&

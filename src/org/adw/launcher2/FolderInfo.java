@@ -18,25 +18,30 @@ package org.adw.launcher2;
 
 import java.util.List;
 
+import android.graphics.Bitmap;
 import android.view.View;
 
 
 /**
  * Represents a folder containing shortcuts or apps.
  */
-class FolderInfo extends ItemInfo {
+class FolderInfo extends IconItemInfo {
 
     /**
      * Whether this folder has been opened
      */
     boolean opened;
 
-    /**
-     * The folder name.
-     */
-    CharSequence title;
-
     private static final int ACTION_DELETE = 1;
+
+    @Override
+    public Bitmap getIcon(IconCache iconCache) {
+    	if (mIcon == null)
+    		return Utilities.createIconBitmap(
+    				iconCache.getContext().getResources().getDrawable(R.drawable.ic_launcher_folder),
+    				iconCache.getContext());
+    	return super.getIcon(iconCache);
+    }
 
     @Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -45,6 +50,8 @@ class FolderInfo extends ItemInfo {
 				launcher.removeDesktopItem(this);
 				LauncherModel.deleteItemFromDatabase(launcher, this);
 			} break;
+			default:
+				super.executeAction(action, view, launcher);
 		}
 	}
 
