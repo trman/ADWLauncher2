@@ -95,6 +95,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        
+        <activity android:name="org.adw.launcher2.actions.RunActionActivity">
+        	<intent-filter>
+        		<action android:name="org.adw.launcher2.ACTION_LAUNCHERACTION" />
+        	</intent-filter>
+        </activity>
+        	
 
         <!-- Intent received used to install shortcuts from other applications -->
         <receiver

@@ -29,6 +29,7 @@ import mobi.intuitit.android.content.LauncherIntent;
 import mobi.intuitit.android.content.LauncherMetadata;
 
 import org.adw.launcher2.ItemInfo.EditAction;
+import org.adw.launcher2.actions.LauncherActions;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -270,6 +271,7 @@ public final class Launcher extends Activity
 
         IntentFilter filter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         registerReceiver(mCloseSystemDialogsReceiver, filter);
+        LauncherActions.getInstance().init(this);
     }
 
     private void checkForLocaleChange() {
@@ -1114,7 +1116,6 @@ public final class Launcher extends Activity
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         try {
             mAppWidgetHost.stopListening();
         } catch (NullPointerException ex) {
@@ -1993,7 +1994,7 @@ public final class Launcher extends Activity
         }
     }
 
-    void showAllApps(boolean animated) {
+    public void showAllApps(boolean animated) {
         mAllAppsGrid.zoom(1.0f, animated);
 
         ((View) mAllAppsGrid).setFocusable(true);
@@ -2042,7 +2043,7 @@ public final class Launcher extends Activity
      *          - From the center workspace
      *          - From another workspace
      */
-    void closeAllApps(boolean animated) {
+    public void closeAllApps(boolean animated) {
         if (mAllAppsGrid.isVisible()) {
             mWorkspace.setVisibility(View.VISIBLE);
             mAllAppsGrid.zoom(0.0f, animated);
