@@ -473,6 +473,9 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         }
     }
 
+
+    private final static boolean mEndlessScrolling = true;
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         boolean restore = false;
@@ -491,12 +494,23 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             final long drawingTime = getDrawingTime();
             final float scrollPos = (float) getScrollX() / getWidth();
             final int leftScreen = (int) scrollPos;
-            final int rightScreen = leftScreen + 1;
+            int rightScreen = leftScreen + 1;
+
+            if (mEndlessScrolling)
+            	rightScreen = rightScreen % getChildCount();
             if (leftScreen >= 0) {
                 drawChild(canvas, getChildAt(leftScreen), drawingTime);
             }
-            if (scrollPos != leftScreen && rightScreen < getChildCount()) {
+            if (leftScreen < rightScreen && scrollPos != leftScreen && rightScreen < getChildCount()) {
                 drawChild(canvas, getChildAt(rightScreen), drawingTime);
+            } else if (mEndlessScrolling && rightScreen == 0) {
+            	View child = getChildAt(rightScreen);
+            	int offset = getChildCount() * getWidth();
+            	Log.d("BOOMBULER", "offset:"+offset);
+            	canvas.translate(+offset, 0);
+
+            	drawChild(canvas, child, drawingTime);
+            	canvas.translate(-offset, 0);
             }
         }
 
@@ -893,7 +907,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                     }
                 } else if (deltaX > 0) {
                     final float availableToScroll = getChildAt(getChildCount() - 1).getRight() -
-                            mTouchX - getWidth();
+                            mTouchX - (mEndlessScrolling ? 0 : getWidth());
                     if (availableToScroll > 0) {
                         mTouchX += Math.min(availableToScroll, deltaX);
                         mSmoothingTime = System.nanoTime() / NANOTIME_DIV;
