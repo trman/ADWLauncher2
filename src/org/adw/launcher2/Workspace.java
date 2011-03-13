@@ -455,12 +455,10 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         		mCurrentScreen = getChildCount() - 1;
         		scrollTo(mCurrentScreen * getWidth(), getScrollY());
         		updateWallpaperOffset();
-        		postInvalidate();
         	} else if (mNextScreen == getChildCount() && mEndlessScrolling) {
         		mCurrentScreen = 0;
-        		scrollTo(mCurrentScreen * getWidth(), getScrollY());
+        		scrollTo(0, getScrollY());
         		updateWallpaperOffset();
-        		postInvalidate();
         	} else
         		mCurrentScreen = Math.max(0, Math.min(mNextScreen, getChildCount() - 1));
             updateIndicators(mCurrentScreen);
@@ -532,10 +530,9 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             }
             if (scrollPos != leftScreen && isScreenNoValid(rightScreen)) {
 	            if (mEndlessScrolling && rightScreen == 0  && isScrollToRight) {
-	                 View child = getChildAt(rightScreen);
 	                 int offset = getChildCount() * getWidth();
 	            	 canvas.translate(+offset, 0);
-	            	 drawChild(canvas, child, drawingTime);
+	            	 drawChild(canvas, getChildAt(rightScreen), drawingTime);
 	            	 canvas.translate(-offset, 0);
 	            } else {
 	            	drawChild(canvas, getChildAt(rightScreen), drawingTime);
