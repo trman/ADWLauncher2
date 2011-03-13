@@ -462,7 +462,9 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             final float now = System.nanoTime() / NANOTIME_DIV;
             final float e = (float) Math.exp((now - mSmoothingTime) / SMOOTHING_CONSTANT);
             final float dx = mTouchX - getScrollX();
-            super.scrollTo(getScrollX() + (int)(dx * e), getScrollY());
+
+            final int scrolltoX =getScrollX() + (int)(dx * e);
+            super.scrollTo(scrolltoX, getScrollY());
             mSmoothingTime = now;
 
             // Keep generating points as long as we're more than 1px away from the target
@@ -493,30 +495,52 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         } else {
             final long drawingTime = getDrawingTime();
             final float scrollPos = (float) getScrollX() / getWidth();
-            final int leftScreen = (int) scrollPos;
-            int rightScreen = leftScreen + 1;
 
-            if (mEndlessScrolling)
-            	rightScreen = rightScreen % getChildCount();
-            if (leftScreen >= 0) {
-                drawChild(canvas, getChildAt(leftScreen), drawingTime);
+            final int leftScreen;
+            int rightScreen;
+            boolean isScrollToRight = false;
+            if (scrollPos < 0 && mEndlessScrolling) {
+            	leftScreen = getChildCount() - 1;
+            	rightScreen = 0;
+            } else {
+            	leftScreen = (int) scrollPos;
+            	rightScreen = leftScreen + 1;
+            	if (mEndlessScrolling) {
+            		rightScreen = rightScreen % getChildCount();
+            		isScrollToRight = true;
+            	}
             }
-            if (leftScreen < rightScreen && scrollPos != leftScreen && rightScreen < getChildCount()) {
-                drawChild(canvas, getChildAt(rightScreen), drawingTime);
-            } else if (mEndlessScrolling && rightScreen == 0) {
-            	View child = getChildAt(rightScreen);
-            	int offset = getChildCount() * getWidth();
-            	Log.d("BOOMBULER", "offset:"+offset);
-            	canvas.translate(+offset, 0);
 
-            	drawChild(canvas, child, drawingTime);
-            	canvas.translate(-offset, 0);
+            if (isScreenNoValid(leftScreen)) {
+            	if (rightScreen == 0 && !isScrollToRight) {
+            		int offset = getChildCount() * getWidth();
+            		canvas.translate(-offset, 0);
+               	 	drawChild(canvas, getChildAt(leftScreen), drawingTime);
+               	 	canvas.translate(+offset, 0);
+            	} else {
+            		drawChild(canvas, getChildAt(leftScreen), drawingTime);
+            	}
+            }
+            if (scrollPos != leftScreen && isScreenNoValid(rightScreen)) {
+	            if (mEndlessScrolling && rightScreen == 0  && isScrollToRight) {
+	                 View child = getChildAt(rightScreen);
+	                 int offset = getChildCount() * getWidth();
+	            	 canvas.translate(+offset, 0);
+	            	 drawChild(canvas, child, drawingTime);
+	            	 canvas.translate(-offset, 0);
+	            } else {
+	            	drawChild(canvas, getChildAt(rightScreen), drawingTime);
+	            }
             }
         }
 
         if (restore) {
             canvas.restoreToCount(restoreCount);
         }
+    }
+
+    private boolean isScreenNoValid(int screen) {
+    	return screen >= 0 && screen < getChildCount();
     }
 
     @Override
@@ -902,6 +926,11 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                 if (deltaX < 0) {
                     if (mTouchX > 0) {
                         mTouchX += Math.max(-mTouchX, deltaX);
+                        mSmoothingTime = System.nanoTime() / NANOTIME_DIV;
+                        invalidate();
+                    }
+                    else if (mEndlessScrolling && mTouchX > -getWidth()) {
+                    	mTouchX += deltaX;
                         mSmoothingTime = System.nanoTime() / NANOTIME_DIV;
                         invalidate();
                     }
