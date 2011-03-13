@@ -1312,19 +1312,21 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
     public void scrollLeft() {
         clearVacantCache();
+        final int dest=(mEndlessScrolling)?-1:0;
         if (mScroller.isFinished()) {
-            if (mCurrentScreen > -1) snapToScreen(mCurrentScreen - 1);
+            if (mCurrentScreen > dest) snapToScreen(mCurrentScreen - 1);
         } else {
-            if (mNextScreen > -1) snapToScreen(mNextScreen - 1);
+            if (mNextScreen > dest) snapToScreen(mNextScreen - 1);
         }
     }
 
     public void scrollRight() {
         clearVacantCache();
+        final int dest=(mEndlessScrolling)?0:1;
         if (mScroller.isFinished()) {
-            if (mCurrentScreen < getChildCount()) snapToScreen(mCurrentScreen + 1);
+            if (mCurrentScreen < getChildCount() -dest) snapToScreen(mCurrentScreen + 1);
         } else {
-            if (mNextScreen < getChildCount()) snapToScreen(mNextScreen + 1);
+            if (mNextScreen < getChildCount() -dest) snapToScreen(mNextScreen + 1);
         }
     }
 
