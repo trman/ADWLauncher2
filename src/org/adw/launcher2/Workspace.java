@@ -302,8 +302,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         if (!mScroller.isFinished()) mScroller.abortAnimation();
         clearVacantCache();
         mCurrentScreen = Math.max(0, Math.min(currentScreen, getChildCount() - 1));
-        mPreviousIndicator.setLevel(mCurrentScreen);
-        mNextIndicator.setLevel(mCurrentScreen);
+        updateIndicators(mCurrentScreen);
         scrollTo(mCurrentScreen * getWidth(), 0);
         updateWallpaperOffset();
         invalidate();
@@ -464,8 +463,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         		postInvalidate();
         	} else
         		mCurrentScreen = Math.max(0, Math.min(mNextScreen, getChildCount() - 1));
-            mPreviousIndicator.setLevel(mCurrentScreen);
-            mNextIndicator.setLevel(mCurrentScreen);
+            updateIndicators(mCurrentScreen);
             Launcher.setScreen(mCurrentScreen);
             mNextScreen = INVALID_SCREEN;
             clearChildrenCache();
@@ -965,9 +963,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                 final int velocityX = (int) velocityTracker.getXVelocity();
 
                 final int screenWidth = getWidth();
-                final int whichScreen = (getScrollX() + (screenWidth / 2)) / screenWidth;
+                final int whichScreen = (int)Math.floor((getScrollX() + (screenWidth / 2.0)) / screenWidth);
                 final float scrolledPos = (float) getScrollX() / screenWidth;
-                Log.d("BOOMBULER", "mCurrent: "+ mCurrentScreen);
                 if (velocityX > SNAP_VELOCITY && (mCurrentScreen > (mEndlessScrolling ? -1 : 0))) {
                     // Fling hard enough to move left.
                     // Don't fling across more than one screen at a time.
@@ -1029,14 +1026,12 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
         whichScreen = Math.max((mEndlessScrolling ? -1 : 0),
         		Math.min(whichScreen, getChildCount() - (mEndlessScrolling ? 0 : 1)));
-        Log.d("BOOMBULER", "snapTo:"+whichScreen);
         clearVacantCache();
         enableChildrenCache(mCurrentScreen, whichScreen);
 
         mNextScreen = whichScreen;
 
-        mPreviousIndicator.setLevel(mNextScreen);
-        mNextIndicator.setLevel(mNextScreen);
+        updateIndicators(mNextScreen);
 
         View focusedChild = getFocusedChild();
         if (focusedChild != null && whichScreen != mCurrentScreen &&
@@ -1555,8 +1550,12 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     void setIndicators(Drawable previous, Drawable next) {
         mPreviousIndicator = previous;
         mNextIndicator = next;
-        previous.setLevel(mCurrentScreen);
-        next.setLevel(mCurrentScreen);
+        updateIndicators(mCurrentScreen);
+    }
+
+    private void updateIndicators(int screen) {
+    	mPreviousIndicator.setLevel(screen);
+    	mNextIndicator.setLevel(screen);
     }
 
     public static class SavedState extends BaseSavedState {
