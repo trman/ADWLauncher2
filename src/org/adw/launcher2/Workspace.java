@@ -58,7 +58,7 @@ import android.widget.TextView;
  */
 public class Workspace extends WidgetSpace implements DropTarget, DragSource, DragScroller {
     private static final String TAG = "Launcher.Workspace";
-    private static final int INVALID_SCREEN = -1;
+    private static final int INVALID_SCREEN = -999;
 
     /**
      * The velocity at which a fling gesture will cause us to snap to the next screen
@@ -452,7 +452,18 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             updateWallpaperOffset();
             postInvalidate();
         } else if (mNextScreen != INVALID_SCREEN) {
-            mCurrentScreen = Math.max(0, Math.min(mNextScreen, getChildCount() - 1));
+        	if (mNextScreen == -1 && mEndlessScrolling) {
+        		mCurrentScreen = getChildCount() - 1;
+        		scrollTo(mCurrentScreen * getWidth(), getScrollY());
+        		updateWallpaperOffset();
+        		postInvalidate();
+        	} else if (mNextScreen == getChildCount() && mEndlessScrolling) {
+        		mCurrentScreen = 0;
+        		scrollTo(mCurrentScreen * getWidth(), getScrollY());
+        		updateWallpaperOffset();
+        		postInvalidate();
+        	} else
+        		mCurrentScreen = Math.max(0, Math.min(mNextScreen, getChildCount() - 1));
             mPreviousIndicator.setLevel(mCurrentScreen);
             mNextIndicator.setLevel(mCurrentScreen);
             Launcher.setScreen(mCurrentScreen);
@@ -956,14 +967,14 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                 final int screenWidth = getWidth();
                 final int whichScreen = (getScrollX() + (screenWidth / 2)) / screenWidth;
                 final float scrolledPos = (float) getScrollX() / screenWidth;
-
-                if (velocityX > SNAP_VELOCITY && mCurrentScreen > 0) {
+                Log.d("BOOMBULER", "mCurrent: "+ mCurrentScreen);
+                if (velocityX > SNAP_VELOCITY && (mCurrentScreen > (mEndlessScrolling ? -1 : 0))) {
                     // Fling hard enough to move left.
                     // Don't fling across more than one screen at a time.
                     final int bound = scrolledPos < whichScreen ?
                             mCurrentScreen - 1 : mCurrentScreen;
                     snapToScreen(Math.min(whichScreen, bound), velocityX, true);
-                } else if (velocityX < -SNAP_VELOCITY && mCurrentScreen < getChildCount() - 1) {
+                } else if (velocityX < -SNAP_VELOCITY && mCurrentScreen < getChildCount() -(mEndlessScrolling ? 0 : 1)) {
                     // Fling hard enough to move right
                     // Don't fling across more than one screen at a time.
                     final int bound = scrolledPos > whichScreen ?
@@ -1016,8 +1027,9 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     private void snapToScreen(int whichScreen, int velocity, boolean settle) {
         //if (!mScroller.isFinished()) return;
 
-        whichScreen = Math.max(0, Math.min(whichScreen, getChildCount() - 1));
-
+        whichScreen = Math.max((mEndlessScrolling ? -1 : 0),
+        		Math.min(whichScreen, getChildCount() - (mEndlessScrolling ? 0 : 1)));
+        Log.d("BOOMBULER", "snapTo:"+whichScreen);
         clearVacantCache();
         enableChildrenCache(mCurrentScreen, whichScreen);
 
