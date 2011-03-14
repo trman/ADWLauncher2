@@ -36,6 +36,7 @@ public class LauncherApplication extends Application {
 
         super.onCreate();
 
+        Preferences.getInstance().setContext(this);
         mIconCache = new IconCache(this);
         mAppDB = new AppDB(this, mIconCache);
         mModel = new LauncherModel(this, mIconCache);
@@ -65,6 +66,7 @@ public class LauncherApplication extends Application {
 
         ContentResolver resolver = getContentResolver();
         resolver.unregisterContentObserver(mFavoritesObserver);
+        Preferences.getInstance().setContext(null);
     }
 
     /**

@@ -106,6 +106,9 @@
 			android:name=".CustomShirtcutActivity"
 			android:theme="@android:style/Theme.Dialog"
 		/>
+		<activity 
+			android:name=".SettingsActivity"
+		/>
 
         <!-- Intent received used to install shortcuts from other applications -->
         <receiver

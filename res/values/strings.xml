@@ -163,6 +163,7 @@
 	<!-- LauncherActions -->
 	<string name="launcher_actions">Launcher Actions</string>
 	<string name="action_opendrawer">Open/Close drawer</string>
+	<string name="action_adw_settings">ADW Settings</string>
 
 	<!-- Custom Shortcuts -->
 	<string name="shirtcut_header">Select your desired application activity to launch.\nYou can select a custom icon too.</string>
@@ -174,4 +175,7 @@
 	<string name="shirtcuts_icon_packs">ADWTheme IconPacks</string>
 	<string name="shirtcuts_select_icon_type">Select the icon type</string>
 	<string name="shirtcuts_select_icon_pack">Select icon pack</string>
+	
+	<!-- Settings -->
+	<string name="settings_endless_desktop_loop">Looping Homescreens</string>
 </resources>

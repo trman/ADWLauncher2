@@ -29,6 +29,7 @@ import mobi.intuitit.android.content.LauncherIntent;
 import mobi.intuitit.android.content.LauncherMetadata;
 
 import org.adw.launcher2.ItemInfo.EditAction;
+import org.adw.launcher2.actions.DefaultAction;
 import org.adw.launcher2.actions.LauncherActions;
 
 import android.app.Activity;
@@ -114,6 +115,7 @@ public final class Launcher extends Activity
     private static final int MENU_SEARCH = MENU_WALLPAPER_SETTINGS + 1;
     private static final int MENU_NOTIFICATIONS = MENU_SEARCH + 1;
     private static final int MENU_SETTINGS = MENU_NOTIFICATIONS + 1;
+    private static final int MENU_ADW_SETTINGS = MENU_SETTINGS + 1;
 
     private static final int REQUEST_CREATE_SHORTCUT = 1;
     private static final int REQUEST_CREATE_LIVE_FOLDER = 4;
@@ -1212,6 +1214,7 @@ public final class Launcher extends Activity
         menu.add(0, MENU_MANAGE_APPS, 0, R.string.menu_manage_apps)
                 .setIcon(android.R.drawable.ic_menu_manage)
                 .setAlphabeticShortcut('M');
+        menu.add(0, MENU_ADW_SETTINGS, 0, R.string.menu_manage_apps);
         menu.add(MENU_GROUP_WALLPAPER, MENU_WALLPAPER_SETTINGS, 0, R.string.menu_wallpaper)
                  .setIcon(android.R.drawable.ic_menu_gallery)
                  .setAlphabeticShortcut('W');
@@ -1275,6 +1278,9 @@ public final class Launcher extends Activity
             case MENU_NOTIFICATIONS:
                 showNotifications();
                 return true;
+            case MENU_ADW_SETTINGS:
+            	showADWSettings();
+            	return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -1466,6 +1472,10 @@ public final class Launcher extends Activity
             }
         } catch (Exception e) {
         }
+    }
+
+    private void showADWSettings() {
+    	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SHOW_ADW_SETTINGS);
     }
 
     private void startWallpaper() {

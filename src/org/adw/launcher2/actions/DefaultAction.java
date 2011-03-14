@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.adw.launcher2.Launcher;
 import org.adw.launcher2.R;
+import org.adw.launcher2.SettingsActivity;
 
 import android.content.Intent;
 
@@ -11,7 +12,8 @@ public class DefaultAction implements LauncherActions.Action {
 
 	private static final String EXTRA_BINDINGVALUE = "DefaultLauncherAction.EXTRA_BINDINGVALUE";
 
-	private static final int ACTION_OPENCLOSE_DRAWER = 1;
+	public static final int ACTION_OPENCLOSE_DRAWER = 1;
+	public static final int ACTION_SHOW_ADW_SETTINGS = 2;
 
 	private final int mBindingValue;
 	private final String mName;
@@ -21,6 +23,7 @@ public class DefaultAction implements LauncherActions.Action {
 		if (launcher == null)
 			return;
 		list.add(new DefaultAction(ACTION_OPENCLOSE_DRAWER, launcher.getString(R.string.action_opendrawer)));
+		list.add(new DefaultAction(ACTION_SHOW_ADW_SETTINGS, launcher.getString(R.string.action_adw_settings)));
 	}
 
 	public DefaultAction(int bindingValue, String name) {
@@ -61,7 +64,7 @@ public class DefaultAction implements LauncherActions.Action {
 		}
 	}
 
-	private static void fireHomeBinding(int value) {
+	public static void fireHomeBinding(int value) {
 		Launcher launcher = LauncherActions.getInstance().getLauncher();
 		if (launcher == null)
 			return;
@@ -71,6 +74,9 @@ public class DefaultAction implements LauncherActions.Action {
 					launcher.closeAllApps(true);
 				else
 					launcher.showAllApps(true);
+			} break;
+			case ACTION_SHOW_ADW_SETTINGS: {
+				launcher.startActivity(new Intent(launcher, SettingsActivity.class));
 			} break;
 		}
 	}
