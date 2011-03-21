@@ -8,6 +8,7 @@ import org.adw.launcher2.R;
 import org.adw.launcher2.SettingsActivity;
 
 import android.content.Intent;
+import android.view.Menu;
 
 public class DefaultAction implements LauncherActions.Action {
 
@@ -26,11 +27,33 @@ public class DefaultAction implements LauncherActions.Action {
 		Launcher launcher = LauncherActions.getInstance().getLauncher();
 		if (launcher == null)
 			return;
-		list.add(new DefaultAction(ACTION_OPENCLOSE_DRAWER, launcher.getString(R.string.action_opendrawer)));
-		list.add(new DefaultAction(ACTION_SHOW_ADW_SETTINGS, launcher.getString(R.string.action_adw_settings)));
-		list.add(new DefaultAction(ACTION_SHOW_NOTIFICATIONS, launcher.getString(R.string.menu_notifications)));
-		list.add(new DefaultAction(ACTION_MANAGE_APPS, launcher.getString(R.string.menu_manage_apps)));
-		list.add(new DefaultAction(ACTION_SYSTEM_SETTINGS, launcher.getString(R.string.menu_settings)));
+		list.add(getAction(launcher, ACTION_OPENCLOSE_DRAWER));
+		list.add(getAction(launcher, ACTION_SHOW_ADW_SETTINGS));
+		list.add(getAction(launcher, ACTION_SHOW_NOTIFICATIONS));
+		list.add(getAction(launcher, ACTION_MANAGE_APPS));
+		list.add(getAction(launcher, ACTION_SYSTEM_SETTINGS));
+	}
+
+	public static DefaultAction getAction(Launcher launcher, int action) {
+		final String name;
+
+		switch(action) {
+			case ACTION_OPENCLOSE_DRAWER:
+				name = launcher.getString(R.string.action_opendrawer); break;
+			case ACTION_SHOW_ADW_SETTINGS:
+				name = launcher.getString(R.string.action_adw_settings); break;
+			case ACTION_SHOW_NOTIFICATIONS:
+				name = launcher.getString(R.string.menu_notifications); break;
+			case ACTION_MANAGE_APPS:
+				name = launcher.getString(R.string.menu_manage_apps); break;
+			case ACTION_SYSTEM_SETTINGS:
+				name = launcher.getString(R.string.menu_settings); break;
+			default:
+				name = "";
+		}
+		if (!name.equals(""))
+			return new DefaultAction(action, name);
+		return null;
 	}
 
 	public DefaultAction(int bindingValue, String name) {
@@ -66,9 +89,21 @@ public class DefaultAction implements LauncherActions.Action {
 	@Override
 	public int getIconResourceId() {
 		switch(mBindingValue) {
+			case ACTION_MANAGE_APPS:
+				return android.R.drawable.ic_menu_manage;
+			case ACTION_SHOW_NOTIFICATIONS:
+				return R.drawable.ic_menu_notifications;
+			case ACTION_SYSTEM_SETTINGS:
+				return android.R.drawable.ic_menu_preferences;
 			default:
 				return R.drawable.ic_launcher_home;
 		}
+	}
+
+	public void addToMenu(Menu menu) {
+		menu.add(getName())
+			.setIntent(LauncherActions.getInstance().getIntentForAction(this))
+			.setIcon(getIconResourceId());
 	}
 
 	private static void OpenCloseDrawer(Launcher launcher) {

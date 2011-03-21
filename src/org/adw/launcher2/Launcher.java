@@ -1210,23 +1210,19 @@ public final class Launcher extends Activity
         menu.add(MENU_GROUP_ADD, MENU_ADD, 0, R.string.menu_add)
                 .setIcon(android.R.drawable.ic_menu_add)
                 .setAlphabeticShortcut('A');
-        menu.add(0, MENU_MANAGE_APPS, 0, R.string.menu_manage_apps)
-                .setIcon(android.R.drawable.ic_menu_manage)
-                .setAlphabeticShortcut('M');
-        menu.add(0, MENU_ADW_SETTINGS, 0, R.string.menu_manage_apps);
+
+        DefaultAction.getAction(this, DefaultAction.ACTION_MANAGE_APPS).addToMenu(menu);
+        DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_ADW_SETTINGS).addToMenu(menu);
+
         menu.add(MENU_GROUP_WALLPAPER, MENU_WALLPAPER_SETTINGS, 0, R.string.menu_wallpaper)
                  .setIcon(android.R.drawable.ic_menu_gallery)
                  .setAlphabeticShortcut('W');
         menu.add(0, MENU_SEARCH, 0, R.string.menu_search)
                 .setIcon(android.R.drawable.ic_search_category_default)
                 .setAlphabeticShortcut(SearchManager.MENU_KEY);
-        menu.add(0, MENU_NOTIFICATIONS, 0, R.string.menu_notifications)
-                .setIcon(R.drawable.ic_menu_notifications)
-                .setAlphabeticShortcut('N');
 
-        menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings)
-                .setIcon(android.R.drawable.ic_menu_preferences)
-                .setAlphabeticShortcut('P');
+        DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_NOTIFICATIONS).addToMenu(menu);
+        DefaultAction.getAction(this, DefaultAction.ACTION_SYSTEM_SETTINGS).addToMenu(menu);
 
         return true;
     }
@@ -1261,24 +1257,12 @@ public final class Launcher extends Activity
             case MENU_ADD:
                 addItems();
                 return true;
-            case MENU_MANAGE_APPS: // Done
-            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_MANAGE_APPS);
-                return true;
             case MENU_WALLPAPER_SETTINGS:
                 startWallpaper();
                 return true;
             case MENU_SEARCH:
                 onSearchRequested();
                 return true;
-            case MENU_NOTIFICATIONS: // Done
-            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SHOW_NOTIFICATIONS);
-                return true;
-            case MENU_ADW_SETTINGS: // Done
-            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SHOW_ADW_SETTINGS);
-            	return true;
-            case MENU_SETTINGS: // Done
-            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SYSTEM_SETTINGS);
-            	return true;
         }
 
         return super.onOptionsItemSelected(item);
