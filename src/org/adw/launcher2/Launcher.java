@@ -20,7 +20,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1225,13 +1224,9 @@ public final class Launcher extends Activity
                 .setIcon(R.drawable.ic_menu_notifications)
                 .setAlphabeticShortcut('N');
 
-        final Intent settings = new Intent(android.provider.Settings.ACTION_SETTINGS);
-        settings.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-
         menu.add(0, MENU_SETTINGS, 0, R.string.menu_settings)
-                .setIcon(android.R.drawable.ic_menu_preferences).setAlphabeticShortcut('P')
-                .setIntent(settings);
+                .setIcon(android.R.drawable.ic_menu_preferences)
+                .setAlphabeticShortcut('P');
 
         return true;
     }
@@ -1266,8 +1261,8 @@ public final class Launcher extends Activity
             case MENU_ADD:
                 addItems();
                 return true;
-            case MENU_MANAGE_APPS:
-                manageApps();
+            case MENU_MANAGE_APPS: // Done
+            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_MANAGE_APPS);
                 return true;
             case MENU_WALLPAPER_SETTINGS:
                 startWallpaper();
@@ -1275,11 +1270,14 @@ public final class Launcher extends Activity
             case MENU_SEARCH:
                 onSearchRequested();
                 return true;
-            case MENU_NOTIFICATIONS:
-                showNotifications();
+            case MENU_NOTIFICATIONS: // Done
+            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SHOW_NOTIFICATIONS);
                 return true;
-            case MENU_ADW_SETTINGS:
-            	showADWSettings();
+            case MENU_ADW_SETTINGS: // Done
+            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SHOW_ADW_SETTINGS);
+            	return true;
+            case MENU_SETTINGS: // Done
+            	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SYSTEM_SETTINGS);
             	return true;
         }
 
@@ -1304,10 +1302,6 @@ public final class Launcher extends Activity
     private void addItems() {
         closeAllApps(true);
         showAddDialog(mMenuAddInfo);
-    }
-
-    private void manageApps() {
-    	startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS));
     }
 
     void addAppWidget(Intent data) {
@@ -1461,21 +1455,6 @@ public final class Launcher extends Activity
             }
         }
         return true;
-    }
-
-    private void showNotifications() {
-    	try {
-            Object service = getSystemService("statusbar");
-            if (service != null) {
-                Method expand = service.getClass().getMethod("expand");
-                expand.invoke(service);
-            }
-        } catch (Exception e) {
-        }
-    }
-
-    private void showADWSettings() {
-    	DefaultAction.fireHomeBinding(DefaultAction.ACTION_SHOW_ADW_SETTINGS);
     }
 
     private void startWallpaper() {
