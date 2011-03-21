@@ -8,7 +8,6 @@ import org.adw.launcher2.R;
 
 import android.content.Intent;
 import android.database.DataSetObserver;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,7 +63,6 @@ public class LauncherActions {
 	}
 
 	void launch(Intent intent) {
-		Log.d("BOOMBULER", "launcher action: "+intent);
 		final List<Action> actions = getList();
 		for(Action act : actions) {
 			if (act.runIntent(intent))
