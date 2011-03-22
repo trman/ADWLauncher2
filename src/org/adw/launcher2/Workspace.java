@@ -20,9 +20,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import mobi.intuitit.android.widget.WidgetSpace;
+
 import org.adw.launcher2.settings.Preferences;
 
-import mobi.intuitit.android.widget.WidgetSpace;
 import android.app.Activity;
 import android.app.WallpaperManager;
 import android.appwidget.AppWidgetManager;
@@ -93,6 +94,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
     private final static int TOUCH_STATE_REST = 0;
     private final static int TOUCH_STATE_SCROLLING = 1;
+    private final static int TOUCH_SWIPE_DOWN_GESTURE = 2;
+    private final static int TOUCH_SWIPE_UP_GESTURE = 3;
 
     private int mTouchState = TOUCH_STATE_REST;
 

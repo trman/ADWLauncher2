@@ -179,4 +179,5 @@
 	<!-- Settings -->
 	<string name="settings_endless_desktop_loop">Looping Homescreens</string>
 	<string name="settings_swipe_up_action">Swipe Up Action</string>
+	<string name="settings_swipe_down_action">Swipe Down Action</string>
 </resources>
