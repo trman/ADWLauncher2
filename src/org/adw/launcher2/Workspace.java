@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import org.adw.launcher2.settings.Preferences;
+
 import mobi.intuitit.android.widget.WidgetSpace;
 import android.app.Activity;
 import android.app.WallpaperManager;

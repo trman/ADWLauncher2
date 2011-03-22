@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.adw.launcher2.Launcher;
 import org.adw.launcher2.R;
-import org.adw.launcher2.SettingsActivity;
+import org.adw.launcher2.settings.SettingsActivity;
 
 import android.content.Intent;
 import android.view.Menu;

@@ -5,4 +5,8 @@
 		android:key="EndlessHomescreenLoop" 
 		android:title="@string/settings_endless_desktop_loop"
 		android:defaultValue="true"/>
+	<org.adw.launcher2.settings.LauncherActionPreference
+		android:key="Foobar"
+		android:title="@string/settings_swipe_up_action" 
+		/>
 </PreferenceScreen>

@@ -47,7 +47,7 @@ public class LauncherActions {
 		return mLauncher;
 	}
 
-	private List<Action> getList() {
+	public List<Action> getList() {
 		List<Action> result = new ArrayList<Action>();
 		DefaultAction.GetActions(result);
 		return result;

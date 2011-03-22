@@ -107,7 +107,7 @@
 			android:theme="@android:style/Theme.Dialog"
 		/>
 		<activity 
-			android:name=".SettingsActivity"
+			android:name="org.adw.launcher2.settings.SettingsActivity"
 		/>
 
         <!-- Intent received used to install shortcuts from other applications -->
