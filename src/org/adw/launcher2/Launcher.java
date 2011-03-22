@@ -2468,7 +2468,7 @@ public final class Launcher extends Activity
         	    title = getResources().getString(action.getTitleResourceId());
         	}
         	    
-        	qa.addItem(icon,(String)title, new OnClickListener() {
+        	qa.addItem(icon,(title==null?null:title.toString()), new OnClickListener() {
 	        		public void onClick(View v) {
 	        			finalInfo.executeAction(finalaction, finalview, Launcher.this);
 	                    qa.dismiss();
