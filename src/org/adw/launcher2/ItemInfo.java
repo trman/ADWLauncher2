@@ -23,6 +23,7 @@ import java.util.List;
 
 import android.content.ContentValues;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 
@@ -147,29 +148,60 @@ class ItemInfo {
     }
 
 
-	class EditAction {
-		private final int mIcon;
-		private final int mTitle;
-		private final int mId;
+    class EditAction
+    {
+        private final int mId;
+        private int mTitle;
+        private int mIcon;
+        private CharSequence mTitleString;
+        private Drawable mIconDrawable;
 
-		public EditAction(int id, int icon, int title) {
-			mId = id;
-			mIcon = icon;
-			mTitle = title;
-		}
+        public EditAction(int id, int icon, int title)
+        {
+            mId = id;
+            mIcon = icon;
+            mTitle = title;
+        }
 
-		public int getIconResourceId() {
-			return mIcon;
-		}
+        public EditAction(int id, int icon, CharSequence title)
+        {
+            mId = id;
+            mIcon = icon;
+            mTitleString = title;
+        }
+        
+        public EditAction(int id, Drawable icon, CharSequence title)
+        {
+            mId = id;
+            mIconDrawable = icon;
+            mTitleString = title;
+        }
 
-		public int getTitleResourceId() {
-			return mTitle;
-		}
+        public int getIconResourceId()
+        {
+            return mIcon;
+        }
 
-		public int getId() {
-			return mId;
-		}
-	}
+        public Drawable getIconDrawable()
+        {
+            return mIconDrawable;
+        }
+
+        public CharSequence getTitleString()
+        {
+            return mTitleString;
+        }
+
+        public int getTitleResourceId()
+        {
+            return mTitle;
+        }
+
+        public int getId()
+        {
+            return mId;
+        }
+    }
 
 	public List<EditAction> getAvailableActions(View view) {
 		return new ArrayList<EditAction>();

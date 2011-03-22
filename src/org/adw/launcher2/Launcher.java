@@ -2449,8 +2449,26 @@ public final class Launcher extends Activity
         //when the item is clicked on
         for(EditAction action : actions) {
         	final EditAction finalaction = action;
-        	qa.addItem(getResources().getDrawable(action.getIconResourceId()),
-        		action.getTitleResourceId(), new OnClickListener() {
+        	Drawable icon;
+        	CharSequence title;
+        	if ( action.getIconResourceId() == 0 )
+        	{
+        	    icon = action.getIconDrawable();
+        	}
+        	else
+        	{
+        	    icon = getResources().getDrawable(action.getIconResourceId());
+        	}
+        	if( action.getTitleResourceId() == 0 )
+        	{
+        	    title = action.getTitleString(); 
+        	}
+        	else
+        	{
+        	    title = getResources().getString(action.getTitleResourceId());
+        	}
+        	    
+        	qa.addItem(icon,(String)title, new OnClickListener() {
 	        		public void onClick(View v) {
 	        			finalInfo.executeAction(finalaction, finalview, Launcher.this);
 	                    qa.dismiss();
