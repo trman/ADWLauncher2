@@ -40,9 +40,8 @@ import android.view.View.OnClickListener;
 class ShortcutInfo extends IconItemInfo {
     private static final String ANDROID_SETTINGS_PACKAGE = "com.android.settings";
     private static final String ANDROID_MARKET_PACKAGE = "com.android.vending";
-    private static final ComponentName ANDROID_MANAGE_COMPONENT = new ComponentName(ANDROID_SETTINGS_PACKAGE, ANDROID_SETTINGS_PACKAGE + ".ManageApplications");
 
-    private static String mAppInfoLabel;
+    private static CharSequence mAppInfoLabel;
     private static Drawable mMarketIcon;
     private static CharSequence mMarketLabel;
     
