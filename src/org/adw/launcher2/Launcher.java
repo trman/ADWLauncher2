@@ -109,12 +109,8 @@ public final class Launcher extends Activity
     private static final int MENU_GROUP_WALLPAPER = MENU_GROUP_ADD + 1;
 
     private static final int MENU_ADD = Menu.FIRST + 1;
-    private static final int MENU_MANAGE_APPS = MENU_ADD + 1;
-    private static final int MENU_WALLPAPER_SETTINGS = MENU_MANAGE_APPS + 1;
+    private static final int MENU_WALLPAPER_SETTINGS = MENU_ADD + 1;
     private static final int MENU_SEARCH = MENU_WALLPAPER_SETTINGS + 1;
-    private static final int MENU_NOTIFICATIONS = MENU_SEARCH + 1;
-    private static final int MENU_SETTINGS = MENU_NOTIFICATIONS + 1;
-    private static final int MENU_ADW_SETTINGS = MENU_SETTINGS + 1;
 
     private static final int REQUEST_CREATE_SHORTCUT = 1;
     private static final int REQUEST_CREATE_LIVE_FOLDER = 4;
@@ -2461,13 +2457,13 @@ public final class Launcher extends Activity
         	}
         	if( action.getTitleResourceId() == 0 )
         	{
-        	    title = action.getTitleString(); 
+        	    title = action.getTitleString();
         	}
         	else
         	{
         	    title = getResources().getString(action.getTitleResourceId());
         	}
-        	    
+
         	qa.addItem(icon,(title==null?null:title.toString()), new OnClickListener() {
 	        		public void onClick(View v) {
 	        			finalInfo.executeAction(finalaction, finalview, Launcher.this);

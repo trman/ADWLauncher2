@@ -29,10 +29,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 
 /**
  * Represents a launchable icon on the workspaces and in folders.
@@ -44,7 +42,7 @@ class ShortcutInfo extends IconItemInfo {
     private static CharSequence mAppInfoLabel;
     private static Drawable mMarketIcon;
     private static CharSequence mMarketLabel;
-    
+
     /**
      * The intent used to start the application.
      */
@@ -141,7 +139,7 @@ class ShortcutInfo extends IconItemInfo {
                     final int apiLevel = Build.VERSION.SDK_INT;
                     if (apiLevel >= 9)
                     { // above 2.3
-                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
                         Uri uri = Uri.fromParts("package", appPackage, null);
                         intent.setData(uri);
                     }
@@ -209,8 +207,8 @@ class ShortcutInfo extends IconItemInfo {
         }
         if (mAppInfoLabel != null)
         {
-            result.add(new EditAction(ACTION_APPINFO, 
-                    android.R.drawable.ic_menu_info_details, 
+            result.add(new EditAction(ACTION_APPINFO,
+                    android.R.drawable.ic_menu_info_details,
                     mAppInfoLabel));
         }
 
@@ -239,7 +237,7 @@ class ShortcutInfo extends IconItemInfo {
         // if market, show it as an option
         if (mMarketIcon != null && mMarketLabel != null)
         {
-            result.add(new EditAction(ACTION_APPINFO, mMarketIcon,mMarketLabel));
+            result.add(new EditAction(ACTION_MARKET, mMarketIcon,mMarketLabel));
         }
 		return result;
 	}
