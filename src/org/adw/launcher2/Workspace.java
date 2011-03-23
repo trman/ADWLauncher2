@@ -34,7 +34,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.res.TypedArray;
+import android.graphics.Camera;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -160,6 +163,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         }
     }
 
+
     /**
      * Used to inflate the Workspace from XML.
      *
@@ -182,8 +186,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
         mWallpaperManager = WallpaperManager.getInstance(context);
 
-        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.Workspace, defStyle, 0);
-        mDefaultScreen = a.getInt(R.styleable.Workspace_defaultScreen, 1);
+        TypedArray a = context.obtainStyledAttributes(attrs, org.adw.launcher2.R.styleable.Workspace, defStyle, 0);
+        mDefaultScreen = a.getInt(org.adw.launcher2.R.styleable.Workspace_defaultScreen, 1);
         a.recycle();
 
         setHapticFeedbackEnabled(false);
@@ -485,6 +489,64 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         }
     }
 
+    private Paint mPaint = null;
+    private Matrix mMatrix = null;
+    private Camera mCamera = null;
+
+
+    protected boolean doDrawChild(Canvas canvas, View child, boolean asLeftScreen) {
+    	if (mPaint == null) {
+            mPaint = new Paint();
+            mPaint.setAntiAlias(true);
+            mPaint.setFilterBitmap(true);
+        }
+        // create the camera if we haven't before
+        if (mCamera == null) {
+            mCamera = new Camera();
+        }
+        if (mMatrix == null) {
+            mMatrix = new Matrix();
+        }
+
+        getChildCount();
+        final int width = getWidth();
+		float scrollPos = (float) getScrollX() / width;
+		int screen = indexOfChild(child);
+
+		float scrollBy = 0;
+	    if (asLeftScreen) {
+	    	scrollBy = (float) (90 * (scrollPos - Math.floor(scrollPos)));
+		} else {
+			scrollBy = (float) (-(90 * (1-(scrollPos - Math.floor(scrollPos)))));
+		}
+
+        // save the camera state
+        mCamera.save();
+
+        mCamera.rotateY(scrollBy);
+        // get the matrix from the camera and then restore the camera
+        mCamera.getMatrix(mMatrix);
+
+    	mCamera.restore();
+
+        int scrollX = getScrollX();
+/*        if ((screen == childCount-1) && !asLeftScreen)
+        	scrollX -= width;
+        else */if (asLeftScreen && screen == 0)
+        	scrollX += width;
+
+        mMatrix.postTranslate(scrollX, 0);
+
+        if (!child.isDrawingCacheEnabled())
+        	child.setDrawingCacheEnabled(true);
+
+    	canvas.drawBitmap(child.getDrawingCache(), mMatrix, mPaint);
+
+
+
+        return false;
+    }
+
     @Override
     protected void dispatchDraw(Canvas canvas) {
         // ViewGroup.dispatchDraw() supports many features we don't need:
@@ -497,7 +559,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         if (fastDraw) {
             drawChild(canvas, getChildAt(mCurrentScreen), getDrawingTime());
         } else {
-            long drawingTime = getDrawingTime();
+            getDrawingTime();
             int width = getWidth();
             float scrollPos = (float) getScrollX() / width;
             boolean endlessScrolling = Preferences.getInstance().getEndlessScrolling();
@@ -520,22 +582,22 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
             if (isScreenNoValid(leftScreen)) {
                 if (rightScreen == 0 && !isScrollToRight) {
-                    int offset = childCount * width;
-                    canvas.translate(-offset, 0);
-                    drawChild(canvas, getChildAt(leftScreen), drawingTime);
-                    canvas.translate(+offset, 0);
+                    // int offset = childCount * width;
+                    //canvas.translate(-offset, 0);
+                    doDrawChild(canvas, getChildAt(leftScreen), true);
+                    //canvas.translate(+offset, 0);
                 } else {
-                    drawChild(canvas, getChildAt(leftScreen), drawingTime);
+                    doDrawChild(canvas, getChildAt(leftScreen), true);
                 }
             }
             if (scrollPos != leftScreen && isScreenNoValid(rightScreen)) {
                 if (endlessScrolling && rightScreen == 0  && isScrollToRight) {
-                     int offset = childCount * width;
-                     canvas.translate(+offset, 0);
-                     drawChild(canvas, getChildAt(rightScreen), drawingTime);
-                     canvas.translate(-offset, 0);
+                    // int offset = childCount * width;
+                    // canvas.translate(+offset, 0);
+                     doDrawChild(canvas, getChildAt(rightScreen), false);
+                    // canvas.translate(-offset, 0);
                 } else {
-                    drawChild(canvas, getChildAt(rightScreen), drawingTime);
+                    doDrawChild(canvas, getChildAt(rightScreen), false);
                 }
             }
         }
@@ -1167,10 +1229,10 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                 // Came from all apps -- make a copy
                 info = new ShortcutInfo((ShortcutInfo)info);
             }
-            view = mLauncher.createShortcut(R.layout.application, cellLayout, (ShortcutInfo)info);
+            view = mLauncher.createShortcut(org.adw.launcher2.R.layout.application, cellLayout, (ShortcutInfo)info);
             break;
         case LauncherSettings.Favorites.ITEM_TYPE_USER_FOLDER:
-            view = FolderIcon.fromXml(R.layout.folder_icon, mLauncher,
+            view = FolderIcon.fromXml(org.adw.launcher2.R.layout.folder_icon, mLauncher,
                     (ViewGroup) getChildAt(mCurrentScreen), ((UserFolderInfo) info));
             break;
         default:
