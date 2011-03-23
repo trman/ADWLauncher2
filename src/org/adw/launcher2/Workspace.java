@@ -487,9 +487,6 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        boolean restore = false;
-        int restoreCount = 0;
-
         // ViewGroup.dispatchDraw() supports many features we don't need:
         // clip to padding, layout animation, animation listener, disappearing
         // children, etc. The following implementation attempts to fast-track
@@ -500,48 +497,47 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         if (fastDraw) {
             drawChild(canvas, getChildAt(mCurrentScreen), getDrawingTime());
         } else {
-            final long drawingTime = getDrawingTime();
-            final float scrollPos = (float) getScrollX() / getWidth();
+            long drawingTime = getDrawingTime();
+            int width = getWidth();
+            float scrollPos = (float) getScrollX() / width;
+            boolean endlessScrolling = Preferences.getInstance().getEndlessScrolling();
 
-            final int leftScreen;
+            int leftScreen;
             int rightScreen;
             boolean isScrollToRight = false;
-            if (scrollPos < 0 && Preferences.getInstance().getEndlessScrolling()) {
-            	leftScreen = getChildCount() - 1;
-            	rightScreen = 0;
+            int childCount = getChildCount();
+            if (scrollPos < 0 && endlessScrolling) {
+                leftScreen = childCount - 1;
+                rightScreen = 0;
             } else {
-            	leftScreen = (int) scrollPos;
-            	rightScreen = leftScreen + 1;
-            	if (Preferences.getInstance().getEndlessScrolling()) {
-            		rightScreen = rightScreen % getChildCount();
-            		isScrollToRight = true;
-            	}
+                leftScreen = Math.min( (int) scrollPos, childCount - 1 );
+                rightScreen = leftScreen + 1;
+                if (endlessScrolling) {
+                    rightScreen = rightScreen % childCount;
+                    isScrollToRight = true;
+                }
             }
 
             if (isScreenNoValid(leftScreen)) {
-            	if (rightScreen == 0 && !isScrollToRight) {
-            		int offset = getChildCount() * getWidth();
-            		canvas.translate(-offset, 0);
-               	 	drawChild(canvas, getChildAt(leftScreen), drawingTime);
-               	 	canvas.translate(+offset, 0);
-            	} else {
-            		drawChild(canvas, getChildAt(leftScreen), drawingTime);
-            	}
+                if (rightScreen == 0 && !isScrollToRight) {
+                    int offset = childCount * width;
+                    canvas.translate(-offset, 0);
+                    drawChild(canvas, getChildAt(leftScreen), drawingTime);
+                    canvas.translate(+offset, 0);
+                } else {
+                    drawChild(canvas, getChildAt(leftScreen), drawingTime);
+                }
             }
             if (scrollPos != leftScreen && isScreenNoValid(rightScreen)) {
-	            if (Preferences.getInstance().getEndlessScrolling() && rightScreen == 0  && isScrollToRight) {
-	                 int offset = getChildCount() * getWidth();
-	            	 canvas.translate(+offset, 0);
-	            	 drawChild(canvas, getChildAt(rightScreen), drawingTime);
-	            	 canvas.translate(-offset, 0);
-	            } else {
-	            	drawChild(canvas, getChildAt(rightScreen), drawingTime);
-	            }
+                if (endlessScrolling && rightScreen == 0  && isScrollToRight) {
+                     int offset = childCount * width;
+                     canvas.translate(+offset, 0);
+                     drawChild(canvas, getChildAt(rightScreen), drawingTime);
+                     canvas.translate(-offset, 0);
+                } else {
+                    drawChild(canvas, getChildAt(rightScreen), drawingTime);
+                }
             }
-        }
-
-        if (restore) {
-            canvas.restoreToCount(restoreCount);
         }
     }
 
