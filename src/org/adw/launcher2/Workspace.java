@@ -498,8 +498,13 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     		boolean asLeftScreen, boolean scrollRight, long drawingTime) {
     	final int width = getWidth();
     	final float scrollPos = (float) getScrollX() / width;
+    	int screen = indexOfChild(child);
+
+    	if (scrollPos == (int)scrollPos) // not in transition
+    		super.drawChild(canvas, child, drawingTime);
+
     	if (!child.isDrawingCacheEnabled())
-    		return super.drawChild(canvas, child, drawingTime);
+    		enableChildrenCache(screen, screen);
 
     	if (mPaint == null) {
             mPaint = new Paint();
@@ -514,8 +519,6 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             mMatrix = new Matrix();
         }
 
-		indexOfChild(child);
-		getChildCount();
 
 		float scrollBy = 0;
 	    if (asLeftScreen) {
@@ -927,11 +930,11 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             fromScreen = toScreen;
             toScreen = temp;
         }
-        Log.d("BOOMBULER", "enabling cache:"+ fromScreen + " - "+toScreen);
+
         final int count = getChildCount();
 
         fromScreen = Math.max(fromScreen, 0);
-        toScreen = Math.min(toScreen, count - 1);
+        toScreen = Math.min(toScreen, count-1);
 
         for (int i = fromScreen; i <= toScreen; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);
@@ -943,7 +946,6 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     }
 
     void clearChildrenCache() {
-    	Log.d("BOOMBULER", "disabling cache!");
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);
