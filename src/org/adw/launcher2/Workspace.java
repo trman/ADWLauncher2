@@ -494,7 +494,13 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     private Camera mCamera = null;
 
 
-    protected boolean doDrawChild(Canvas canvas, View child, boolean asLeftScreen) {
+    protected boolean doDrawChild(Canvas canvas, View child,
+    		boolean asLeftScreen, boolean scrollRight, long drawingTime) {
+    	final int width = getWidth();
+    	final float scrollPos = (float) getScrollX() / width;
+    	if (!child.isDrawingCacheEnabled())
+    		return super.drawChild(canvas, child, drawingTime);
+
     	if (mPaint == null) {
             mPaint = new Paint();
             mPaint.setAntiAlias(true);
@@ -508,10 +514,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             mMatrix = new Matrix();
         }
 
-        getChildCount();
-        final int width = getWidth();
-		float scrollPos = (float) getScrollX() / width;
-		int screen = indexOfChild(child);
+		indexOfChild(child);
+		getChildCount();
 
 		float scrollBy = 0;
 	    if (asLeftScreen) {
@@ -521,28 +525,27 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 		}
 
         // save the camera state
-        mCamera.save();
+       // mCamera.save();
 
         mCamera.rotateY(scrollBy);
         // get the matrix from the camera and then restore the camera
         mCamera.getMatrix(mMatrix);
-
-    	mCamera.restore();
+        mCamera.rotateY(-scrollBy);
+    	//mCamera.restore();
 
         int scrollX = getScrollX();
-/*        if ((screen == childCount-1) && !asLeftScreen)
-        	scrollX -= width;
-        else */if (asLeftScreen && screen == 0)
-        	scrollX += width;
-
-        mMatrix.postTranslate(scrollX, 0);
-
-        if (!child.isDrawingCacheEnabled())
-        	child.setDrawingCacheEnabled(true);
-
+//        if (screen == 0 && !asLeftScreen && !scrollRight) {
+//        	mMatrix.preTranslate(-childCount * width, 0);
+//        	scrollX -= width;
+//        } else if (!asLeftScreen && screen == 0)
+//        	scrollX += width;
+        if (!asLeftScreen) {
+        	mMatrix.preTranslate(-width, 0);
+        	mMatrix.postTranslate(width+scrollX, 0);
+        }
+        else
+        	mMatrix.postTranslate(scrollX, 0);
     	canvas.drawBitmap(child.getDrawingCache(), mMatrix, mPaint);
-
-
 
         return false;
     }
@@ -559,7 +562,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         if (fastDraw) {
             drawChild(canvas, getChildAt(mCurrentScreen), getDrawingTime());
         } else {
-            getDrawingTime();
+            long drawingTime = getDrawingTime();
             int width = getWidth();
             float scrollPos = (float) getScrollX() / width;
             boolean endlessScrolling = Preferences.getInstance().getEndlessScrolling();
@@ -582,22 +585,22 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
             if (isScreenNoValid(leftScreen)) {
                 if (rightScreen == 0 && !isScrollToRight) {
-                    // int offset = childCount * width;
-                    //canvas.translate(-offset, 0);
-                    doDrawChild(canvas, getChildAt(leftScreen), true);
-                    //canvas.translate(+offset, 0);
+                    int offset = childCount * width;
+                    canvas.translate(-offset, 0);
+                    doDrawChild(canvas, getChildAt(leftScreen), true,isScrollToRight, drawingTime);
+                    canvas.translate(+offset, 0);
                 } else {
-                    doDrawChild(canvas, getChildAt(leftScreen), true);
+                    doDrawChild(canvas, getChildAt(leftScreen), true,isScrollToRight, drawingTime);
                 }
             }
             if (scrollPos != leftScreen && isScreenNoValid(rightScreen)) {
                 if (endlessScrolling && rightScreen == 0  && isScrollToRight) {
-                    // int offset = childCount * width;
-                    // canvas.translate(+offset, 0);
-                     doDrawChild(canvas, getChildAt(rightScreen), false);
-                    // canvas.translate(-offset, 0);
+                    int offset = childCount * width;
+                    canvas.translate(+offset, 0);
+                    doDrawChild(canvas, getChildAt(rightScreen), false, isScrollToRight, drawingTime);
+                    canvas.translate(-offset, 0);
                 } else {
-                    doDrawChild(canvas, getChildAt(rightScreen), false);
+                    doDrawChild(canvas, getChildAt(rightScreen), false, isScrollToRight, drawingTime);
                 }
             }
         }
@@ -924,7 +927,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             fromScreen = toScreen;
             toScreen = temp;
         }
-
+        Log.d("BOOMBULER", "enabling cache:"+ fromScreen + " - "+toScreen);
         final int count = getChildCount();
 
         fromScreen = Math.max(fromScreen, 0);
@@ -932,17 +935,20 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
         for (int i = fromScreen; i <= toScreen; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);
-            layout.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_LOW);
+            layout.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_AUTO);
             layout.setChildrenDrawnWithCacheEnabled(true);
             layout.setChildrenDrawingCacheEnabled(true);
+            layout.setDrawingCacheEnabled(true);
         }
     }
 
     void clearChildrenCache() {
+    	Log.d("BOOMBULER", "disabling cache!");
         final int count = getChildCount();
         for (int i = 0; i < count; i++) {
             final CellLayout layout = (CellLayout) getChildAt(i);
             layout.setChildrenDrawnWithCacheEnabled(false);
+            layout.setDrawingCacheEnabled(false);
         }
     }
 
