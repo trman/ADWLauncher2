@@ -50,7 +50,7 @@ public class AppDB extends BroadcastReceiver {
 		Cursor c = cr.query(AppInfos.CONTENT_URI,
 				new String[] { AppInfos.ID },
 				AppInfos.COMPONENT_NAME + "=?",
-				new String[] { name.toString() }, null);
+				new String[] { name.flattenToString() }, null);
 		try {
 			c.moveToFirst();
 			if (!c.isAfterLast()) {
@@ -79,7 +79,7 @@ public class AppDB extends BroadcastReceiver {
 					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
 				return getLaunchCounter(info.intent.getComponent());
 		}
-		return -1;
+		return -2;
 	}
 
 	public int getLaunchCounter(ComponentName name) {
@@ -87,7 +87,7 @@ public class AppDB extends BroadcastReceiver {
 		Cursor c = cr.query(AppInfos.CONTENT_URI,
 				new String[] { AppInfos.LAUNCH_COUNT },
 				AppInfos.COMPONENT_NAME + "=?",
-				new String[] { name.toString() }, null);
+				new String[] { name.flattenToString() }, null);
 		try {
 			c.moveToFirst();
 			if (!c.isAfterLast()) {
@@ -97,7 +97,7 @@ public class AppDB extends BroadcastReceiver {
 		finally {
 			c.close();
 		}
-		return -1;
+		return -3;
 	}
 
 

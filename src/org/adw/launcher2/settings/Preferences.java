@@ -93,7 +93,7 @@ public class Preferences {
     		mLaunchCountComparator = new Comparator<ShortcutInfo>() {
 				@Override
 				public int compare(ShortcutInfo a, ShortcutInfo b) {
-					return myAppDB.getLaunchCounter(a) - myAppDB.getLaunchCounter(b);
+					return myAppDB.getLaunchCounter(b) - myAppDB.getLaunchCounter(a);
 				}
 			};
     	}
@@ -101,7 +101,8 @@ public class Preferences {
     }
 
     public Comparator<ShortcutInfo> getCurrentDrawerComparator(AppDB appDB, IconCache iconCache) {
-    	int currentMode = mPreferences.getInt(PREF_CURRENT_DRAWER_SORT_ORDER, SORT_BY_NAME);
+    	int currentMode = mPreferences.getInt(PREF_CURRENT_DRAWER_SORT_ORDER,
+    			SORT_BY_LAUNCH_COUNT);
     	switch(currentMode) {
     		case SORT_BY_NAME:
     			return getAppNameComparator(iconCache);
