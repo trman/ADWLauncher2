@@ -30,6 +30,8 @@ import mobi.intuitit.android.content.LauncherMetadata;
 import org.adw.launcher2.ItemInfo.EditAction;
 import org.adw.launcher2.actions.DefaultAction;
 import org.adw.launcher2.actions.LauncherActions;
+import org.adw.launcher2.appdb.AppDB;
+import org.adw.launcher2.settings.LauncherSettings;
 
 import android.app.Activity;
 import android.app.AlertDialog;

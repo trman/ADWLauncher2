@@ -19,6 +19,8 @@ package org.adw.launcher2;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
@@ -61,6 +63,10 @@ public class ShortcutInfo extends IconItemInfo {
     	this.container = ItemInfo.NO_ID;
     	this.mTitle = null;
     	this.setActivity(componentName, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+    }
+
+    public Intent getIntent() {
+    	return intent;
     }
 
     @Override

@@ -19,6 +19,8 @@ package org.adw.launcher2;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.adw.launcher2.appdb.AppDB;
+
 import android.content.ComponentName;
 
 

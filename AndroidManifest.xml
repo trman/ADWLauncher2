@@ -128,7 +128,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name="org.adw.launcher2.AppDB"
+        <receiver android:name="org.adw.launcher2.appdb.AppDB"
                   android:enabled="true"
                   android:exported="true">
             <intent-filter>
@@ -148,7 +148,7 @@
             android:readPermission="com.android.launcher.permission.READ_SETTINGS" />
             
         <provider
-        	android:name="org.adw.launcher2.AppDBProvider"
+        	android:name="org.adw.launcher2.appdb.AppDBProvider"
         	android:authorities="org.adw.launcher2.appdb" 
         	android:exported="false" />
 

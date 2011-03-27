@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.content.ContentValues;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -30,7 +32,7 @@ import android.view.View;
 /**
  * Represents an item in the launcher.
  */
-class ItemInfo {
+public class ItemInfo {
 
     static final int NO_ID = -1;
 
@@ -132,7 +134,7 @@ class ItemInfo {
         }
     }
 
-    static void writeBitmap(ContentValues values, Bitmap bitmap) {
+    public static void writeBitmap(ContentValues values, Bitmap bitmap) {
         if (bitmap != null) {
             byte[] data = flattenBitmap(bitmap);
             values.put(LauncherSettings.Favorites.ICON, data);
@@ -169,7 +171,7 @@ class ItemInfo {
             mIcon = icon;
             mTitleString = title;
         }
-        
+
         public EditAction(int id, Drawable icon, CharSequence title)
         {
             mId = id;

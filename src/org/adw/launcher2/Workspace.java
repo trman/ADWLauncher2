@@ -22,6 +22,7 @@ import java.util.List;
 
 import mobi.intuitit.android.widget.WidgetSpace;
 
+import org.adw.launcher2.settings.LauncherSettings;
 import org.adw.launcher2.settings.Preferences;
 
 import android.app.Activity;

@@ -16,6 +16,8 @@
 
 package org.adw.launcher2;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;

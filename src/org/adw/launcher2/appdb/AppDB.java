@@ -1,4 +1,4 @@
-package org.adw.launcher2;
+package org.adw.launcher2.appdb;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -6,6 +6,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+
+import org.adw.launcher2.IconCache;
+import org.adw.launcher2.ItemInfo;
+import org.adw.launcher2.ShortcutInfo;
+import org.adw.launcher2.Utilities;
+import org.adw.launcher2.settings.LauncherSettings;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -64,20 +70,20 @@ public class AppDB extends BroadcastReceiver {
 	}
 
 	public void incrementLaunchCounter(ShortcutInfo info) {
-		if (info != null && info.intent != null) {
-			String action = info.intent.getAction();
+		if (info != null && info.getIntent() != null) {
+			String action = info.getIntent().getAction();
 			if (Intent.ACTION_MAIN.equals(action) &&
-					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
-				incrementLaunchCounter(info.intent.getComponent());
+					info.getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
+				incrementLaunchCounter(info.getIntent().getComponent());
 		}
 	}
 
 	public int getLaunchCounter(ShortcutInfo info) {
-		if (info != null && info.intent != null) {
-			String action = info.intent.getAction();
+		if (info != null && info.getIntent() != null) {
+			String action = info.getIntent().getAction();
 			if (Intent.ACTION_MAIN.equals(action) &&
-					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
-				return getLaunchCounter(info.intent.getComponent());
+					info.getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
+				return getLaunchCounter(info.getIntent().getComponent());
 		}
 		return -2;
 	}
@@ -274,7 +280,7 @@ public class AppDB extends BroadcastReceiver {
 		}
 	}
 
-	static boolean arrayContains(String[] array, String value) {
+	public static boolean arrayContains(String[] array, String value) {
 		for (String itm : array) {
 			if (itm.equals(value))
 				return true;

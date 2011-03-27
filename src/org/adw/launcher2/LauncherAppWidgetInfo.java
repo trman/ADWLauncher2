@@ -18,6 +18,8 @@ package org.adw.launcher2;
 
 import java.util.List;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.appwidget.AppWidgetHostView;
 import android.appwidget.AppWidgetProviderInfo;
 import android.content.ContentValues;

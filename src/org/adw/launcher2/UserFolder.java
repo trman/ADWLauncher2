@@ -1,5 +1,7 @@
 package org.adw.launcher2;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;

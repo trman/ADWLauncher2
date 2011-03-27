@@ -18,6 +18,8 @@ package org.adw.launcher2;
 
 import java.util.ArrayList;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 /**
  * Represents a folder containing shortcuts or apps.
  */

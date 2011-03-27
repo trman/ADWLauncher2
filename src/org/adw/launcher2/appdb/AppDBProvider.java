@@ -1,9 +1,9 @@
-package org.adw.launcher2;
+package org.adw.launcher2.appdb;
 
 import java.util.List;
 
-import org.adw.launcher2.AppDB.AppInfos;
 import org.adw.launcher2.LauncherProvider.SqlArguments;
+import org.adw.launcher2.appdb.AppDB.AppInfos;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;

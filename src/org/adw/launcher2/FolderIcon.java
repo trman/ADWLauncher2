@@ -16,6 +16,8 @@
 
 package org.adw.launcher2;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Rect;

@@ -2,6 +2,8 @@ package org.adw.launcher2;
 
 import java.util.List;
 
+import org.adw.launcher2.settings.LauncherSettings;
+
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;

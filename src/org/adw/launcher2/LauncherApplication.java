@@ -16,6 +16,8 @@
 
 package org.adw.launcher2;
 
+import org.adw.launcher2.appdb.AppDB;
+import org.adw.launcher2.settings.LauncherSettings;
 import org.adw.launcher2.settings.Preferences;
 
 import android.app.Application;

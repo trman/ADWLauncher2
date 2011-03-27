@@ -19,7 +19,8 @@ package org.adw.launcher2;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.adw.launcher2.LauncherSettings.Favorites;
+import org.adw.launcher2.settings.LauncherSettings;
+import org.adw.launcher2.settings.LauncherSettings.Favorites;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -60,10 +61,10 @@ public class LauncherProvider extends ContentProvider {
 
     private static final int DATABASE_VERSION = 8;
 
-    static final String AUTHORITY = "org.adw.launcher2.settings";
+    public static final String AUTHORITY = "org.adw.launcher2.settings";
 
-    static final String TABLE_FAVORITES = "favorites";
-    static final String PARAMETER_NOTIFY = "notify";
+    public static final String TABLE_FAVORITES = "favorites";
+    public static final String PARAMETER_NOTIFY = "notify";
 
     /**
      * {@link Uri} triggered at any registered {@link android.database.ContentObserver} when
@@ -836,12 +837,12 @@ public class LauncherProvider extends ContentProvider {
         return selectWhere.toString();
     }
 
-    static class SqlArguments {
+    public static class SqlArguments {
         public final String table;
         public final String where;
         public final String[] args;
 
-        SqlArguments(Uri url, String where, String[] args) {
+        public SqlArguments(Uri url, String where, String[] args) {
             if (url.getPathSegments().size() == 1) {
                 this.table = url.getPathSegments().get(0);
                 this.where = where;
@@ -857,7 +858,7 @@ public class LauncherProvider extends ContentProvider {
             }
         }
 
-        SqlArguments(Uri url) {
+        public SqlArguments(Uri url) {
             if (url.getPathSegments().size() == 1) {
                 table = url.getPathSegments().get(0);
                 where = null;

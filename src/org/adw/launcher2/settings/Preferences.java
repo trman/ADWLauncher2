@@ -4,9 +4,9 @@ import java.net.URISyntaxException;
 import java.text.Collator;
 import java.util.Comparator;
 
-import org.adw.launcher2.AppDB;
 import org.adw.launcher2.IconCache;
 import org.adw.launcher2.ShortcutInfo;
+import org.adw.launcher2.appdb.AppDB;
 
 import android.content.Context;
 import android.content.Intent;
