@@ -39,6 +39,8 @@ public class AppDB extends BroadcastReceiver {
 	private Context mContext;
 	private final IconCache mIconCache;
 
+	private final HashMap<String, LaunchInfo> mLaunchInfos = new HashMap<String, LaunchInfo>();
+
 	public AppDB(Context context, IconCache iconCache) {
 		mContext = context;
 		mIconCache = iconCache;
@@ -78,6 +80,22 @@ public class AppDB extends BroadcastReceiver {
 		}
 	}
 
+	private void incrementLaunchCounter(ComponentName name) {
+		String cnStr = name.flattenToString();
+		if (mLaunchInfos.containsKey(cnStr)) {
+			// Update local
+			mLaunchInfos.get(cnStr).launched();
+		}
+
+		ContentResolver cr = mContext.getContentResolver();
+		Cursor c = cr.query( // Update within the DB
+				AppInfos.APP_LAUNCHED_URI.buildUpon()
+					.appendEncodedPath(cnStr).build(),
+				null, null, null, null);
+		if (c != null)
+			c.close();
+	}
+
 	public int getLaunchCounter(ShortcutInfo info) {
 		if (info != null && info.getIntent() != null) {
 			String action = info.getIntent().getAction();
@@ -85,36 +103,46 @@ public class AppDB extends BroadcastReceiver {
 					info.getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
 				return getLaunchCounter(info.getIntent().getComponent());
 		}
-		return -2;
+		return -1;
 	}
 
 	public int getLaunchCounter(ComponentName name) {
-		ContentResolver cr = mContext.getContentResolver();
-		Cursor c = cr.query(AppInfos.CONTENT_URI,
-				new String[] { AppInfos.LAUNCH_COUNT },
-				AppInfos.COMPONENT_NAME + "=?",
-				new String[] { name.flattenToString() }, null);
-		try {
-			c.moveToFirst();
-			if (!c.isAfterLast()) {
-				return (int)c.getLong(0);
-			}
-		}
-		finally {
-			c.close();
-		}
-		return -3;
+		LaunchInfo info = getLaunchInfo(name);
+		if (info != null)
+			return info.getCount();
+		return -1;
 	}
 
+	private LaunchInfo getLaunchInfo(ComponentName name) {
+		String cnStr = name.flattenToString();
+		if (!mLaunchInfos.containsKey(cnStr)) {
+			ContentResolver cr = mContext.getContentResolver();
+			Cursor c = cr.query(AppInfos.CONTENT_URI,
+					new String[] {
+						AppInfos.LAUNCH_COUNT,
+						AppInfos.LAST_LAUNCHED },
+					AppInfos.COMPONENT_NAME + "=?",
+					new String[] { cnStr }, null);
+			try {
+				c.moveToFirst();
 
-	private void incrementLaunchCounter(ComponentName name) {
-		ContentResolver cr = mContext.getContentResolver();
-		Cursor c = cr.query(
-				AppInfos.APP_LAUNCHED_URI.buildUpon()
-					.appendEncodedPath(name.flattenToString()).build(),
-				null, null, null, null);
-		if (c != null)
-			c.close();
+				if (!c.isAfterLast()) {
+					LaunchInfo li = new LaunchInfo(
+							(int)c.getLong(c.getColumnIndex(AppInfos.LAUNCH_COUNT)),
+							c.getLong(c.getColumnIndex(AppInfos.LAST_LAUNCHED)));
+
+					mLaunchInfos.put(cnStr, li);
+					return li;
+				}
+				else
+					return null;
+			}
+			finally {
+				c.close();
+			}
+
+		}
+		return mLaunchInfos.get(cnStr);
 	}
 
 	@Override
@@ -408,18 +436,31 @@ public class AppDB extends BroadcastReceiver {
 		Cursor c = cr.query(AppInfos.CONTENT_URI, new String[] {
 				AppInfos.COMPONENT_NAME,
 				AppInfos.ICON,
-				AppInfos.TITLE
+				AppInfos.TITLE,
+				AppInfos.LAST_LAUNCHED,
+				AppInfos.LAUNCH_COUNT
 		}, getAppIdFilter(appIds), null, null);
 		try {
 			c.moveToFirst();
 			final int iconIdx = c.getColumnIndex(AppInfos.ICON);
 			final int cnIdx = c.getColumnIndex(AppInfos.COMPONENT_NAME);
 			final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
+			final int launchcntIdx = c.getColumnIndex(AppInfos.LAUNCH_COUNT);
+			final int lastlaunchIdx = c.getColumnIndex(AppInfos.LAST_LAUNCHED);
 
 			while(!c.isAfterLast()) {
 				Bitmap icon = getIconFromCursor(c, iconIdx);
 				String cnStr = c.getString(cnIdx);
 				String title = c.getString(titleIdx);
+
+				if (mLaunchInfos.containsKey(cnStr))
+					mLaunchInfos.remove(cnStr);
+
+				mLaunchInfos.put(cnStr,
+						new LaunchInfo(
+								(int)c.getLong(launchcntIdx),
+								c.getLong(lastlaunchIdx)));
+
 				ComponentName cname = ComponentName.unflattenFromString(cnStr);
 				if (mIconCache != null)
 					mIconCache.addToCache(cname, title, icon);
