@@ -35,7 +35,7 @@ import android.view.View;
 /**
  * Represents a launchable icon on the workspaces and in folders.
  */
-class ShortcutInfo extends IconItemInfo {
+public class ShortcutInfo extends IconItemInfo {
     private static final String ANDROID_SETTINGS_PACKAGE = "com.android.settings";
     private static final String ANDROID_MARKET_PACKAGE = "com.android.vending";
 

@@ -19,6 +19,8 @@ package org.adw.launcher2;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import org.adw.launcher2.settings.Preferences;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.res.Resources;
@@ -268,7 +270,9 @@ public class AllApps2D
         for (int i=0; i<N; i++) {
             final ShortcutInfo item = list.get(i);
             int index = Collections.binarySearch(mAllAppsList, item,
-                    LauncherModel.getAppNameComperator(mLauncher.getIconCache()));
+                    Preferences.getInstance().getCurrentDrawerComparator(
+                    		((LauncherApplication)mLauncher.getApplication()).getAppDB(),
+                    		mLauncher.getIconCache()));
             if (index < 0) {
                 index = -(index+1);
             }

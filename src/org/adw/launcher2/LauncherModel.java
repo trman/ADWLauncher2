@@ -18,9 +18,7 @@ package org.adw.launcher2;
 
 import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
-import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -1295,16 +1293,6 @@ public class LauncherModel extends BroadcastReceiver {
         return (LiveFolderInfo) folderInfo;
     }
 
-    private static final Collator sCollator = Collator.getInstance();
-    public static Comparator<ShortcutInfo> getAppNameComperator(IconCache iconCache)
-    {
-    	final IconCache myIconCache = iconCache;
-    	return new Comparator<ShortcutInfo>() {
-    		public final int compare(ShortcutInfo a, ShortcutInfo b) {
-    			return sCollator.compare(a.getTitle(myIconCache), b.getTitle(myIconCache));
-    		}
-    	};
-    }
     /**
      * Resize an item in the DB to a new <container, screen, cellX, cellY>
      */

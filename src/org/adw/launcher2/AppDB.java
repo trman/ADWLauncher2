@@ -72,6 +72,35 @@ public class AppDB extends BroadcastReceiver {
 		}
 	}
 
+	public int getLaunchCounter(ShortcutInfo info) {
+		if (info != null && info.intent != null) {
+			String action = info.intent.getAction();
+			if (Intent.ACTION_MAIN.equals(action) &&
+					info.intent.hasCategory(Intent.CATEGORY_LAUNCHER))
+				return getLaunchCounter(info.intent.getComponent());
+		}
+		return -1;
+	}
+
+	public int getLaunchCounter(ComponentName name) {
+		ContentResolver cr = mContext.getContentResolver();
+		Cursor c = cr.query(AppInfos.CONTENT_URI,
+				new String[] { AppInfos.LAUNCH_COUNT },
+				AppInfos.COMPONENT_NAME + "=?",
+				new String[] { name.toString() }, null);
+		try {
+			c.moveToFirst();
+			if (!c.isAfterLast()) {
+				return (int)c.getLong(0);
+			}
+		}
+		finally {
+			c.close();
+		}
+		return -1;
+	}
+
+
 	private void incrementLaunchCounter(ComponentName name) {
 		ContentResolver cr = mContext.getContentResolver();
 		Cursor c = cr.query(
