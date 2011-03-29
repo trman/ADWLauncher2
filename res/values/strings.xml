@@ -177,7 +177,15 @@
 	<string name="shirtcuts_select_icon_pack">Select icon pack</string>
 	
 	<!-- Settings -->
+	<string name="settings_cat_homescreen">Homescreens</string>
+	<string name="settings_cat_drawer">Drawer</string>
+	<string name="settings_drawer_sorting">Sorting</string>
 	<string name="settings_endless_desktop_loop">Looping Homescreens</string>
 	<string name="settings_swipe_up_action">Swipe Up Action</string>
 	<string name="settings_swipe_down_action">Swipe Down Action</string>
+	
+	<string-array name="settings_sorting_names">
+		<item>By Name</item>
+		<item>By Times Launched</item>
+	</string-array>
 </resources>

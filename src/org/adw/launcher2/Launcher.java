@@ -32,6 +32,7 @@ import org.adw.launcher2.actions.DefaultAction;
 import org.adw.launcher2.actions.LauncherActions;
 import org.adw.launcher2.appdb.AppDB;
 import org.adw.launcher2.settings.LauncherSettings;
+import org.adw.launcher2.settings.Preferences;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -234,6 +235,7 @@ public final class Launcher extends Activity
         mAppDB = app.getAppDB();
         mDragController = new DragController(this);
         mInflater = getLayoutInflater();
+        Preferences.getInstance().setLauncher(this);
 
         mAppWidgetManager = AppWidgetManager.getInstance(this);
         mAppWidgetHost = new LauncherAppWidgetHost(this, APPWIDGET_HOST_ID);
@@ -385,6 +387,14 @@ public final class Launcher extends Activity
 
     public LauncherModel getModel() {
     	return mModel;
+    }
+
+    public AppDB getAppDB() {
+    	return mAppDB;
+    }
+
+    public AllAppsView getAllAppsView() {
+    	return mAllAppsGrid;
     }
 
     static int getScreen() {

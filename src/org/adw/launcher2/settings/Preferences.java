@@ -5,15 +5,16 @@ import java.text.Collator;
 import java.util.Comparator;
 
 import org.adw.launcher2.IconCache;
+import org.adw.launcher2.Launcher;
 import org.adw.launcher2.ShortcutInfo;
 import org.adw.launcher2.appdb.AppDB;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.preference.PreferenceManager;
 
-public class Preferences {
+public class Preferences implements OnSharedPreferenceChangeListener {
 
 	private final static String EmptyString = "";
 
@@ -26,14 +27,18 @@ public class Preferences {
 	}
 
 	private SharedPreferences mPreferences = null;
+	private Launcher mLauncher = null;
 
 
-	public void setContext(Context context) {
-		if (context == null && mPreferences != null) {
+	public void setLauncher(Launcher launcher) {
+		if (launcher == null && mPreferences != null) {
+			mPreferences.unregisterOnSharedPreferenceChangeListener(this);
 			mPreferences = null;
-		} else if (context != null) {
-			mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+		} else if (launcher != null) {
+			mPreferences = PreferenceManager.getDefaultSharedPreferences(launcher);
+			mPreferences.registerOnSharedPreferenceChangeListener(this);
 		}
+		mLauncher = launcher;
 	}
 
 	private Intent getIntent(String key) {
@@ -69,49 +74,50 @@ public class Preferences {
 	private static final int SORT_BY_LAUNCH_COUNT = 2;
 
     private static final Collator sCollator = Collator.getInstance();
+    private Comparator<ShortcutInfo> mCurrentComparator = null;
 
-    private Comparator<ShortcutInfo> mNameComparator = null;
-
-    private Comparator<ShortcutInfo> getAppNameComparator(IconCache iconCache) {
-    	if (mNameComparator == null) {
-    		final IconCache myIconCache = iconCache;
-    		mNameComparator = new Comparator<ShortcutInfo>() {
-    			@Override
-	    		public final int compare(ShortcutInfo a, ShortcutInfo b) {
-	    			return sCollator.compare(a.getTitle(myIconCache), b.getTitle(myIconCache));
-	    		}
-	    	};
-    	}
-    	return mNameComparator;
+    private Comparator<ShortcutInfo> getAppNameComparator() {
+		final IconCache myIconCache = mLauncher.getIconCache();
+		return new Comparator<ShortcutInfo>() {
+			@Override
+    		public final int compare(ShortcutInfo a, ShortcutInfo b) {
+    			return sCollator.compare(a.getTitle(myIconCache), b.getTitle(myIconCache));
+    		}
+    	};
     }
 
-    private Comparator<ShortcutInfo> mLaunchCountComparator = null;
-
-    private Comparator<ShortcutInfo> getLaunchCountComparator(AppDB appdb) {
-    	if (mLaunchCountComparator == null) {
-    		final AppDB myAppDB = appdb;
-    		mLaunchCountComparator = new Comparator<ShortcutInfo>() {
-				@Override
-				public int compare(ShortcutInfo a, ShortcutInfo b) {
-					return myAppDB.getLaunchCounter(b) - myAppDB.getLaunchCounter(a);
-				}
-			};
-    	}
-    	return mLaunchCountComparator;
+    private Comparator<ShortcutInfo> getLaunchCountComparator() {
+		final AppDB myAppDB = mLauncher.getAppDB();
+		return new Comparator<ShortcutInfo>() {
+			@Override
+			public int compare(ShortcutInfo a, ShortcutInfo b) {
+				return myAppDB.getLaunchCounter(b) - myAppDB.getLaunchCounter(a);
+			}
+		};
     }
 
-    public Comparator<ShortcutInfo> getCurrentDrawerComparator(AppDB appDB, IconCache iconCache) {
-    	int currentMode = mPreferences.getInt(PREF_CURRENT_DRAWER_SORT_ORDER,
-    			SORT_BY_LAUNCH_COUNT);
-    	switch(currentMode) {
-    		case SORT_BY_NAME:
-    			return getAppNameComparator(iconCache);
-    		case SORT_BY_LAUNCH_COUNT:
-    			return getLaunchCountComparator(appDB);
-    		default:
-    			return null;
+    public Comparator<ShortcutInfo> getCurrentDrawerComparator() {
+    	if (mCurrentComparator == null) {
+	    	int currentMode = Integer.parseInt(mPreferences.getString(PREF_CURRENT_DRAWER_SORT_ORDER,
+	    			String.valueOf(SORT_BY_NAME)));
+	    	switch(currentMode) {
+	    		case SORT_BY_NAME:
+	    			mCurrentComparator = getAppNameComparator();
+	    		case SORT_BY_LAUNCH_COUNT:
+	    			mCurrentComparator = getLaunchCountComparator();
+	    	}
     	}
-
+    	return mCurrentComparator;
     }
+
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+			String key) {
+		if (key.equals(PREF_CURRENT_DRAWER_SORT_ORDER) && mLauncher != null) {
+			mCurrentComparator = null;
+			mLauncher.getAllAppsView().sort();
+		}
+	}
 
 }
