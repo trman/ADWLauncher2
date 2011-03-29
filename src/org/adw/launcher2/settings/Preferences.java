@@ -6,6 +6,7 @@ import java.util.Comparator;
 
 import org.adw.launcher2.IconCache;
 import org.adw.launcher2.Launcher;
+import org.adw.launcher2.R;
 import org.adw.launcher2.ShortcutInfo;
 import org.adw.launcher2.appdb.AppDB;
 
@@ -37,6 +38,7 @@ public class Preferences implements OnSharedPreferenceChangeListener {
 		} else if (launcher != null) {
 			mPreferences = PreferenceManager.getDefaultSharedPreferences(launcher);
 			mPreferences.registerOnSharedPreferenceChangeListener(this);
+			PreferenceManager.setDefaultValues(launcher, R.xml.settings, false);
 		}
 		mLauncher = launcher;
 	}
@@ -73,11 +75,11 @@ public class Preferences implements OnSharedPreferenceChangeListener {
 	private static final int SORT_BY_NAME = 1;
 	private static final int SORT_BY_LAUNCH_COUNT = 2;
 
-    private static final Collator sCollator = Collator.getInstance();
     private Comparator<ShortcutInfo> mCurrentComparator = null;
 
     private Comparator<ShortcutInfo> getAppNameComparator() {
 		final IconCache myIconCache = mLauncher.getIconCache();
+		final Collator sCollator = Collator.getInstance();
 		return new Comparator<ShortcutInfo>() {
 			@Override
     		public final int compare(ShortcutInfo a, ShortcutInfo b) {
@@ -102,9 +104,9 @@ public class Preferences implements OnSharedPreferenceChangeListener {
 	    			String.valueOf(SORT_BY_NAME)));
 	    	switch(currentMode) {
 	    		case SORT_BY_NAME:
-	    			mCurrentComparator = getAppNameComparator();
+	    			mCurrentComparator = getAppNameComparator(); break;
 	    		case SORT_BY_LAUNCH_COUNT:
-	    			mCurrentComparator = getLaunchCountComparator();
+	    			mCurrentComparator = getLaunchCountComparator(); break;
 	    	}
     	}
     	return mCurrentComparator;
