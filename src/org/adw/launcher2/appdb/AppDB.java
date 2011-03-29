@@ -71,13 +71,14 @@ public class AppDB extends BroadcastReceiver {
 		return INVALID_ID;
 	}
 
-	public void incrementLaunchCounter(ShortcutInfo info) {
-		if (info != null && info.getIntent() != null) {
-			String action = info.getIntent().getAction();
-			if (Intent.ACTION_MAIN.equals(action) &&
-					info.getIntent().hasCategory(Intent.CATEGORY_LAUNCHER))
-				incrementLaunchCounter(info.getIntent().getComponent());
+	public boolean incrementLaunchCounter(Intent intent) {
+		String action = intent.getAction();
+		if (Intent.ACTION_MAIN.equals(action) &&
+				intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
+			incrementLaunchCounter(intent.getComponent());
+			return true;
 		}
+		return false;
 	}
 
 	private void incrementLaunchCounter(ComponentName name) {

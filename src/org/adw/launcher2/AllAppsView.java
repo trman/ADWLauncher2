@@ -44,4 +44,6 @@ public interface AllAppsView {
     public void dumpState();
 
     public void surrender();
+
+    public void sort();
 }

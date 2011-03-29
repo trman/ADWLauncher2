@@ -18,6 +18,7 @@ package org.adw.launcher2;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 import org.adw.launcher2.settings.Preferences;
 
@@ -269,16 +270,24 @@ public class AllApps2D
 
         for (int i=0; i<N; i++) {
             final ShortcutInfo item = list.get(i);
-            int index = Collections.binarySearch(mAllAppsList, item,
-                    Preferences.getInstance().getCurrentDrawerComparator(
-                    		((LauncherApplication)mLauncher.getApplication()).getAppDB(),
-                    		mLauncher.getIconCache()));
+            int index = Collections.binarySearch(mAllAppsList, item, getComparator());
             if (index < 0) {
                 index = -(index+1);
             }
             mAllAppsList.add(index, item);
         }
         mAppsAdapter.notifyDataSetChanged();
+    }
+
+    public void sort() {
+    	Collections.sort(mAllAppsList, getComparator());
+    	mAppsAdapter.notifyDataSetChanged();
+    }
+
+    private Comparator<ShortcutInfo> getComparator() {
+    	return Preferences.getInstance().getCurrentDrawerComparator(
+        		((LauncherApplication)mLauncher.getApplication()).getAppDB(),
+        		mLauncher.getIconCache());
     }
 
     public void removeApps(ArrayList<ShortcutInfo> list) {

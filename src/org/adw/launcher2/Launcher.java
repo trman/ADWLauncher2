@@ -1581,9 +1581,8 @@ public final class Launcher extends Activity
                     "or use the exported attribute for this activity. "
                     + "tag="+ tag + " intent=" + intent, e);
         }
-        if (tag instanceof ShortcutInfo) {
-        	ShortcutInfo info = (ShortcutInfo)tag;
-        	mAppDB.incrementLaunchCounter(info);
+        if(mAppDB.incrementLaunchCounter(intent)) {
+        	mAllAppsGrid.sort();
         }
     }
 
