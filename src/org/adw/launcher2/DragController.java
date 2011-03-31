@@ -478,14 +478,19 @@ public class DragController {
         final int[] coordinates = mCoordinatesTemp;
         DropTarget dropTarget = findDropTarget((int) x, (int) y, coordinates);
 
+        if ( mTagPopup != null )
+        {
+            // don't perform dismiss action when the popup closes
+            ((QuickActionWindow) mTagPopup).setOnDismissListener(null);
+        }
         if (dropTarget != null) {
             dropTarget.onDragExit(mDragSource, coordinates[0], coordinates[1],
                     (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
             if (dropTarget.acceptDrop(mDragSource, coordinates[0], coordinates[1],
                     (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo)) {
-                
                 if ( mTagPopup == null || !(dropTarget instanceof Workspace) )
                 {
+                    mTagPopup = null;
                     dropTarget.onDrop(mDragSource, coordinates[0], coordinates[1],
                             (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
                 }
