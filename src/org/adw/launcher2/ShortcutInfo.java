@@ -124,25 +124,17 @@ public class ShortcutInfo extends IconItemInfo implements ItemInfo.ItemPackage {
 	}
 
 	@Override
-	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = super.getAvailableActions(view);
-		result.add(new EditAction(ACTION_DELETE,
-				android.R.drawable.ic_menu_delete,
-				R.string.menu_delete
-		));
-        addAppInfoAction(view, result);
-        addMarketAction(view, result);
+	public List<EditAction> getAvailableActions(View view, Launcher launcher) {
+        List<EditAction> result = super.getAvailableActions(view, launcher);
+        addAppInfoAction(view, result, launcher);
+        addMarketAction(view, result, launcher);
 		return result;
 	}
 
     @Override
-    public String getPackageName()
+    public String getPackageName(Launcher launcher)
     {
-        if ( intent != null && intent.getComponent() != null )
-        {
-            return intent.getComponent().getPackageName();
-        }
-        return null;
+        return launcher.getPackageNameFromIntent(intent);
     }
 }
 

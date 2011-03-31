@@ -224,11 +224,18 @@ public class ItemInfo {
     
     interface ItemPackage
     {
-        public String getPackageName();
+        public String getPackageName(Launcher launcher);
     }
 
-	public List<EditAction> getAvailableActions(View view) {
-		return new ArrayList<EditAction>();
+	public List<EditAction> getAvailableActions(View view, Launcher launcher) {
+        ArrayList<EditAction> result = new ArrayList<EditAction>();
+        if ( container != ItemInfo.NO_ID )
+        {
+            result.add(new EditAction(ACTION_DELETE,
+                    android.R.drawable.ic_menu_delete,
+                    R.string.menu_delete));
+        }
+        return result;
 	}
 
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -236,7 +243,7 @@ public class ItemInfo {
             case ACTION_APPINFO: {
                 try
                 {
-                    String appPackage = ((ItemPackage) this).getPackageName();
+                    String appPackage = ((ItemPackage) this).getPackageName(launcher);
                     if ( appPackage != null )
                     {
                         Intent intent = new Intent();
@@ -267,7 +274,7 @@ public class ItemInfo {
                 {
                     try
                     {
-                        String appPackage = ((ItemPackage) this).getPackageName();
+                        String appPackage = ((ItemPackage) this).getPackageName(null);
                         if ( appPackage != null )
                         {
                             Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -288,7 +295,7 @@ public class ItemInfo {
         }
 	}
 
-    protected void addAppInfoAction(View view, List<EditAction> result)
+    protected void addAppInfoAction(View view, List<EditAction> result, Launcher launcher)
     {
         // get the application info label and if found show the option
         if (mAppInfoLabel == null)
@@ -309,7 +316,7 @@ public class ItemInfo {
         }
         if (mAppInfoLabel != null && this instanceof ItemPackage)
         {
-            if ( ((ItemPackage) this).getPackageName() != null )
+            if ( ((ItemPackage) this).getPackageName(launcher) != null )
             {
                 result.add(new EditAction(ACTION_APPINFO,
                         android.R.drawable.ic_menu_info_details,
@@ -317,7 +324,7 @@ public class ItemInfo {
             }
         }
     }
-    protected void addMarketAction(View view, List<EditAction> result)
+    protected void addMarketAction(View view, List<EditAction> result, Launcher launcher)
     {
         // get the market icon and label
         if (mMarketIcon == null && mMarketLabel == null)
@@ -344,7 +351,7 @@ public class ItemInfo {
         // if market, show it as an option
         if (mMarketIcon != null && mMarketLabel != null && this instanceof ItemPackage)
         {
-            if ( ((ItemPackage) this).getPackageName() != null )
+            if ( ((ItemPackage) this).getPackageName(launcher) != null )
             {
                 result.add(new EditAction(ACTION_MARKET, mMarketIcon,mMarketLabel));
             }

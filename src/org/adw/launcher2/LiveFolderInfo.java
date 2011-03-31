@@ -25,7 +25,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 
-class LiveFolderInfo extends FolderInfo {
+class LiveFolderInfo extends FolderInfo implements ItemInfo.ItemPackage {
 
     /**
      * The base intent, if it exists.
@@ -56,25 +56,17 @@ class LiveFolderInfo extends FolderInfo {
         values.put(LauncherSettings.Favorites.DISPLAY_MODE, displayMode);
     }
 
-    private static final int ACTION_UNINSTALL = 2;
+    @Override
+    public List<EditAction> getAvailableActions(View view, Launcher launcher) {
+        List<EditAction> result = super.getAvailableActions(view, launcher);
+        addAppInfoAction(view, result, launcher);
+        addMarketAction(view, result, launcher);
+        return result;
+    }
 
     @Override
-	public void executeAction(EditAction action, View view, Launcher launcher) {
-		switch(action.getId()) {
-			case ACTION_UNINSTALL: {
-				launcher.UninstallPackage(launcher.getPackageNameFromIntent(baseIntent));
-			} break;
-			default:
-				super.executeAction(action, view, launcher);
-		}
-	}
-
-	@Override
-	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = super.getAvailableActions(view);
-		result.add(new EditAction(ACTION_UNINSTALL,
-				android.R.drawable.ic_menu_manage,
-				R.string.menu_uninstall));
-		return result;
-	}
+    public String getPackageName(Launcher launcher)
+    {
+        return launcher.getPackageNameFromIntent(baseIntent);
+    }
 }
