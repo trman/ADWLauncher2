@@ -18,6 +18,8 @@ package org.adw.launcher2;
 
 import java.util.ArrayList;
 
+import org.adw.launcher2.quickactionbar.QuickAction;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
@@ -32,8 +34,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-
-import com.devoteam.quickaction.QuickActionWindow;
 
 
 /**
@@ -426,7 +426,7 @@ public class DragController {
             	final float movY = Math.abs(screenY-mMotionDownY);
 
                 if(movX>QA_HIDE_OFFSET || movY>QA_HIDE_OFFSET){
-                    final QuickActionWindow qa=(QuickActionWindow) mTagPopup;
+                    final QuickAction qa=(QuickAction) mTagPopup;
                     qa.dismiss();
                     mTagPopup=null;
                 }
@@ -483,7 +483,7 @@ public class DragController {
                     (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
             if (dropTarget.acceptDrop(mDragSource, coordinates[0], coordinates[1],
                     (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo)) {
-                
+
                 if ( mTagPopup == null || !(dropTarget instanceof Workspace) )
                 {
                     dropTarget.onDrop(mDragSource, coordinates[0], coordinates[1],

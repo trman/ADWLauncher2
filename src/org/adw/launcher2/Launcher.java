@@ -31,6 +31,8 @@ import org.adw.launcher2.ItemInfo.EditAction;
 import org.adw.launcher2.actions.DefaultAction;
 import org.adw.launcher2.actions.LauncherActions;
 import org.adw.launcher2.appdb.AppDB;
+import org.adw.launcher2.quickactionbar.ActionItem;
+import org.adw.launcher2.quickactionbar.QuickAction;
 import org.adw.launcher2.settings.LauncherSettings;
 import org.adw.launcher2.settings.Preferences;
 
@@ -92,8 +94,6 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.devoteam.quickaction.QuickActionWindow;
 
 
 /**
@@ -2445,11 +2445,10 @@ public final class Launcher extends Activity
     	int[] xy = new int[2];
         //fills the array with the computed coordinates
         view.getLocationInWindow(xy);
-        //rectangle holding the clicked view area
-        Rect rect = new Rect(xy[0], xy[1], xy[0]+view.getWidth(), xy[1]+view.getHeight());
+        new Rect(xy[0], xy[1], xy[0]+view.getWidth(), xy[1]+view.getHeight());
 
         //a new QuickActionWindow object
-        final QuickActionWindow qa = new QuickActionWindow(this, view, rect);
+        final QuickAction qa = new QuickAction(view);
         view.setTag(org.adw.launcher2.R.id.TAG_PREVIEW, qa);
         if (onDismissListener != null) {
             qa.setOnDismissListener(onDismissListener);
@@ -2478,13 +2477,19 @@ public final class Launcher extends Activity
         	    title = getResources().getString(action.getTitleResourceId());
         	}
 
-        	qa.addItem(icon,(title==null?null:title.toString()), new OnClickListener() {
-	        		public void onClick(View v) {
-	        			finalInfo.executeAction(finalaction, finalview, Launcher.this);
-	                    qa.dismiss();
-	        		}
+        	ActionItem ai = new ActionItem(icon);
+        	if (title != null)
+        		ai.setTitle(title.toString());
+
+        	ai.setOnClickListener(new OnClickListener() {
+				@Override
+        		public void onClick(View v) {
+        			finalInfo.executeAction(finalaction, finalview, Launcher.this);
+                    qa.dismiss();
         		}
-        	);
+			});
+
+        	qa.addActionItem(ai);
         }
         //shows the quick action window on the screen
         qa.show();
