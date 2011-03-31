@@ -309,9 +309,12 @@ public class ItemInfo {
         }
         if (mAppInfoLabel != null && this instanceof ItemPackage)
         {
-            result.add(new EditAction(ACTION_APPINFO,
-                    android.R.drawable.ic_menu_info_details,
-                    mAppInfoLabel));
+            if ( ((ItemPackage) this).getPackageName() != null )
+            {
+                result.add(new EditAction(ACTION_APPINFO,
+                        android.R.drawable.ic_menu_info_details,
+                        mAppInfoLabel));
+            }
         }
     }
     protected void addMarketAction(View view, List<EditAction> result)
@@ -341,7 +344,10 @@ public class ItemInfo {
         // if market, show it as an option
         if (mMarketIcon != null && mMarketLabel != null && this instanceof ItemPackage)
         {
-            result.add(new EditAction(ACTION_MARKET, mMarketIcon,mMarketLabel));
+            if ( ((ItemPackage) this).getPackageName() != null )
+            {
+                result.add(new EditAction(ACTION_MARKET, mMarketIcon,mMarketLabel));
+            }
         }
     }
 }
