@@ -121,9 +121,8 @@ public class QuickAction extends CustomPopupWindow {
 			}
 		}
 
-		int centery         = anchorRect.height() / 2;
-		int dyTop			= (centery + anchorRect.top);
-		int dyBottom		= screenHeight - centery;
+		int dyTop			= anchorRect.top;
+		int dyBottom		= screenHeight - anchorRect.bottom;
 
 		boolean onTop		= (dyTop > dyBottom) ? true : false;
 
