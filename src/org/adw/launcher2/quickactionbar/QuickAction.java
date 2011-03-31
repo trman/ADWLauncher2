@@ -121,22 +121,24 @@ public class QuickAction extends CustomPopupWindow {
 			}
 		}
 
-		int dyTop			= anchorRect.top;
-		int dyBottom		= screenHeight - anchorRect.bottom;
+		int anchorHalfHeight = (anchorRect.height() / 2);
+		int dyTop			 = anchorRect.top;
+		int dyBottom	 	 = screenHeight - anchorRect.bottom;
 
-		boolean onTop		= (dyTop > dyBottom) ? true : false;
+		boolean onTop		 = (dyTop >= dyBottom) ? true : false;
 
 		if (onTop) {
+			dyTop += anchorHalfHeight;
 			if (rootHeight > dyTop) {
 				yPos 			= 15;
 				LayoutParams l 	= scroller.getLayoutParams();
 				l.height		= dyTop - anchor.getHeight();
 			} else {
-				yPos = anchorRect.top - rootHeight;
+				yPos = anchorRect.top - rootHeight + anchorHalfHeight;
 			}
 		} else {
-			yPos = anchorRect.bottom;
-
+			yPos = anchorRect.bottom - anchorHalfHeight;
+            dyBottom += anchorHalfHeight;
 			if (rootHeight > dyBottom) {
 				LayoutParams l 	= scroller.getLayoutParams();
 				l.height		= dyBottom;
