@@ -38,6 +38,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -186,8 +187,15 @@ public class AllApps2D
         ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
         app = new ShortcutInfo(app);
 
+        mLauncher.showActions(app, view, new PopupWindow.OnDismissListener()
+        {
+            @Override
+            public void onDismiss()
+            {
+                mLauncher.closeAllApps(true);
+            }
+        });
         mDragController.startDrag(view, this, app, DragController.DRAG_ACTION_COPY);
-        mLauncher.closeAllApps(true);
 
         return true;
     }

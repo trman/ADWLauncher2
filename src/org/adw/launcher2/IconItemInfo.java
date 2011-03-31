@@ -84,6 +84,10 @@ public abstract class IconItemInfo extends ItemInfo{
 			edit.putExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, id);
 			launcher.startActivityForResult(edit, Launcher.REQUEST_EDIT_SHIRTCUT);
 	    }
+	    else
+	    {
+	        super.executeAction(action, view, launcher);
+	    }
 	}
 
 	@Override

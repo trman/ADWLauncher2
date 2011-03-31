@@ -23,28 +23,15 @@ import org.adw.launcher2.settings.LauncherSettings;
 
 import android.content.ComponentName;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
 import android.view.View;
 
 /**
  * Represents a launchable icon on the workspaces and in folders.
  */
-public class ShortcutInfo extends IconItemInfo {
-    private static final String ANDROID_SETTINGS_PACKAGE = "com.android.settings";
-    private static final String ANDROID_MARKET_PACKAGE = "com.android.vending";
-
-    private static CharSequence mAppInfoLabel;
-    private static Drawable mMarketIcon;
-    private static CharSequence mMarketLabel;
-
+public class ShortcutInfo extends IconItemInfo implements ItemInfo.ItemPackage {
     /**
      * The intent used to start the application.
      */
@@ -125,11 +112,6 @@ public class ShortcutInfo extends IconItemInfo {
         }
     }
 
-	private static final int ACTION_DELETE = 1;
-    private static final int ACTION_APPINFO = 2;
-    private static final int ACTION_MARKET = 3;
-
-
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
 		switch(action.getId()) {
@@ -137,52 +119,6 @@ public class ShortcutInfo extends IconItemInfo {
 				launcher.removeDesktopItem(this);
 				LauncherModel.deleteItemFromDatabase(launcher, this);
 			} break;
-			case ACTION_APPINFO: {
-                try
-                {
-                    String appPackage = intent.getComponent().getPackageName();
-                    Intent intent = new Intent();
-                    final int apiLevel = Build.VERSION.SDK_INT;
-                    if (apiLevel >= 9)
-                    { // above 2.3
-                        intent.setAction("android.settings.APPLICATION_DETAILS_SETTINGS");
-                        Uri uri = Uri.fromParts("package", appPackage, null);
-                        intent.setData(uri);
-                    }
-                    else
-                    { // below 2.3
-                        final String appPkgName = (apiLevel == 8 ? "pkg" : "com.android.settings.ApplicationPkgName");
-                        intent.setAction(Intent.ACTION_VIEW);
-                        intent.setClassName(ANDROID_SETTINGS_PACKAGE, "com.android.settings.InstalledAppDetails");
-                        intent.putExtra(appPkgName, appPackage);
-                    }
-                    launcher.startActivity(intent);
-                }
-                catch (Exception e)
-                {
-                    // failed to tell start app info
-                }
-			} break;
-            case ACTION_MARKET: {
-                try
-                {
-                    try
-                    {
-                        String appPackage = intent.getComponent().getPackageName();
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setData(Uri.parse("market://search?q=pname:" + appPackage));
-                        launcher.startActivity(intent);
-                    }
-                    catch (Exception e)
-                    {
-                        // failed to tell market to find the app
-                    }
-                }
-                catch (Exception e)
-                {
-                    // failed to tell start app info
-                }
-            } break;
 			default: super.executeAction(action, view, launcher);
 		}
 	}
@@ -194,58 +130,19 @@ public class ShortcutInfo extends IconItemInfo {
 				android.R.drawable.ic_menu_delete,
 				R.string.menu_delete
 		));
-        // get the application info label and if found show the option
-        if (mAppInfoLabel == null)
-        {
-            try
-            {
-                Resources resources = view.getContext().createPackageContext(ANDROID_SETTINGS_PACKAGE, Context.CONTEXT_IGNORE_SECURITY).getResources();
-                int nameID = resources.getIdentifier("application_info_label", "string", ANDROID_SETTINGS_PACKAGE);
-                if (nameID != 0)
-                {
-                    mAppInfoLabel = resources.getString(nameID);
-                }
-            }
-            catch (Exception e)
-            {
-                // can't find the settings label
-            }
-        }
-        if (mAppInfoLabel != null)
-        {
-            result.add(new EditAction(ACTION_APPINFO,
-                    android.R.drawable.ic_menu_info_details,
-                    mAppInfoLabel));
-        }
-
-        // get the market icon and label
-        if (mMarketIcon == null && mMarketLabel == null)
-        {
-            try
-            {
-                PackageManager packageManager = view.getContext().getPackageManager();
-                android.content.pm.ApplicationInfo applicationInfo = packageManager.getApplicationInfo(ANDROID_MARKET_PACKAGE, 0);
-                mMarketIcon = applicationInfo.loadIcon(packageManager);
-                mMarketLabel = applicationInfo.loadLabel(packageManager);
-                if (mMarketLabel == null)
-                {
-                    mMarketLabel = applicationInfo.name;
-                }
-            }
-            catch (Exception e)
-            {
-                // would appear there is no market
-                mMarketIcon = null;
-                mMarketLabel = "no-market";
-            }
-        }
-
-        // if market, show it as an option
-        if (mMarketIcon != null && mMarketLabel != null)
-        {
-            result.add(new EditAction(ACTION_MARKET, mMarketIcon,mMarketLabel));
-        }
+        addAppInfoAction(view, result);
+        addMarketAction(view, result);
 		return result;
 	}
+
+    @Override
+    public String getPackageName()
+    {
+        if ( intent != null && intent.getComponent() != null )
+        {
+            return intent.getComponent().getPackageName();
+        }
+        return null;
+    }
 }
 

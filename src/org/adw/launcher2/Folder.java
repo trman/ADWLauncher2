@@ -26,6 +26,7 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
@@ -100,8 +101,15 @@ public class Folder extends LinearLayout implements DragSource, OnItemLongClickL
 
         ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
 
+        mLauncher.showActions(app, view, new PopupWindow.OnDismissListener()
+        {
+            @Override
+            public void onDismiss()
+            {
+                mLauncher.closeFolder(Folder.this);
+            }
+        });
         mDragController.startDrag(view, this, app, DragController.DRAG_ACTION_COPY);
-        mLauncher.closeFolder(this);
         mDragItem = app;
 
         return true;

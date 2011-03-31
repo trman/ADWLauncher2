@@ -29,7 +29,7 @@ import android.view.ViewGroup;
 /**
  * Represents a widget, which just contains an identifier.
  */
-class LauncherAppWidgetInfo extends ItemInfo {
+class LauncherAppWidgetInfo extends ItemInfo implements ItemInfo.ItemPackage {
 
     /**
      * Identifier for this widget when talking with
@@ -66,9 +66,7 @@ class LauncherAppWidgetInfo extends ItemInfo {
         hostView = null;
     }
 
-    private static final int ACTION_DELETE = 1;
-    private static final int ACTION_RESIZE = 2;
-    private static final int ACTION_UNINSTALL = 3;
+    private static final int ACTION_RESIZE = 1;
 
 	@Override
 	public void executeAction(EditAction action, View view, Launcher launcher) {
@@ -81,12 +79,7 @@ class LauncherAppWidgetInfo extends ItemInfo {
 			case ACTION_RESIZE: {
 				launcher.editWidget(view);
 			} break;
-			case ACTION_UNINSTALL: {
-				AppWidgetProviderInfo info = hostView.getAppWidgetInfo();
-				if (info != null && info.provider != null) {
-					launcher.UninstallPackage(info.provider.getPackageName());
-				}
-			} break;
+            default: super.executeAction(action, view, launcher);
 		}
 	}
 
@@ -100,10 +93,19 @@ class LauncherAppWidgetInfo extends ItemInfo {
 		result.add(new EditAction(ACTION_RESIZE,
 				android.R.drawable.ic_menu_crop,
 				R.string.menu_resize));
-		result.add(new EditAction(ACTION_UNINSTALL,
-				android.R.drawable.ic_menu_manage,
-				R.string.menu_uninstall
-		));
+        addAppInfoAction(view, result);
+        addMarketAction(view, result);
 		return result;
 	}
+
+    @Override
+    public String getPackageName()
+    {
+        final AppWidgetProviderInfo appWidgetInfo = hostView.getAppWidgetInfo();
+        if (appWidgetInfo != null && appWidgetInfo.provider != null)
+        {
+            return appWidgetInfo.provider.getPackageName();
+        }
+        return null;
+    }
 }

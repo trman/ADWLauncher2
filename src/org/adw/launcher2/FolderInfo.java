@@ -32,8 +32,6 @@ class FolderInfo extends IconItemInfo {
      */
     boolean opened;
 
-    private static final int ACTION_DELETE = 1;
-
     @Override
     public Bitmap getIcon(IconCache iconCache) {
     	if (mIcon == null)

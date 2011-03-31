@@ -2433,7 +2433,7 @@ public final class Launcher extends Activity
         mAllAppsGrid.removeApps(apps);
     }
 
-    public void showActions(ItemInfo info, View view) {
+    public void showActions(ItemInfo info, View view, PopupWindow.OnDismissListener onDismissListener) {
     	if (info == null || view == null)
     		return;
 
@@ -2451,6 +2451,9 @@ public final class Launcher extends Activity
         //a new QuickActionWindow object
         final QuickActionWindow qa = new QuickActionWindow(this, view, rect);
         view.setTag(org.adw.launcher2.R.id.TAG_PREVIEW, qa);
+        if (onDismissListener != null) {
+            qa.setOnDismissListener(onDismissListener);
+        }
 
         //adds an item to the badge and defines the quick action to be triggered
         //when the item is clicked on

@@ -483,8 +483,12 @@ public class DragController {
                     (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
             if (dropTarget.acceptDrop(mDragSource, coordinates[0], coordinates[1],
                     (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo)) {
-                dropTarget.onDrop(mDragSource, coordinates[0], coordinates[1],
-                        (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
+                
+                if ( mTagPopup == null || !(dropTarget instanceof Workspace) )
+                {
+                    dropTarget.onDrop(mDragSource, coordinates[0], coordinates[1],
+                            (int) mTouchOffsetX, (int) mTouchOffsetY, mDragView, mDragInfo);
+                }
                 mDragSource.onDropCompleted((View) dropTarget, true);
                 return true;
             } else {
