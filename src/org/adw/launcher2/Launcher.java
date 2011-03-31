@@ -2484,8 +2484,8 @@ public final class Launcher extends Activity
         	ai.setOnClickListener(new OnClickListener() {
 				@Override
         		public void onClick(View v) {
+					qa.dismiss();
         			finalInfo.executeAction(finalaction, finalview, Launcher.this);
-                    qa.dismiss();
         		}
 			});
 
