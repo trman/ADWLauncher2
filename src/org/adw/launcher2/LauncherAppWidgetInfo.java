@@ -91,7 +91,7 @@ class LauncherAppWidgetInfo extends ItemInfo implements ItemInfo.ItemPackage {
 				android.R.drawable.ic_menu_crop,
 				R.string.menu_resize));
         addAppInfoAction(view, result, launcher);
-        addMarketAction(view, result, launcher);
+        addMarketActions(view, result, launcher);
 		return result;
 	}
 

@@ -127,7 +127,7 @@ public class ShortcutInfo extends IconItemInfo implements ItemInfo.ItemPackage {
 	public List<EditAction> getAvailableActions(View view, Launcher launcher) {
         List<EditAction> result = super.getAvailableActions(view, launcher);
         addAppInfoAction(view, result, launcher);
-        addMarketAction(view, result, launcher);
+        addMarketActions(view, result, launcher);
 		return result;
 	}
 
