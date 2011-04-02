@@ -20,7 +20,6 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:sharedUserId="@string/sharedUserId"
-    android:installLocation="internalOnly"
     package="org.adw.launcher2">
 
     <original-package android:name="org.adw.launcher2" />

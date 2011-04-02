@@ -16,8 +16,6 @@
 
 package org.adw.launcher2;
 
-import java.util.List;
-
 import android.graphics.Bitmap;
 import android.view.View;
 
@@ -51,14 +49,5 @@ class FolderInfo extends IconItemInfo {
 			default:
 				super.executeAction(action, view, launcher);
 		}
-	}
-
-	@Override
-	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = super.getAvailableActions(view);
-		result.add(new EditAction(ACTION_DELETE,
-				android.R.drawable.ic_menu_delete,
-				R.string.menu_delete));
-		return result;
 	}
 }

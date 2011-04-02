@@ -54,6 +54,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Intent.ShortcutIconResource;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -980,6 +981,19 @@ public final class Launcher extends Activity
             if (res != null)
             	pName = res.activityInfo.packageName;
 		}
+
+        if (pName == null) {
+            Uri data = intent.getData();
+            if ( data != null )
+            {
+                String host = data.getHost();
+                PackageManager mgr = getPackageManager();
+                ProviderInfo packageInfo = mgr.resolveContentProvider(host, 0);
+                if (packageInfo != null)
+                    pName = packageInfo.packageName;
+            }
+        }
+
 		return pName;
     }
 
@@ -2437,7 +2451,7 @@ public final class Launcher extends Activity
     	if (info == null || view == null)
     		return;
 
-    	List<EditAction> actions = info.getAvailableActions(view);
+    	List<EditAction> actions = info.getAvailableActions(view, this);
     	if (actions.size() <= 0)
     		return;
     	final View finalview = view;

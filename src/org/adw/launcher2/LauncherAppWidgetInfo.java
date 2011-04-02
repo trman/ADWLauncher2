@@ -84,22 +84,19 @@ class LauncherAppWidgetInfo extends ItemInfo implements ItemInfo.ItemPackage {
 	}
 
 	@Override
-	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = super.getAvailableActions(view);
-		result.add(new EditAction(ACTION_DELETE,
-				android.R.drawable.ic_menu_delete,
-				R.string.menu_delete));
+	public List<EditAction> getAvailableActions(View view, Launcher launcher) {
+		List<EditAction> result = super.getAvailableActions(view, launcher);
 
 		result.add(new EditAction(ACTION_RESIZE,
 				android.R.drawable.ic_menu_crop,
 				R.string.menu_resize));
-        addAppInfoAction(view, result);
-        addMarketAction(view, result);
+        addAppInfoAction(view, result, launcher);
+        addMarketAction(view, result, launcher);
 		return result;
 	}
 
     @Override
-    public String getPackageName()
+    public String getPackageName(Launcher launcher)
     {
         final AppWidgetProviderInfo appWidgetInfo = hostView.getAppWidgetInfo();
         if (appWidgetInfo != null && appWidgetInfo.provider != null)
