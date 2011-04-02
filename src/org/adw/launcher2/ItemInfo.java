@@ -40,6 +40,7 @@ import android.view.View;
  */
 public class ItemInfo {
     // external apps
+	private static final String ANDROID_MARKET_URI_BASE = "https://market.android.com/search?q=pname:";
     private static final String ANDROID_SETTINGS_PACKAGE = "com.android.settings";
     private static final String ANDROID_MARKET_PACKAGE = "com.android.vending";
     private static CharSequence mAppInfoLabel;
@@ -50,6 +51,7 @@ public class ItemInfo {
     protected static final int ACTION_DELETE = -1;
     protected static final int ACTION_APPINFO = -2;
     protected static final int ACTION_MARKET = -3;
+    protected static final int ACTION_SHARE_APP = -4;
 
     static final int NO_ID = -1;
 
@@ -221,7 +223,7 @@ public class ItemInfo {
             return mId;
         }
     }
-    
+
     interface ItemPackage
     {
         public String getPackageName(Launcher launcher);
@@ -272,24 +274,34 @@ public class ItemInfo {
             case ACTION_MARKET: {
                 try
                 {
-                    try
+                    String appPackage = ((ItemPackage) this).getPackageName(null);
+                    if ( appPackage != null )
                     {
-                        String appPackage = ((ItemPackage) this).getPackageName(null);
-                        if ( appPackage != null )
-                        {
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setData(Uri.parse("market://search?q=pname:" + appPackage));
-                            launcher.startActivity(intent);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        // failed to tell market to find the app
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse(ANDROID_MARKET_URI_BASE + appPackage));
+                        launcher.startActivity(intent);
                     }
                 }
                 catch (Exception e)
                 {
-                    // failed to tell start app info
+                    // failed to tell market to find the app
+                }
+            } break;
+            case ACTION_SHARE_APP: {
+            	try
+                {
+                    String appPackage = ((ItemPackage) this).getPackageName(null);
+                    if ( appPackage != null )
+                    {
+                        Intent intent = new Intent(Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        intent.putExtra(Intent.EXTRA_TEXT, ANDROID_MARKET_URI_BASE+appPackage);
+                        ;
+                        launcher.startActivity(Intent.createChooser(intent, launcher.getString(R.string.menu_choose_share_app)));
+                    }
+                }
+                catch (Exception e)
+                {
                 }
             } break;
         }
@@ -324,7 +336,7 @@ public class ItemInfo {
             }
         }
     }
-    protected void addMarketAction(View view, List<EditAction> result, Launcher launcher)
+    protected void addMarketActions(View view, List<EditAction> result, Launcher launcher)
     {
         // get the market icon and label
         if (mMarketIcon == null && mMarketLabel == null)
@@ -354,6 +366,7 @@ public class ItemInfo {
             if ( ((ItemPackage) this).getPackageName(launcher) != null )
             {
                 result.add(new EditAction(ACTION_MARKET, mMarketIcon,mMarketLabel));
+                result.add(new EditAction(ACTION_SHARE_APP, android.R.drawable.ic_menu_share, R.string.menu_share));
             }
         }
     }
