@@ -481,7 +481,7 @@ public class DragController {
         if ( mTagPopup != null )
         {
             // don't perform dismiss action when the popup closes
-            ((QuickActionWindow) mTagPopup).setOnDismissListener(null);
+            ((QuickAction) mTagPopup).setOnDismissListener(null);
         }
         if (dropTarget != null) {
             dropTarget.onDragExit(mDragSource, coordinates[0], coordinates[1],
