@@ -91,11 +91,14 @@ public abstract class IconItemInfo extends ItemInfo{
 	}
 
 	@Override
-	public List<EditAction> getAvailableActions(View view) {
-		List<EditAction> result = super.getAvailableActions(view);
-		result.add(new EditAction(ACTION_EDIT,
-				android.R.drawable.ic_menu_edit,
-				R.string.menu_edit));
+	public List<EditAction> getAvailableActions(View view, Launcher launcher) {
+        List<EditAction> result = super.getAvailableActions(view, launcher);
+	    if ( container != ItemInfo.NO_ID )
+	    {
+    		result.add(new EditAction(ACTION_EDIT,
+    				android.R.drawable.ic_menu_edit,
+    				R.string.menu_edit));
+	    }
 		return result;
 	}
 }
