@@ -81,7 +81,12 @@ public abstract class IconItemInfo extends ItemInfo{
 	    if (action.getId() == ACTION_EDIT) {
 			Intent edit = new Intent(Intent.ACTION_EDIT);
 			edit.setClass(launcher, CustomShirtcutActivity.class);
-			edit.putExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, id);
+			long itemId = id;
+		    if ( container == ItemInfo.NO_ID )
+		    {
+	            edit.putExtra(CustomShirtcutActivity.EXTRA_DRAWERINFO, true);
+		    }
+            edit.putExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, itemId);
 			launcher.startActivityForResult(edit, Launcher.REQUEST_EDIT_SHIRTCUT);
 	    }
 	    else
@@ -93,12 +98,9 @@ public abstract class IconItemInfo extends ItemInfo{
 	@Override
 	public List<EditAction> getAvailableActions(View view, Launcher launcher) {
         List<EditAction> result = super.getAvailableActions(view, launcher);
-	    if ( container != ItemInfo.NO_ID )
-	    {
-    		result.add(new EditAction(ACTION_EDIT,
-    				android.R.drawable.ic_menu_edit,
-    				R.string.menu_edit));
-	    }
+		result.add(new EditAction(ACTION_EDIT,
+				android.R.drawable.ic_menu_edit,
+				R.string.menu_edit));
 		return result;
 	}
 }

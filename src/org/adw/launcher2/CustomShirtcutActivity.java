@@ -7,9 +7,11 @@ package org.adw.launcher2;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.adw.launcher2.actions.LauncherActions;
 import org.adw.launcher2.actions.RunActionActivity;
+import org.adw.launcher2.appdb.AppDB;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -39,7 +41,8 @@ import android.widget.TextView;
 
 public class CustomShirtcutActivity extends Activity implements OnClickListener {
 	private static final String ACTION_ADW_PICK_ICON="org.adw.launcher.icons.ACTION_PICK_ICON";
-	public static final String EXTRA_APPLICATIONINFO = "EXTRA_APPLICATIONINFO";
+    public static final String EXTRA_APPLICATIONINFO = "EXTRA_APPLICATIONINFO";
+    public static final String EXTRA_DRAWERINFO = "EXTRA_DRAWERINFO";
 
 	private static final int PICK_CUSTOM_ICON=1;
 	private static final int PICK_STANDARD_MENU=2;
@@ -59,8 +62,11 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 	PackageManager mPackageManager;
 	private Intent mIntent;
 	private int mIconSize;
+	private boolean isDrawerInfo;
 
 	private IconCache mIconCache;
+
+    private LauncherApplication launcherApp;
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
@@ -71,6 +77,7 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 		outState.putBoolean("btOk_enabled", btOk.isEnabled());
 		outState.putBoolean("btPickIcon_enabled", btPickIcon.isEnabled());
 		outState.putCharSequence("btPickActivity_text", btPickActivity.getText());
+		outState.putBoolean("isDrawerInfo", isDrawerInfo);
 	}
 
 	@Override
@@ -86,6 +93,7 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 			btPickActivity.setText(savedInstanceState.getCharSequence("btPickActivity_text"));
 			btPickIcon.setEnabled(savedInstanceState.getBoolean("btPickIcon_enabled"));
 			btOk.setEnabled(savedInstanceState.getBoolean("btOk_enabled"));
+			isDrawerInfo = savedInstanceState.getBoolean("isDrawerInfo");
 		}
 		super.onRestoreInstanceState(savedInstanceState);
 	};
@@ -94,7 +102,8 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		mIconCache = new IconCache(this);
+        launcherApp = (LauncherApplication)this.getApplication();
+		mIconCache = launcherApp.getIconCache();
 		setContentView(R.layout.custom_shirtcuts);
 		btPickActivity=(Button) findViewById(R.id.pick_activity);
 		btPickActivity.setOnClickListener(this);
@@ -118,9 +127,21 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 				&& intent.hasExtra(EXTRA_APPLICATIONINFO)) {
 			long id = intent.getLongExtra(EXTRA_APPLICATIONINFO, 0);
 
-			LauncherApplication app = (LauncherApplication)this.getApplication();
-
-			ItemInfo info = app.getModel().getItemInfoById(id);
+            ItemInfo info = null;
+            if ( intent.hasExtra(EXTRA_DRAWERINFO) )
+            {
+                btPickActivity.setVisibility(View.GONE);
+                isDrawerInfo = true;
+                List<ShortcutInfo> apps = launcherApp.getAppDB().getApps(new long[] {id});
+                if ( apps.size() == 1 )
+                {
+                    info = apps.get(0); 
+                }
+            }
+            else
+            {
+                info = launcherApp.getModel().getItemInfoById(id);
+            }
 			if (info instanceof IconItemInfo)
 				return (IconItemInfo)info;
 		}
@@ -366,7 +387,9 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 			}
 	        if (mBitmap != null)
 	        	mReturnData.putExtra(Intent.EXTRA_SHORTCUT_ICON, mBitmap);
-
+	        if ( isDrawerInfo)
+                mReturnData.putExtra(EXTRA_DRAWERINFO, true);
+	        
 			setResult(RESULT_OK,mReturnData);
 			finish();
 		}

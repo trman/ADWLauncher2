@@ -435,7 +435,8 @@ public class AppDB extends BroadcastReceiver {
 		ContentResolver cr = mContext.getContentResolver();
 
 		Cursor c = cr.query(AppInfos.CONTENT_URI, new String[] {
-				AppInfos.COMPONENT_NAME,
+		        AppInfos.ID,
+		        AppInfos.COMPONENT_NAME,
 				AppInfos.ICON,
 				AppInfos.TITLE,
 				AppInfos.LAST_LAUNCHED,
@@ -443,7 +444,8 @@ public class AppDB extends BroadcastReceiver {
 		}, getAppIdFilter(appIds), null, null);
 		try {
 			c.moveToFirst();
-			final int iconIdx = c.getColumnIndex(AppInfos.ICON);
+            final int idIdx = c.getColumnIndex(AppInfos.ID);
+            final int iconIdx = c.getColumnIndex(AppInfos.ICON);
 			final int cnIdx = c.getColumnIndex(AppInfos.COMPONENT_NAME);
 			final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
 			final int launchcntIdx = c.getColumnIndex(AppInfos.LAUNCH_COUNT);
@@ -465,10 +467,8 @@ public class AppDB extends BroadcastReceiver {
 				ComponentName cname = ComponentName.unflattenFromString(cnStr);
 				if (mIconCache != null)
 					mIconCache.addToCache(cname, title, icon);
-				if (title != null) {
-					ShortcutInfo info = new ShortcutInfo(cname);
-					result.add(info);
-				}
+				ShortcutInfo info = new ShortcutInfo(c.getLong(idIdx), cname);
+				result.add(info);
 				c.moveToNext();
 			}
 		}
@@ -652,5 +652,21 @@ public class AppDB extends BroadcastReceiver {
         }
 
 	}
+
+    public void updateAppDisplay(long id, String title, Bitmap icon) {
+        ContentResolver cr = mContext.getContentResolver();
+        final Uri uri = AppInfos.getContentUri(id);
+        final ContentValues values = new ContentValues();
+
+        byte[] data = null;
+        if ( icon != null )
+        {
+            data = Utilities.flattenBitmap(icon);
+        }
+        values.put(AppInfos.ICON, data);
+        values.put(AppInfos.TITLE, title);
+
+        cr.update(uri, values, null, null);
+    }
 
 }
