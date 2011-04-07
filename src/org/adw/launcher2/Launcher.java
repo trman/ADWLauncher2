@@ -672,9 +672,10 @@ public final class Launcher extends Activity
                 info.setTitle(title);
                 mAppDB.updateAppDisplay(appInfoId, title, bitmap);
                 
-                ArrayList<ShortcutInfo> updateList = new ArrayList<ShortcutInfo>();
-                updateList.add( (ShortcutInfo) info );
-                mAllAppsGrid.updateApps(updateList);
+                // Notify Model:
+                Intent modelIntent = new Intent(AppDB.INTENT_DB_CHANGED);
+                modelIntent.putExtra(AppDB.EXTRA_UPDATED, new long[] {info.id} );
+                sendBroadcast(modelIntent);
             }		    
 		}
 		else

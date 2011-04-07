@@ -171,9 +171,11 @@ public class AppDBProvider extends ContentProvider {
 			db.execSQL("CREATE TABLE "+AppDB.APPINFOS+" (" +
 					AppDB.AppInfos.ID + " INTEGER PRIMARY KEY," +
 					AppDB.AppInfos.COMPONENT_NAME + " TEXT," +
-					AppDB.AppInfos.TITLE + " TEXT," +
+                    AppDB.AppInfos.TITLE + " TEXT," +
+                    AppDB.AppInfos.TITLE_CHANGED + " BOOLEAN," +
 					AppDB.AppInfos.LOCALE + " TEXT," +
-					AppDB.AppInfos.ICON + " BLOB," +
+                    AppDB.AppInfos.ICON + " BLOB," +
+                    AppDB.AppInfos.ICON_CHANGED + " BOOLEAN," +
 					AppDB.AppInfos.LAUNCH_COUNT + " INTEGER," +
 					AppDB.AppInfos.LAST_LAUNCHED + " INTEGER" +
                     ");");

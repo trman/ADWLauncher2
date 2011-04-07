@@ -54,7 +54,8 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 	private static final int DIALOG_ICON_TYPE=1;
 	private Button btPickActivity;
 	private ImageButton btPickIcon;
-	private Button btOk;
+    private Button btOk;
+    private Button btRevert;
 	private EditText edLabel;
 	private TextView tvHead;
 	//private ActivityInfo mInfo;
@@ -113,6 +114,8 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 		btOk=(Button) findViewById(R.id.shirtcut_ok);
 		btOk.setEnabled(false);
 		btOk.setOnClickListener(this);
+        btRevert=(Button) findViewById(R.id.shirtcut_revert);
+        btRevert.setOnClickListener(this);
 		edLabel=(EditText) findViewById(R.id.shirtcut_label);
 		tvHead=(TextView)findViewById(R.id.header);
 		mPackageManager=getPackageManager();
@@ -130,6 +133,7 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
             ItemInfo info = null;
             if ( intent.hasExtra(EXTRA_DRAWERINFO) )
             {
+                btRevert.setVisibility(View.VISIBLE);
                 btPickActivity.setVisibility(View.GONE);
                 isDrawerInfo = true;
                 List<ShortcutInfo> apps = launcherApp.getAppDB().getApps(new long[] {id});
@@ -392,6 +396,23 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 	        
 			setResult(RESULT_OK,mReturnData);
 			finish();
+        }else if(v.equals(btRevert)){
+            Intent mReturnData = new Intent();
+            if (mIntent != null)
+                mReturnData.putExtra(Intent.EXTRA_SHORTCUT_INTENT, mIntent);
+            mReturnData.putExtra(Intent.EXTRA_SHORTCUT_NAME, (String) null);
+            Intent intent = getIntent();
+            if (intent != null && intent.getAction() != null &&
+                    intent.getAction().equals(Intent.ACTION_EDIT)
+                    && intent.hasExtra(EXTRA_APPLICATIONINFO)) {
+                long id = intent.getLongExtra(EXTRA_APPLICATIONINFO, 0);
+                mReturnData.putExtra(EXTRA_APPLICATIONINFO, id);
+            }
+            mReturnData.putExtra(Intent.EXTRA_SHORTCUT_ICON, (Bitmap) null);
+            if ( isDrawerInfo)
+                mReturnData.putExtra(EXTRA_DRAWERINFO, true);
+            setResult(RESULT_OK,mReturnData);
+            finish();
 		}
 	}
 	@Override
