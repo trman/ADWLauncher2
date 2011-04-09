@@ -5,6 +5,7 @@ import java.text.Collator;
 import java.util.Comparator;
 
 import org.adw.launcher2.IconCache;
+import org.adw.launcher2.IconItemInfo;
 import org.adw.launcher2.Launcher;
 import org.adw.launcher2.R;
 import org.adw.launcher2.ShortcutInfo;
@@ -75,30 +76,36 @@ public class Preferences implements OnSharedPreferenceChangeListener {
 	private static final int SORT_BY_NAME = 1;
 	private static final int SORT_BY_LAUNCH_COUNT = 2;
 
-    private Comparator<ShortcutInfo> mCurrentComparator = null;
+    private Comparator<IconItemInfo> mCurrentComparator = null;
 
-    private Comparator<ShortcutInfo> getAppNameComparator() {
+    private Comparator<IconItemInfo> getAppNameComparator() {
 		final IconCache myIconCache = mLauncher.getIconCache();
 		final Collator sCollator = Collator.getInstance();
-		return new Comparator<ShortcutInfo>() {
+		return new Comparator<IconItemInfo>() {
 			@Override
-    		public final int compare(ShortcutInfo a, ShortcutInfo b) {
+    		public final int compare(IconItemInfo a, IconItemInfo b) {
     			return sCollator.compare(a.getTitle(myIconCache), b.getTitle(myIconCache));
     		}
     	};
     }
 
-    private Comparator<ShortcutInfo> getLaunchCountComparator() {
+    private Comparator<IconItemInfo> getLaunchCountComparator() {
 		final AppDB myAppDB = mLauncher.getAppDB();
-		return new Comparator<ShortcutInfo>() {
+		return new Comparator<IconItemInfo>() {
 			@Override
-			public int compare(ShortcutInfo a, ShortcutInfo b) {
-				return myAppDB.getLaunchCounter(b) - myAppDB.getLaunchCounter(a);
+			public int compare(IconItemInfo a, IconItemInfo b) {
+				int valA = Integer.MAX_VALUE;
+				int valB = Integer.MAX_VALUE;
+				if (a instanceof ShortcutInfo)
+					valA = myAppDB.getLaunchCounter((ShortcutInfo)a);
+				if (b instanceof ShortcutInfo)
+					valB = myAppDB.getLaunchCounter((ShortcutInfo)b);
+				return valB - valA;
 			}
 		};
     }
 
-    public Comparator<ShortcutInfo> getCurrentDrawerComparator() {
+    public Comparator<IconItemInfo> getCurrentDrawerComparator() {
     	if (mCurrentComparator == null) {
 	    	int currentMode = Integer.parseInt(mPreferences.getString(PREF_CURRENT_DRAWER_SORT_ORDER,
 	    			String.valueOf(SORT_BY_NAME)));

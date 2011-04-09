@@ -58,7 +58,7 @@ public class AllApps2D
 
     private GridView mGrid;
 
-    private final ArrayList<ShortcutInfo> mAllAppsList = new ArrayList<ShortcutInfo>();
+    private final ArrayList<IconItemInfo> mAllAppsList = new ArrayList<IconItemInfo>();
 
     // preserve compatibility with 3D all apps:
     //    0.0 -> hidden
@@ -81,17 +81,17 @@ public class AllApps2D
         }
     }
 
-    public class AppsAdapter extends ArrayAdapter<ShortcutInfo> {
+    public class AppsAdapter extends ArrayAdapter<IconItemInfo> {
         private final LayoutInflater mInflater;
 
-        public AppsAdapter(Context context, ArrayList<ShortcutInfo> apps) {
+        public AppsAdapter(Context context, ArrayList<IconItemInfo> apps) {
             super(context, 0, apps);
             mInflater = LayoutInflater.from(context);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            final ShortcutInfo info = getItem(position);
+            final IconItemInfo info = getItem(position);
 
             if (convertView == null) {
                 convertView = mInflater.inflate(R.layout.application_boxed, parent, false);
@@ -175,8 +175,13 @@ public class AllApps2D
     }
 
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-    	ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
-        mLauncher.startActivitySafely(app.intent, app);
+    	IconItemInfo info = (IconItemInfo)parent.getItemAtPosition(position);
+    	if (info instanceof ShortcutInfo) {
+    		ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
+        	mLauncher.startActivitySafely(app.intent, app);
+    	} else if (info instanceof FolderInfo) {
+    		mLauncher.openFolder((FolderInfo)info);
+    	}
     }
 
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -184,10 +189,11 @@ public class AllApps2D
             return false;
         }
 
-        ShortcutInfo app = (ShortcutInfo) parent.getItemAtPosition(position);
-        app = new ShortcutInfo(app);
+        IconItemInfo info = (IconItemInfo) parent.getItemAtPosition(position);
+        if (info instanceof ShortcutInfo)
+        	info = new ShortcutInfo((ShortcutInfo)info);
 
-        mLauncher.showActions(app, view, new PopupWindow.OnDismissListener()
+        mLauncher.showActions(info, view, new PopupWindow.OnDismissListener()
         {
             @Override
             public void onDismiss()
@@ -195,7 +201,7 @@ public class AllApps2D
                 mLauncher.closeAllApps(true);
             }
         });
-        mDragController.startDrag(view, this, app, DragController.DRAG_ACTION_COPY);
+        mDragController.startDrag(view, this, info, DragController.DRAG_ACTION_COPY);
 
         return true;
     }
@@ -265,18 +271,19 @@ public class AllApps2D
         return mZoom > 0.999f;
     }
 
-    public void setApps(ArrayList<ShortcutInfo> list) {
+    public void setApps(ArrayList<? extends IconItemInfo> list) {
         mAllAppsList.clear();
         addApps(list);
     }
 
-    public void addApps(ArrayList<ShortcutInfo> list) {
+    public void addApps(ArrayList<? extends IconItemInfo> list) {
 //        Log.d(TAG, "addApps: " + list.size() + " apps: " + list.toString());
 
         final int N = list.size();
 
         for (int i=0; i<N; i++) {
-            final ShortcutInfo item = list.get(i);
+            final IconItemInfo item = list.get(i);
+            Log.d("BOOMBULER", "adding: "+item.getClass().getName());
             int index = Collections.binarySearch(mAllAppsList, item, Preferences.getInstance().getCurrentDrawerComparator());
             if (index < 0) {
                 index = -(index+1);
@@ -291,37 +298,60 @@ public class AllApps2D
     	mAppsAdapter.notifyDataSetChanged();
     }
 
-    public void removeApps(ArrayList<ShortcutInfo> list) {
+    public void removeApps(ArrayList<? extends IconItemInfo> list) {
         final int N = list.size();
         for (int i=0; i<N; i++) {
-            final ShortcutInfo item = list.get(i);
-            int index = findAppByComponent(mAllAppsList, item);
+        	IconItemInfo iii = list.get(i);
+        	final int index;
+        	if (iii instanceof ShortcutInfo) {
+        		final ShortcutInfo item = (ShortcutInfo)iii;
+            	index = findAppByComponent(mAllAppsList, item);
+        	} else { // everything else should have an id...
+        		index = findAppById(mAllAppsList, iii);
+        	}
+
             if (index >= 0) {
                 mAllAppsList.remove(index);
             } else {
-                Log.w(TAG, "couldn't find a match for item \"" + item + "\"");
+                Log.w(TAG, "couldn't find a match for item \"" + iii + "\"");
                 // Try to recover.  This should keep us from crashing for now.
             }
         }
         mAppsAdapter.notifyDataSetChanged();
     }
 
-    public void updateApps(ArrayList<ShortcutInfo> list) {
+    public void updateApps(ArrayList<? extends IconItemInfo> list) {
         // Just remove and add, because they may need to be re-sorted.
         removeApps(list);
         addApps(list);
     }
 
-    private static int findAppByComponent(ArrayList<ShortcutInfo> list, ShortcutInfo item) {
+    private static int findAppByComponent(ArrayList<IconItemInfo> list, ShortcutInfo item) {
         ComponentName component = item.intent.getComponent();
         if (component == null)
         	return -1;
         final int N = list.size();
         for (int i=0; i<N; i++) {
-            ShortcutInfo x = list.get(i);
-            if (component.equals(x.intent.getComponent())) {
-                return i;
-            }
+        	IconItemInfo curItm = list.get(i);
+        	if (curItm instanceof ShortcutInfo) {
+        		ShortcutInfo x = (ShortcutInfo)curItm;
+	            if (component.equals(x.intent.getComponent())) {
+	                return i;
+	            }
+        	}
+        }
+        return -1;
+    }
+
+    private static int findAppById(ArrayList<IconItemInfo> list, IconItemInfo item) {
+        final long id = item.id;
+        if (id == ItemInfo.NO_ID)
+        	return -1;
+        final int N = list.size();
+        for (int i=0; i<N; i++) {
+        	IconItemInfo curItm = list.get(i);
+        	if (curItm.id == id)
+        		return i;
         }
         return -1;
     }

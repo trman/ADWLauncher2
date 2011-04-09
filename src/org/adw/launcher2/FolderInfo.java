@@ -16,6 +16,10 @@
 
 package org.adw.launcher2;
 
+import java.util.ArrayList;
+
+import org.adw.launcher2.settings.LauncherSettings.Favorites;
+
 import android.graphics.Bitmap;
 import android.view.View;
 
@@ -43,7 +47,13 @@ class FolderInfo extends IconItemInfo {
 	public void executeAction(EditAction action, View view, Launcher launcher) {
 		switch(action.getId()) {
 			case ACTION_DELETE: {
-				launcher.removeDesktopItem(this);
+				if (this.container == Favorites.CONTAINER_DRAWER) {
+					ArrayList<IconItemInfo> lst = new ArrayList<IconItemInfo>();
+					lst.add(this);
+					launcher.getAllAppsView().removeApps(lst);
+				}
+				else
+					launcher.removeDesktopItem(this);
 				LauncherModel.deleteItemFromDatabase(launcher, this);
 			} break;
 			default:

@@ -81,6 +81,7 @@ public class LauncherModel extends BroadcastReceiver {
     private final AllAppsList mAllAppsList; // only access in worker thread
     private final IconCache mIconCache;
     final ArrayList<ItemInfo> mItems = new ArrayList<ItemInfo>();
+    final ArrayList<IconItemInfo> mAdditionalDrawerItems = new ArrayList<IconItemInfo>();
     final ArrayList<LauncherAppWidgetInfo> mAppWidgets = new ArrayList<LauncherAppWidgetInfo>();
     final HashMap<Long, FolderInfo> mFolders = new HashMap<Long, FolderInfo>();
 
@@ -94,8 +95,8 @@ public class LauncherModel extends BroadcastReceiver {
         public void bindFolders(HashMap<Long,FolderInfo> folders);
         public void finishBindingItems();
         public void bindAppWidget(LauncherAppWidgetInfo info);
-        public void bindAllApplications(ArrayList<ShortcutInfo> apps);
-        public void bindAppsAdded(ArrayList<ShortcutInfo> apps);
+        public void bindAllApplications(ArrayList<ShortcutInfo> apps, ArrayList<IconItemInfo> otherItems);
+        public void bindAppsAdded(ArrayList<? extends IconItemInfo> apps);
         public void bindAppsUpdated(ArrayList<ShortcutInfo> apps);
         public void bindAppsRemoved(ArrayList<ShortcutInfo> apps, boolean permanent);
         public boolean isAllAppsVisible();
@@ -726,6 +727,7 @@ public class LauncherModel extends BroadcastReceiver {
             final AppWidgetManager widgets = AppWidgetManager.getInstance(context);
             final boolean isSafeMode = manager.isSafeMode();
 
+            mAdditionalDrawerItems.clear();
             mItems.clear();
             mAppWidgets.clear();
             mFolders.clear();
@@ -851,6 +853,9 @@ public class LauncherModel extends BroadcastReceiver {
                                 case LauncherSettings.Favorites.CONTAINER_DESKTOP:
                                     mItems.add(folderInfo);
                                     break;
+                                case LauncherSettings.Favorites.CONTAINER_DRAWER:
+                                	mAdditionalDrawerItems.add(folderInfo);
+                                	break;
                             }
 
                             mFolders.put(folderInfo.id, folderInfo);
@@ -902,6 +907,9 @@ public class LauncherModel extends BroadcastReceiver {
                                     case LauncherSettings.Favorites.CONTAINER_DESKTOP:
                                         mItems.add(liveFolderInfo);
                                         break;
+                                    case LauncherSettings.Favorites.CONTAINER_DRAWER:
+                                    	mAdditionalDrawerItems.add(liveFolderInfo);
+                                    	break;
                                 }
                                 mFolders.put(liveFolderInfo.id, liveFolderInfo);
                             }
@@ -952,6 +960,15 @@ public class LauncherModel extends BroadcastReceiver {
                 }
             } finally {
                 c.close();
+            }
+
+            if (mAdditionalDrawerItems.size() > 0) {
+            	Log.d("BOOMBULER", "found Drawer Items:"+mAdditionalDrawerItems.size());
+            	Callbacks cbs = mCallbacks.get();
+            	if (cbs != null) {
+            		Log.d("BOOMBULER", "callbacks ok!");
+            		cbs.bindAppsAdded(mAdditionalDrawerItems);
+            	}
             }
 
             if (itemsToRemove.size() > 0) {
@@ -1097,11 +1114,13 @@ public class LauncherModel extends BroadcastReceiver {
             // shallow copy
             final ArrayList<ShortcutInfo> list
                     = (ArrayList<ShortcutInfo>)mAllAppsList.data.clone();
+            final ArrayList<IconItemInfo> otherItems
+                    = (ArrayList<IconItemInfo>)mAdditionalDrawerItems.clone();
             mHandler.post(new Runnable() {
                 public void run() {
                     final Callbacks callbacks = tryGetCallbacks(oldCallbacks);
                     if (callbacks != null) {
-                        callbacks.bindAllApplications(list);
+                        callbacks.bindAllApplications(list, otherItems);
                     }
                 }
             });
@@ -1135,10 +1154,14 @@ public class LauncherModel extends BroadcastReceiver {
             final ArrayList<ShortcutInfo> added = mAllAppsList.added;
             mAllAppsList.added = new ArrayList<ShortcutInfo>();
 
+            final ArrayList<IconItemInfo> others
+            	= new ArrayList<IconItemInfo>(mAdditionalDrawerItems);
+
+
             mHandler.post(new Runnable() {
                 public void run() {
                     if (callbacks != null) {
-                        callbacks.bindAllApplications(added);
+                        callbacks.bindAllApplications(added, others);
                     } else {
                         Log.i(TAG, "not binding apps: no Launcher activity");
                     }

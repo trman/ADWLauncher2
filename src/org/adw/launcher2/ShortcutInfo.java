@@ -106,9 +106,9 @@ public class ShortcutInfo extends IconItemInfo implements ItemInfo.ItemPackage {
     }
 
     public static void dumpShortcutInfoList(String tag, String label,
-            ArrayList<ShortcutInfo> list) {
+            ArrayList<IconItemInfo> list) {
         Log.d(tag, label + " size=" + list.size());
-        for (ShortcutInfo info: list) {
+        for (IconItemInfo info: list) {
             Log.d(tag, "   title=\"" + info.mTitle + " icon=" + info.mIcon);
         }
     }

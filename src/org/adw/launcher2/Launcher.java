@@ -35,6 +35,7 @@ import org.adw.launcher2.quickactionbar.ActionItem;
 import org.adw.launcher2.quickactionbar.QuickAction;
 import org.adw.launcher2.settings.LauncherSettings;
 import org.adw.launcher2.settings.Preferences;
+import org.adw.launcher2.settings.LauncherSettings.Favorites;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -73,7 +74,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.provider.LiveFolders;
-import android.test.suitebuilder.annotation.Smoke;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -117,6 +117,7 @@ public final class Launcher extends Activity
     private static final int MENU_ADD = Menu.FIRST + 1;
     private static final int MENU_WALLPAPER_SETTINGS = MENU_ADD + 1;
     private static final int MENU_SEARCH = MENU_WALLPAPER_SETTINGS + 1;
+    private static final int MENU_DRAWER_ADD_FOLDER = MENU_SEARCH + 1;
 
     private static final int REQUEST_CREATE_SHORTCUT = 1;
     private static final int REQUEST_CREATE_LIVE_FOLDER = 4;
@@ -671,12 +672,12 @@ public final class Launcher extends Activity
                 String title = data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME);
                 info.setTitle(title);
                 mAppDB.updateAppDisplay(appInfoId, title, bitmap);
-                
+
                 // Notify Model:
                 Intent modelIntent = new Intent(AppDB.INTENT_DB_CHANGED);
                 modelIntent.putExtra(AppDB.EXTRA_UPDATED, new long[] {info.id} );
                 sendBroadcast(modelIntent);
-            }		    
+            }
 		}
 		else
 		{
@@ -684,7 +685,7 @@ public final class Launcher extends Activity
     		if (ii != null && ii instanceof IconItemInfo) {
     			IconItemInfo info = (IconItemInfo)ii;
     			Bitmap bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
-    
+
     	        if (bitmap != null) {
     		        info.setIcon(bitmap);
     	        }
@@ -1263,6 +1264,9 @@ public final class Launcher extends Activity
         DefaultAction.getAction(this, DefaultAction.ACTION_MANAGE_APPS).addToMenu(menu, MENU_GROUP_HOMESCREEN);
         DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_ADW_SETTINGS).addToMenu(menu, MENU_GROUP_HOMESCREEN);
 
+        menu.add(MENU_GROUP_DRAWER, MENU_DRAWER_ADD_FOLDER, 0, "Add Folder");
+
+
         menu.add(MENU_GROUP_HOMESCREEN, MENU_WALLPAPER_SETTINGS, 0, R.string.menu_wallpaper)
                  .setIcon(android.R.drawable.ic_menu_gallery)
                  .setAlphabeticShortcut('W');
@@ -1312,6 +1316,9 @@ public final class Launcher extends Activity
             case MENU_SEARCH:
                 onSearchRequested();
                 return true;
+            case MENU_DRAWER_ADD_FOLDER:
+            	addFolderToDrawer();
+            	return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -1490,6 +1497,16 @@ public final class Launcher extends Activity
         return true;
     }
 
+    private void addFolderToDrawer() {
+    	UserFolderInfo folderInfo = new UserFolderInfo();
+        folderInfo.setTitle(getText(R.string.folder_name));
+
+    	LauncherModel.addItemToDatabase(this, folderInfo, Favorites.CONTAINER_DRAWER, -1, 0, 0, false);
+    	ArrayList<IconItemInfo> list = new ArrayList<IconItemInfo>();
+    	list.add(folderInfo);
+    	mAllAppsGrid.addApps(list);
+    }
+
     private void startWallpaper() {
         closeAllApps(true);
         final Intent pickWallpaper = new Intent(Intent.ACTION_SET_WALLPAPER);
@@ -1608,7 +1625,7 @@ public final class Launcher extends Activity
                     pos[0] + v.getWidth(), pos[1] + v.getHeight()));
             startActivitySafely(intent, tag);
         } else if (tag instanceof FolderInfo) {
-            handleFolderClick((FolderInfo) tag);
+            openFolder((FolderInfo) tag);
         } else if (v == mHandleView) {
             if (isAllAppsVisible()) {
                 closeAllApps(true);
@@ -1650,12 +1667,12 @@ public final class Launcher extends Activity
         }
     }
 
-    private void handleFolderClick(FolderInfo folderInfo) {
+    public void openFolder(FolderInfo folderInfo) {
         if (!folderInfo.opened) {
             // Close any open folder
             closeFolder();
             // Open the requested folder
-            openFolder(folderInfo);
+            doOpenFolder(folderInfo);
         } else {
             // Find the open folder...
             Folder openFolder = mWorkspace.getFolderForTag(folderInfo);
@@ -1681,7 +1698,7 @@ public final class Launcher extends Activity
      *
      * @param folderInfo The FolderInfo describing the folder to open.
      */
-    private void openFolder(FolderInfo folderInfo) {
+    private void doOpenFolder(FolderInfo folderInfo) {
         Folder openFolder;
 
         if (folderInfo instanceof UserFolderInfo) {
@@ -1691,6 +1708,8 @@ public final class Launcher extends Activity
         } else {
             return;
         }
+        if (isAllAppsVisible())
+        	closeAllApps(false);
 
         openFolder.setDragController(mDragController);
         openFolder.setLauncher(this);
@@ -1698,7 +1717,11 @@ public final class Launcher extends Activity
         openFolder.bind(folderInfo);
         folderInfo.opened = true;
 
-        mWorkspace.addInScreen(openFolder, folderInfo.screen, 0, 0, 4, 4);
+        int screen = folderInfo.screen;
+        if (screen < 0)
+        	screen = mWorkspace.getCurrentScreen();
+
+        mWorkspace.addInScreen(openFolder, screen, 0, 0, 4, 4);
         openFolder.onOpen();
     }
 
@@ -2403,7 +2426,7 @@ public final class Launcher extends Activity
                 for (long folderId : userFolders) {
                     final FolderInfo info = sFolders.get(folderId);
                     if (info != null) {
-                        openFolder(info);
+                        doOpenFolder(info);
                     }
                 }
                 final Folder openFolder = mWorkspace.getOpenFolder();
@@ -2434,8 +2457,9 @@ public final class Launcher extends Activity
      *
      * Implementation of the method from LauncherModel.Callbacks.
      */
-    public void bindAllApplications(ArrayList<ShortcutInfo> apps) {
+    public void bindAllApplications(ArrayList<ShortcutInfo> apps, ArrayList<IconItemInfo> otherItems) {
         mAllAppsGrid.setApps(apps);
+        mAllAppsGrid.addApps(otherItems);
     }
 
     /**
@@ -2443,7 +2467,7 @@ public final class Launcher extends Activity
      *
      * Implementation of the method from LauncherModel.Callbacks.
      */
-    public void bindAppsAdded(ArrayList<ShortcutInfo> apps) {
+    public void bindAppsAdded(ArrayList<? extends IconItemInfo> apps) {
         setLoadOnResume();
         removeDialog(DIALOG_CREATE_SHORTCUT);
         mAllAppsGrid.addApps(apps);

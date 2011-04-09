@@ -132,6 +132,8 @@ public class LauncherSettings {
          */
         public static final int CONTAINER_DESKTOP = -100;
 
+        public static final int CONTAINER_DRAWER = -200;
+
         /**
          * The screen holding the favorite (if container is CONTAINER_DESKTOP)
          * <P>Type: INTEGER</P>

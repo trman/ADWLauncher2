@@ -11,7 +11,6 @@ import java.util.List;
 
 import org.adw.launcher2.actions.LauncherActions;
 import org.adw.launcher2.actions.RunActionActivity;
-import org.adw.launcher2.appdb.AppDB;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -139,7 +138,7 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
                 List<ShortcutInfo> apps = launcherApp.getAppDB().getApps(new long[] {id});
                 if ( apps.size() == 1 )
                 {
-                    info = apps.get(0); 
+                    info = apps.get(0);
                 }
             }
             else
@@ -393,7 +392,7 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 	        	mReturnData.putExtra(Intent.EXTRA_SHORTCUT_ICON, mBitmap);
 	        if ( isDrawerInfo)
                 mReturnData.putExtra(EXTRA_DRAWERINFO, true);
-	        
+
 			setResult(RESULT_OK,mReturnData);
 			finish();
         }else if(v.equals(btRevert)){
