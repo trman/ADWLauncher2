@@ -149,7 +149,7 @@ public class QuickAction extends CustomPopupWindow {
 
 		setAnimationStyle(screenWidth, anchorRect.centerX(), onTop);
 
-		showAtLocation(anchor, Gravity.NO_GRAVITY, xPos, yPos);
+		window.showAtLocation(anchor, Gravity.NO_GRAVITY, xPos, yPos);
 	}
 
 	/**
@@ -165,28 +165,28 @@ public class QuickAction extends CustomPopupWindow {
 
 		switch (animStyle) {
 		case ANIM_GROW_FROM_LEFT:
-			setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Left : R.style.Animations_PopDownMenu_Left);
+			window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Left : R.style.Animations_PopDownMenu_Left);
 			break;
 
 		case ANIM_GROW_FROM_RIGHT:
-			setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Right : R.style.Animations_PopDownMenu_Right);
+			window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Right : R.style.Animations_PopDownMenu_Right);
 			break;
 
 		case ANIM_GROW_FROM_CENTER:
-			setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Center : R.style.Animations_PopDownMenu_Center);
+			window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Center : R.style.Animations_PopDownMenu_Center);
 		break;
 
 		case ANIM_REFLECT:
-			setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Reflect : R.style.Animations_PopDownMenu_Reflect);
+			window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Reflect : R.style.Animations_PopDownMenu_Reflect);
 		break;
 
 		case ANIM_AUTO:
 			if (arrowPos <= screenWidth/4) {
-				setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Left : R.style.Animations_PopDownMenu_Left);
+				window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Left : R.style.Animations_PopDownMenu_Left);
 			} else if (arrowPos > screenWidth/4 && arrowPos < 3 * (screenWidth/4)) {
-				setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Center : R.style.Animations_PopDownMenu_Center);
+				window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Center : R.style.Animations_PopDownMenu_Center);
 			} else {
-				setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Right : R.style.Animations_PopDownMenu_Right);
+				window.setAnimationStyle((onTop) ? R.style.Animations_PopUpMenu_Right : R.style.Animations_PopDownMenu_Right);
 			}
 
 			break;
