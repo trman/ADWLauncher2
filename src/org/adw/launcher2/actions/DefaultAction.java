@@ -100,8 +100,8 @@ public class DefaultAction implements LauncherActions.Action {
 		}
 	}
 
-	public void addToMenu(Menu menu) {
-		menu.add(getName())
+	public void addToMenu(Menu menu, int group) {
+		menu.add(group, Menu.NONE, Menu.NONE, getName())
 			.setIntent(LauncherActions.getInstance().getIntentForAction(this))
 			.setIcon(getIconResourceId());
 	}
