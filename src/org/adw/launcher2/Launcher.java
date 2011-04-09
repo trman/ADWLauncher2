@@ -109,8 +109,9 @@ public final class Launcher extends Activity
 
     private static final int WALLPAPER_SCREENS_SPAN = 2;
 
-    private static final int MENU_GROUP_ADD = 1;
-    private static final int MENU_GROUP_WALLPAPER = MENU_GROUP_ADD + 1;
+    private static final int MENU_GROUP_HOMESCREEN = 1;
+    private static final int MENU_GROUP_DRAWER = MENU_GROUP_HOMESCREEN + 1;
+    private static final int MENU_GROUP_ADD = MENU_GROUP_DRAWER +1;
 
     private static final int MENU_ADD = Menu.FIRST + 1;
     private static final int MENU_WALLPAPER_SETTINGS = MENU_ADD + 1;
@@ -1226,25 +1227,24 @@ public final class Launcher extends Activity
         if (isWorkspaceLocked()) {
             return false;
         }
-
         super.onCreateOptionsMenu(menu);
 
         menu.add(MENU_GROUP_ADD, MENU_ADD, 0, R.string.menu_add)
                 .setIcon(android.R.drawable.ic_menu_add)
                 .setAlphabeticShortcut('A');
 
-        DefaultAction.getAction(this, DefaultAction.ACTION_MANAGE_APPS).addToMenu(menu);
-        DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_ADW_SETTINGS).addToMenu(menu);
+        DefaultAction.getAction(this, DefaultAction.ACTION_MANAGE_APPS).addToMenu(menu, MENU_GROUP_HOMESCREEN);
+        DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_ADW_SETTINGS).addToMenu(menu, MENU_GROUP_HOMESCREEN);
 
-        menu.add(MENU_GROUP_WALLPAPER, MENU_WALLPAPER_SETTINGS, 0, R.string.menu_wallpaper)
+        menu.add(MENU_GROUP_HOMESCREEN, MENU_WALLPAPER_SETTINGS, 0, R.string.menu_wallpaper)
                  .setIcon(android.R.drawable.ic_menu_gallery)
                  .setAlphabeticShortcut('W');
-        menu.add(0, MENU_SEARCH, 0, R.string.menu_search)
+        menu.add(MENU_GROUP_HOMESCREEN, MENU_SEARCH, 0, R.string.menu_search)
                 .setIcon(android.R.drawable.ic_search_category_default)
                 .setAlphabeticShortcut(SearchManager.MENU_KEY);
 
-        DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_NOTIFICATIONS).addToMenu(menu);
-        DefaultAction.getAction(this, DefaultAction.ACTION_SYSTEM_SETTINGS).addToMenu(menu);
+        DefaultAction.getAction(this, DefaultAction.ACTION_SHOW_NOTIFICATIONS).addToMenu(menu, MENU_GROUP_HOMESCREEN);
+        DefaultAction.getAction(this, DefaultAction.ACTION_SYSTEM_SETTINGS).addToMenu(menu, MENU_GROUP_HOMESCREEN);
 
         return true;
     }
@@ -1261,8 +1261,8 @@ public final class Launcher extends Activity
 
         // Only show the add and wallpaper options when we're not in all apps.
         boolean visible = !mAllAppsGrid.isOpaque();
-        menu.setGroupVisible(MENU_GROUP_ADD, visible);
-        menu.setGroupVisible(MENU_GROUP_WALLPAPER, visible);
+        menu.setGroupVisible(MENU_GROUP_HOMESCREEN, visible);
+        menu.setGroupVisible(MENU_GROUP_DRAWER, !visible);
 
         // Disable add if the workspace is full.
         if (visible) {
