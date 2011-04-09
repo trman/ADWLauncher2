@@ -46,8 +46,9 @@ public class ShortcutInfo extends IconItemInfo implements ItemInfo.ItemPackage {
         intent = new Intent(info.intent);
     }
 
-    public ShortcutInfo(ComponentName componentName) {
-    	this.container = ItemInfo.NO_ID;
+    public ShortcutInfo(long id, ComponentName componentName) {
+    	this.id = id;
+        this.container = ItemInfo.NO_ID;
     	this.mTitle = null;
     	this.setActivity(componentName, Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
     }

@@ -31,11 +31,23 @@
 	android:layout_centerHorizontal="true"
 	android:text="@string/shirtcut_label"
   />
-  <Button android:id="@+id/shirtcut_ok"
-	android:text="@android:string/ok"
-	android:layout_height="wrap_content"
-	android:layout_width="fill_parent"
-	android:layout_below="@id/pick_icon"
-	android:layout_centerHorizontal="true"
-  />
+  <LinearLayout
+    android:layout_height="wrap_content"
+    android:layout_width="fill_parent"
+    android:orientation="horizontal"
+    android:layout_below="@id/pick_icon" >
+	  <Button android:id="@+id/shirtcut_ok"
+		android:text="@android:string/ok"
+		android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+		android:layout_weight="1"
+	  />
+	  <Button android:id="@+id/shirtcut_revert"
+	    android:text="@string/shirtcuts_revert"
+	    android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+	    android:layout_weight="1"
+	    android:visibility="gone"
+	  />
+  </LinearLayout>
 </RelativeLayout>

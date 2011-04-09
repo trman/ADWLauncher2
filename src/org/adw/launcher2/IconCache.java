@@ -103,17 +103,16 @@ public class IconCache {
     public Bitmap getIcon(Intent intent) {
         synchronized (mCache) {
             ComponentName component = intent.getComponent();
-            if (component == null || !mCache.containsKey(component)) {
+            CacheEntry entry = mCache.get(component);
+            if (component == null || entry == null || entry.icon == null) {
             	final ResolveInfo resolveInfo = mPackageManager.resolveActivity(intent, 0);
 
 	            if (resolveInfo == null || component == null) {
 	                return mDefaultIcon;
 	            }
 
-	            CacheEntry entry = cacheLocked(component, resolveInfo);
-	            return entry.icon;
+	            return cacheLocked(component, resolveInfo).icon;
             } else {
-            	CacheEntry entry = mCache.get(component);
 	            return entry.icon;
             }
         }
@@ -121,14 +120,13 @@ public class IconCache {
 
     public Bitmap getIcon(ComponentName component, ResolveInfo resolveInfo) {
         synchronized (mCache) {
-            if (component == null || !mCache.containsKey(component)) {
+            CacheEntry entry = mCache.get(component);
+            if (component == null ||entry == null || entry.icon == null) {
 	            if (resolveInfo == null || component == null) {
 	                return mDefaultIcon;
 	            }
-	            CacheEntry entry = cacheLocked(component, resolveInfo);
-	            return entry.icon;
+	            return cacheLocked(component, resolveInfo).icon;
             } else {
-            	CacheEntry entry = mCache.get(component);
 	            return entry.icon;
             }
         }
@@ -137,17 +135,16 @@ public class IconCache {
     public CharSequence getTitle(Intent intent) {
         synchronized (mCache) {
             ComponentName component = intent.getComponent();
-            if (component == null || !mCache.containsKey(component)) {
+            CacheEntry entry = mCache.get(component);
+            if (component == null || entry == null || entry.title == null ) {
             	final ResolveInfo resolveInfo = mPackageManager.resolveActivity(intent, 0);
 
 	            if (resolveInfo == null || component == null) {
 	                return component.getClassName();
 	            }
 
-	            CacheEntry entry = cacheLocked(component, resolveInfo);
-	            return entry.title;
+	            return cacheLocked(component, resolveInfo).title;
             } else {
-            	CacheEntry entry = mCache.get(component);
 	            return entry.title;
             }
         }
@@ -155,14 +152,13 @@ public class IconCache {
 
     public CharSequence getTitle(ComponentName component, ResolveInfo resolveInfo) {
         synchronized (mCache) {
-            if (component == null || !mCache.containsKey(component)) {
+            CacheEntry entry = mCache.get(component);
+            if (component == null || entry == null || entry.title == null) {
 	            if (resolveInfo == null || component == null) {
 	                return component.getClassName();
 	            }
-	            CacheEntry entry = cacheLocked(component, resolveInfo);
-	            return entry.title;
+	            return cacheLocked(component, resolveInfo).title;
             } else {
-            	CacheEntry entry = mCache.get(component);
 	            return entry.title;
             }
         }
@@ -179,10 +175,16 @@ public class IconCache {
 
             mCache.put(componentName, entry);
 
+        }
+        
+        if ( entry.title == null ) {
             entry.title = info.loadLabel(mPackageManager).toString();
             if (entry.title == null) {
                 entry.title = info.activityInfo.name;
             }
+        }
+        
+        if ( entry.icon == null ) {
             entry.icon = Utilities.createIconBitmap(
                     info.activityInfo.loadIcon(mPackageManager), mContext);
         }

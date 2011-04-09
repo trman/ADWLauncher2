@@ -274,7 +274,7 @@ public class ItemInfo {
             case ACTION_MARKET: {
                 try
                 {
-                    String appPackage = ((ItemPackage) this).getPackageName(null);
+                    String appPackage = ((ItemPackage) this).getPackageName(launcher);
                     if ( appPackage != null )
                     {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -290,7 +290,7 @@ public class ItemInfo {
             case ACTION_SHARE_APP: {
             	try
                 {
-                    String appPackage = ((ItemPackage) this).getPackageName(null);
+                    String appPackage = ((ItemPackage) this).getPackageName(launcher);
                     if ( appPackage != null )
                     {
                         Intent intent = new Intent(Intent.ACTION_SEND);

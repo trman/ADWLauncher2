@@ -73,6 +73,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.provider.LiveFolders;
+import android.test.suitebuilder.annotation.Smoke;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -654,22 +655,48 @@ public final class Launcher extends Activity
 		if (!data.hasExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO))
 			return;
 		long appInfoId = data.getLongExtra(CustomShirtcutActivity.EXTRA_APPLICATIONINFO, 0);
-		ItemInfo ii = mModel.getItemInfoById(appInfoId);
-		if (ii != null && ii instanceof IconItemInfo) {
-			IconItemInfo info = (IconItemInfo)ii;
-			Bitmap bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
-
-	        if (bitmap != null) {
-		        info.setIcon(bitmap);
-	        }
-			info.setTitle(data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME));
-			if (data.hasExtra(Intent.EXTRA_SHORTCUT_INTENT) && info instanceof ShortcutInfo)
-				((ShortcutInfo)info).intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
-			LauncherModel.updateItemInDatabase(this, info);
-			// Need to update the icon here!
-			View v = mWorkspace.findViewWithTag(info);
-			if (v instanceof BubbleTextView)
-				((BubbleTextView)v).updateFromItemInfo(mIconCache, info);
+		if ( data.hasExtra(CustomShirtcutActivity.EXTRA_DRAWERINFO))
+		{
+            List<ShortcutInfo> apps = mAppDB.getApps(new long[] {appInfoId});
+            if (apps.size() == 1) {
+                IconItemInfo info = apps.get(0);
+                Bitmap bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
+                if (bitmap != null) {
+                    info.setIcon(bitmap);
+                }
+                else
+                {
+                    bitmap = info.mIcon;
+                }
+                String title = data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME);
+                info.setTitle(title);
+                mAppDB.updateAppDisplay(appInfoId, title, bitmap);
+                
+                // Notify Model:
+                Intent modelIntent = new Intent(AppDB.INTENT_DB_CHANGED);
+                modelIntent.putExtra(AppDB.EXTRA_UPDATED, new long[] {info.id} );
+                sendBroadcast(modelIntent);
+            }		    
+		}
+		else
+		{
+    		ItemInfo ii = mModel.getItemInfoById(appInfoId);
+    		if (ii != null && ii instanceof IconItemInfo) {
+    			IconItemInfo info = (IconItemInfo)ii;
+    			Bitmap bitmap = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_ICON);
+    
+    	        if (bitmap != null) {
+    		        info.setIcon(bitmap);
+    	        }
+    			info.setTitle(data.getStringExtra(Intent.EXTRA_SHORTCUT_NAME));
+    			if (data.hasExtra(Intent.EXTRA_SHORTCUT_INTENT) && info instanceof ShortcutInfo)
+    				((ShortcutInfo)info).intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
+    			LauncherModel.updateItemInDatabase(this, info);
+    			// Need to update the icon here!
+    			View v = mWorkspace.findViewWithTag(info);
+    			if (v instanceof BubbleTextView)
+    				((BubbleTextView)v).updateFromItemInfo(mIconCache, info);
+    		}
 		}
 	}
 

@@ -501,7 +501,7 @@ public class LauncherProvider extends ContentProvider {
                                 mContext);
                         if (bitmap != null) {
                             update.bindLong(1, id);
-                            data = ItemInfo.flattenBitmap(bitmap);
+                            data = Utilities.flattenBitmap(bitmap);
                             if (data != null) {
                                 update.bindBlob(2, data);
                                 update.execute();

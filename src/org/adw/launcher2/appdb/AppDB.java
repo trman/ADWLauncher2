@@ -196,7 +196,7 @@ public class AppDB extends BroadcastReceiver {
         List<ExtResolveInfo> pmInfos = toExtInfos(findActivitiesForPackage(packageManager, aPackage));
         ContentResolver cr = mContext.getContentResolver();
         Cursor c = queryAppsFromPackage(
-				new String[] {AppInfos.ID, AppInfos.COMPONENT_NAME},
+				new String[] {AppInfos.ID, AppInfos.COMPONENT_NAME, AppInfos.TITLE_CHANGED, AppInfos.ICON_CHANGED},
 				aPackage);
         List<DBInfo> dbInfos = toDBInfos(c);
         c.close();
@@ -237,17 +237,29 @@ public class AppDB extends BroadcastReceiver {
     	for (ExtResolveInfo pmInfo : updatedApps.keySet()) {
     		DBInfo dbinfo = updatedApps.get(pmInfo);
 
-    		ResolveInfo rInfo = pmInfo.getResolveInfo();
-            Bitmap icon = Utilities.createIconBitmap(
-                    rInfo.loadIcon(packageManager), mContext);
-
-            ContentValues values = new ContentValues();
-            values.put(AppInfos.TITLE, rInfo.loadLabel(packageManager).toString());
-            ItemInfo.writeBitmap(values, icon);
-
-    		cr.update(AppInfos.CONTENT_URI, values, AppInfos.ID + " = ?",
-    				new String[] { String.valueOf(dbinfo.getId()) } );
-    		updatedIds[i++] = dbinfo.getId();
+    		boolean iconChanged = dbinfo.isIconChanged();
+    		boolean titleChanged = dbinfo.isTitleChanged();
+    		if ( !titleChanged || !iconChanged )
+    		{
+        		ResolveInfo rInfo = pmInfo.getResolveInfo();
+                Bitmap icon = Utilities.createIconBitmap(
+                        rInfo.loadIcon(packageManager), mContext);
+    
+                ContentValues values = new ContentValues();
+                if ( !titleChanged )
+                {
+                    values.put(AppInfos.TITLE, rInfo.loadLabel(packageManager).toString());
+                }
+                
+                if ( !iconChanged )
+                {
+                    ItemInfo.writeBitmap(values, icon);
+                }
+    
+        		cr.update(AppInfos.CONTENT_URI, values, AppInfos.ID + " = ?",
+        				new String[] { String.valueOf(dbinfo.getId()) } );
+        		updatedIds[i++] = dbinfo.getId();
+    		}
     	}
     	if (i > 0)
     		modelIntent.putExtra(EXTRA_UPDATED, updatedIds);
@@ -281,7 +293,9 @@ public class AppDB extends BroadcastReceiver {
 	    try {
 	    	c.moveToFirst();
 			c.getColumnIndex(AppInfos.ID);
-			c.getColumnIndex(AppInfos.COMPONENT_NAME);
+            c.getColumnIndex(AppInfos.COMPONENT_NAME);
+            c.getColumnIndex(AppInfos.TITLE_CHANGED);
+            c.getColumnIndex(AppInfos.ICON_CHANGED);
 			while(!c.isAfterLast()) {
 				DBInfo info = new DBInfo(c);
 				infos.add(info);
@@ -435,17 +449,21 @@ public class AppDB extends BroadcastReceiver {
 		ContentResolver cr = mContext.getContentResolver();
 
 		Cursor c = cr.query(AppInfos.CONTENT_URI, new String[] {
-				AppInfos.COMPONENT_NAME,
-				AppInfos.ICON,
-				AppInfos.TITLE,
+		        AppInfos.ID,
+		        AppInfos.COMPONENT_NAME,
+                AppInfos.ICON,
+                AppInfos.ICON_CHANGED,
+                AppInfos.TITLE,
+                AppInfos.TITLE_CHANGED,
 				AppInfos.LAST_LAUNCHED,
 				AppInfos.LAUNCH_COUNT
 		}, getAppIdFilter(appIds), null, null);
 		try {
 			c.moveToFirst();
-			final int iconIdx = c.getColumnIndex(AppInfos.ICON);
+            final int idIdx = c.getColumnIndex(AppInfos.ID);
+            final int iconIdx = c.getColumnIndex(AppInfos.ICON);
 			final int cnIdx = c.getColumnIndex(AppInfos.COMPONENT_NAME);
-			final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
+            final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
 			final int launchcntIdx = c.getColumnIndex(AppInfos.LAUNCH_COUNT);
 			final int lastlaunchIdx = c.getColumnIndex(AppInfos.LAST_LAUNCHED);
 
@@ -465,10 +483,8 @@ public class AppDB extends BroadcastReceiver {
 				ComponentName cname = ComponentName.unflattenFromString(cnStr);
 				if (mIconCache != null)
 					mIconCache.addToCache(cname, title, icon);
-				if (title != null) {
-					ShortcutInfo info = new ShortcutInfo(cname);
-					result.add(info);
-				}
+				ShortcutInfo info = new ShortcutInfo(c.getLong(idIdx), cname);
+				result.add(info);
 				c.moveToNext();
 			}
 		}
@@ -606,10 +622,14 @@ public class AppDB extends BroadcastReceiver {
     private class DBInfo {
     	private final long mId;
     	private final String mComponentName;
+        private final boolean mTitleChanged;
+        private final boolean mIconChanged;
 
     	public DBInfo(Cursor c) {
     		mId = c.getLong(c.getColumnIndex(AppInfos.ID));
-    		mComponentName = c.getString(c.getColumnIndex(AppInfos.COMPONENT_NAME));
+            mComponentName = c.getString(c.getColumnIndex(AppInfos.COMPONENT_NAME));
+            mTitleChanged = c.getInt(c.getColumnIndex(AppInfos.TITLE_CHANGED)) == 1;
+            mIconChanged = c.getInt(c.getColumnIndex(AppInfos.ICON_CHANGED)) == 1;
     	}
 
     	public long getId(){
@@ -619,6 +639,16 @@ public class AppDB extends BroadcastReceiver {
     	public String getComponentName() {
     		return mComponentName;
     	}
+
+        public boolean isTitleChanged()
+        {
+            return mTitleChanged;
+        }
+
+        public boolean isIconChanged()
+        {
+            return mIconChanged;
+        }
     }
 
     public static final String APPINFOS = "appinfos";
@@ -629,7 +659,9 @@ public class AppDB extends BroadcastReceiver {
 		public static final String LAUNCH_COUNT = "launchcount";
 		public static final String LAST_LAUNCHED = "lastlaunched";
 		public static final String TITLE = "title";
+        public static final String TITLE_CHANGED = "titlechanged";
 		public static final String ICON = "icon";
+        public static final String ICON_CHANGED = "iconchanged";
 		public static final String LOCALE = "locale";
 
         static final Uri CONTENT_URI = Uri.parse("content://" +
@@ -652,5 +684,24 @@ public class AppDB extends BroadcastReceiver {
         }
 
 	}
+
+    public void updateAppDisplay(long id, String title, Bitmap icon) {
+        ContentResolver cr = mContext.getContentResolver();
+        final Uri uri = AppInfos.getContentUri(id);
+        final ContentValues values = new ContentValues();
+
+        byte[] data = null;
+        if ( icon != null )
+        {
+            data = Utilities.flattenBitmap(icon);
+        }
+        values.put(AppInfos.ICON, data);
+        values.put(AppInfos.ICON_CHANGED, data == null?0:1);
+
+        values.put(AppInfos.TITLE, title);
+        values.put(AppInfos.TITLE_CHANGED, title == null?0:1);
+
+        cr.update(uri, values, null, null);
+    }
 
 }
