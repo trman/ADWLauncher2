@@ -462,8 +462,10 @@ public class AppDB extends BroadcastReceiver {
 			c.moveToFirst();
             final int idIdx = c.getColumnIndex(AppInfos.ID);
             final int iconIdx = c.getColumnIndex(AppInfos.ICON);
+            final int iconChangedIdx = c.getColumnIndex(AppInfos.ICON_CHANGED);
 			final int cnIdx = c.getColumnIndex(AppInfos.COMPONENT_NAME);
             final int titleIdx = c.getColumnIndex(AppInfos.TITLE);
+            final int titleChangedIdx = c.getColumnIndex(AppInfos.TITLE_CHANGED);
 			final int launchcntIdx = c.getColumnIndex(AppInfos.LAUNCH_COUNT);
 			final int lastlaunchIdx = c.getColumnIndex(AppInfos.LAST_LAUNCHED);
 
@@ -484,6 +486,8 @@ public class AppDB extends BroadcastReceiver {
 				if (mIconCache != null)
 					mIconCache.addToCache(cname, title, icon);
 				ShortcutInfo info = new ShortcutInfo(c.getLong(idIdx), cname);
+                info.setTitleInAppsDb(c.getInt( titleChangedIdx ) == 1);
+                info.setIconInAppsDb( c.getInt( iconChangedIdx ) == 1 );
 				result.add(info);
 				c.moveToNext();
 			}
