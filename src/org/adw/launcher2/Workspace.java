@@ -36,6 +36,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -1167,7 +1168,22 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         case LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT:
             if (info.container == NO_ID && info instanceof ShortcutInfo) {
                 // Came from all apps -- make a copy
-                info = new ShortcutInfo((ShortcutInfo)info);
+                ShortcutInfo newShortcutInfo = new ShortcutInfo((ShortcutInfo)info);
+                List<ShortcutInfo> apps = mLauncher.getAppDB().getApps(new long[] {newShortcutInfo.id} );
+                if ( apps.size() == 1 )
+                {
+                    ShortcutInfo shortcutInfo = apps.get(0);
+                    if ( shortcutInfo.mIconInAppsDb )
+                    {
+                        newShortcutInfo.mIcon = newShortcutInfo.getIcon(mLauncher.getIconCache());
+                    }
+                    
+                    if ( shortcutInfo.mTitleInAppsDb )
+                    {
+                        newShortcutInfo.mTitle = newShortcutInfo.getTitle(mLauncher.getIconCache());
+                    }
+                }
+                info = newShortcutInfo;
             }
             view = mLauncher.createShortcut(R.layout.application, cellLayout, (ShortcutInfo)info);
             break;

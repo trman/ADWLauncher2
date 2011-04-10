@@ -15,12 +15,14 @@ public abstract class IconItemInfo extends ItemInfo{
      * The application name.
      */
     protected CharSequence mTitle;
+    boolean mTitleInAppsDb = false;
 
     /**
      * The application icon.
      */
     protected Bitmap mIcon = null;
-
+    boolean mIconInAppsDb = false;
+    
     IconItemInfo() {
     }
 
@@ -103,4 +105,13 @@ public abstract class IconItemInfo extends ItemInfo{
 				R.string.menu_edit));
 		return result;
 	}
+
+    public void setTitleInAppsDb(boolean inAppsDb)
+    {
+        this.mTitleInAppsDb = inAppsDb;
+    }
+    public void setIconInAppsDb(boolean inAppsDb)
+    {
+        this.mIconInAppsDb = inAppsDb;
+    }
 }
