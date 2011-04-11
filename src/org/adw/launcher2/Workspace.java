@@ -24,6 +24,7 @@ import mobi.intuitit.android.widget.WidgetSpace;
 
 import org.adw.launcher2.settings.LauncherSettings;
 import org.adw.launcher2.settings.Preferences;
+import org.adw.launcher2.settings.LauncherSettings.Favorites;
 
 import android.app.Activity;
 import android.app.WallpaperManager;
@@ -1171,7 +1172,12 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             view = mLauncher.createShortcut(R.layout.application, cellLayout, (ShortcutInfo)info);
             break;
         case LauncherSettings.Favorites.ITEM_TYPE_USER_FOLDER:
-            view = FolderIcon.fromXml(R.layout.folder_icon, mLauncher,
+        	if (info.container == Favorites.CONTAINER_DRAWER) {
+        		ArrayList<IconItemInfo> list = new ArrayList<IconItemInfo>();
+        		list.add((IconItemInfo)info);
+        		mLauncher.getAllAppsView().removeApps(list);
+        	}
+    		view = FolderIcon.fromXml(R.layout.folder_icon, mLauncher,
                     (ViewGroup) getChildAt(mCurrentScreen), ((UserFolderInfo) info));
             break;
         default:
