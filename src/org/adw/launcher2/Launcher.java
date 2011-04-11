@@ -129,6 +129,8 @@ public final class Launcher extends Activity
     private static final int REQUEST_PICK_WALLPAPER = 10;
     private static final int REQUEST_PICK_ANYCUT=11;
     static final int REQUEST_EDIT_SHIRTCUT = 12;
+    private static final int REQUEST_PICK_LIVE_FOLDER_DRAWER = 13;
+    private static final int REQUEST_CREATE_LIVE_FOLDER_DRAWER = 14;
 
     static final String EXTRA_SHORTCUT_DUPLICATE = "duplicate";
 
@@ -583,8 +585,7 @@ public final class Launcher extends Activity
         	completeEditShirtcut(data);
         	return;
         }
-
-        if (resultCode == RESULT_OK && mAddItemCellInfo != null) {
+        if (resultCode == RESULT_OK && (mAddItemCellInfo != null || requestCode == REQUEST_PICK_LIVE_FOLDER_DRAWER || requestCode == REQUEST_CREATE_LIVE_FOLDER_DRAWER)) {
             switch (requestCode) {
                 case REQUEST_PICK_APPLICATION:
                     completeAddApplication(this, data, mAddItemCellInfo);
@@ -596,9 +597,15 @@ public final class Launcher extends Activity
                 case REQUEST_CREATE_SHORTCUT:
                     completeAddShortcut(data, mAddItemCellInfo);
                     break;
-                case REQUEST_PICK_LIVE_FOLDER:
-                    addLiveFolder(data);
+                case REQUEST_PICK_LIVE_FOLDER_DRAWER:
+                    addLiveFolder(data, true);
                     break;
+                case REQUEST_PICK_LIVE_FOLDER:
+                    addLiveFolder(data, false);
+                    break;
+                case REQUEST_CREATE_LIVE_FOLDER_DRAWER:
+                	completeAddLiveFolderDrawer(data);
+                	break;
                 case REQUEST_CREATE_LIVE_FOLDER:
                     completeAddLiveFolder(data, mAddItemCellInfo);
                     break;
@@ -1324,7 +1331,7 @@ public final class Launcher extends Activity
                 onSearchRequested();
                 return true;
             case MENU_DRAWER_ADD_FOLDER:
-            	addFolderToDrawer();
+            	requestPickLiveFolder(true);
             	return true;
         }
 
@@ -1387,15 +1394,18 @@ public final class Launcher extends Activity
         }
     }
 
-    void addLiveFolder(Intent intent) {
+    void addLiveFolder(Intent intent, boolean toDrawer) {
         // Handle case where user selected "Folder"
         String folderName = getResources().getString(R.string.group_folder);
         String shortcutName = intent.getStringExtra(Intent.EXTRA_SHORTCUT_NAME);
 
         if (folderName != null && folderName.equals(shortcutName)) {
-            addFolder();
+        	if (toDrawer)
+        		addFolderToDrawer();
+        	else
+        		addFolder();
         } else {
-            startActivityForResultSafely(intent, REQUEST_CREATE_LIVE_FOLDER);
+            startActivityForResultSafely(intent, toDrawer ? REQUEST_CREATE_LIVE_FOLDER_DRAWER : REQUEST_CREATE_LIVE_FOLDER);
         }
     }
 
@@ -1422,6 +1432,15 @@ public final class Launcher extends Activity
 
     void removeFolder(FolderInfo folder) {
         sFolders.remove(folder.id);
+    }
+
+    private void completeAddLiveFolderDrawer(Intent data) {
+    	final LiveFolderInfo info = addLiveFolder(this, data, null, false);
+    	if (!mRestoring) {
+    		ArrayList<IconItemInfo> list = new ArrayList<IconItemInfo>();
+    		list.add(info);
+    		getAllAppsView().addApps(list);
+    	}
     }
 
     private void completeAddLiveFolder(Intent data, CellLayout.CellInfo cellInfo) {
@@ -1473,10 +1492,16 @@ public final class Launcher extends Activity
         info.displayMode = data.getIntExtra(LiveFolders.EXTRA_LIVE_FOLDER_DISPLAY_MODE,
                 LiveFolders.DISPLAY_MODE_GRID);
 
-        LauncherModel.addItemToDatabase(context, info, LauncherSettings.Favorites.CONTAINER_DESKTOP,
-                cellInfo.screen, cellInfo.cellX, cellInfo.cellY, notify);
-        sFolders.put(info.id, info);
-        mModel.mItems.add(info);
+        if (cellInfo != null) {
+        	LauncherModel.addItemToDatabase(context, info, Favorites.CONTAINER_DESKTOP,
+        			cellInfo.screen, cellInfo.cellX, cellInfo.cellY, notify);
+            sFolders.put(info.id, info);
+            mModel.mItems.add(info);
+        } else {
+        	LauncherModel.addItemToDatabase(context, info, Favorites.CONTAINER_DRAWER,
+        			ItemInfo.NO_ID, 0, 0, notify);
+        	mModel.mAdditionalDrawerItems.add(info);
+        }
 
         return info;
     }
@@ -2076,6 +2101,30 @@ public final class Launcher extends Activity
         }
     }
 
+    private void requestPickLiveFolder(boolean toDrawer) {
+    	// Insert extra item to handle inserting folder
+        Bundle bundle = new Bundle();
+
+        ArrayList<String> shortcutNames = new ArrayList<String>();
+        shortcutNames.add(getString(R.string.group_folder));
+        bundle.putStringArrayList(Intent.EXTRA_SHORTCUT_NAME, shortcutNames);
+
+        ArrayList<ShortcutIconResource> shortcutIcons =
+                new ArrayList<ShortcutIconResource>();
+        shortcutIcons.add(ShortcutIconResource.fromContext(Launcher.this,
+                R.drawable.ic_launcher_folder));
+        bundle.putParcelableArrayList(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, shortcutIcons);
+
+        Intent pickIntent = new Intent(Intent.ACTION_PICK_ACTIVITY);
+        pickIntent.putExtra(Intent.EXTRA_INTENT,
+                new Intent(LiveFolders.ACTION_CREATE_LIVE_FOLDER));
+        pickIntent.putExtra(Intent.EXTRA_TITLE,
+                getText(R.string.title_select_live_folder));
+        pickIntent.putExtras(bundle);
+
+        startActivityForResult(pickIntent, toDrawer ? REQUEST_PICK_LIVE_FOLDER_DRAWER : REQUEST_PICK_LIVE_FOLDER);
+    }
+
     public void showAllApps(boolean animated) {
         mAllAppsGrid.zoom(1.0f, animated);
 
@@ -2188,7 +2237,7 @@ public final class Launcher extends Activity
          * Handle the action clicked in the "Add to home" dialog.
          */
         public void onClick(DialogInterface dialog, int which) {
-            Resources res = getResources();
+            getResources();
             cleanup();
 
             switch (which) {
@@ -2209,27 +2258,7 @@ public final class Launcher extends Activity
                 }
 
                 case AddAdapter.ITEM_LIVE_FOLDER: {
-                    // Insert extra item to handle inserting folder
-                    Bundle bundle = new Bundle();
-
-                    ArrayList<String> shortcutNames = new ArrayList<String>();
-                    shortcutNames.add(res.getString(R.string.group_folder));
-                    bundle.putStringArrayList(Intent.EXTRA_SHORTCUT_NAME, shortcutNames);
-
-                    ArrayList<ShortcutIconResource> shortcutIcons =
-                            new ArrayList<ShortcutIconResource>();
-                    shortcutIcons.add(ShortcutIconResource.fromContext(Launcher.this,
-                            R.drawable.ic_launcher_folder));
-                    bundle.putParcelableArrayList(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, shortcutIcons);
-
-                    Intent pickIntent = new Intent(Intent.ACTION_PICK_ACTIVITY);
-                    pickIntent.putExtra(Intent.EXTRA_INTENT,
-                            new Intent(LiveFolders.ACTION_CREATE_LIVE_FOLDER));
-                    pickIntent.putExtra(Intent.EXTRA_TITLE,
-                            getText(R.string.title_select_live_folder));
-                    pickIntent.putExtras(bundle);
-
-                    startActivityForResult(pickIntent, REQUEST_PICK_LIVE_FOLDER);
+                    Launcher.this.requestPickLiveFolder(false);
                     break;
                 }
                 case AddAdapter.ITEM_ANYCUT: {
