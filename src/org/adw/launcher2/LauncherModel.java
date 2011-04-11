@@ -286,6 +286,10 @@ public class LauncherModel extends BroadcastReceiver {
     		if (ii.id == id)
     			return ii;
     	}
+    	for(IconItemInfo ii : mAdditionalDrawerItems) {
+    		if (ii.id == id)
+    			return ii;
+    	}
     	return null;
     }
 
@@ -963,10 +967,8 @@ public class LauncherModel extends BroadcastReceiver {
             }
 
             if (mAdditionalDrawerItems.size() > 0) {
-            	Log.d("BOOMBULER", "found Drawer Items:"+mAdditionalDrawerItems.size());
             	Callbacks cbs = mCallbacks.get();
             	if (cbs != null) {
-            		Log.d("BOOMBULER", "callbacks ok!");
             		cbs.bindAppsAdded(mAdditionalDrawerItems);
             	}
             }

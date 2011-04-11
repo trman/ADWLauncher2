@@ -19,7 +19,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 public class AppDBProvider extends ContentProvider {
 	static final String AUTHORITY = "org.adw.launcher2.appdb";
@@ -113,7 +112,6 @@ public class AppDBProvider extends ContentProvider {
             						AppInfos.LAST_LAUNCHED + " = "+ curUnixTime +
             						" WHERE substr("+AppInfos.COMPONENT_NAME + ",1,"+ cPathName.length() +") = ?",
             						new String[] { cPathName.toString() });
-                			Log.d("BOOMBULER", "updated LC for: "+cPathName.toString());
                 		} finally {
                 			db.close();
                 		}

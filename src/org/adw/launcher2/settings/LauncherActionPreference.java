@@ -53,11 +53,4 @@ public class LauncherActionPreference extends DialogPreference {
 		});
 		builder.create().show();
 	}
-
-	/*@Override
-	public void setValueIndex(int index) {
-		Log.d("BOOMBULER", "setValue: "+index);
-		super.setValueIndex(index);
-	}*/
-
 }

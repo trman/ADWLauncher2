@@ -694,9 +694,16 @@ public final class Launcher extends Activity
     				((ShortcutInfo)info).intent = data.getParcelableExtra(Intent.EXTRA_SHORTCUT_INTENT);
     			LauncherModel.updateItemInDatabase(this, info);
     			// Need to update the icon here!
-    			View v = mWorkspace.findViewWithTag(info);
-    			if (v instanceof BubbleTextView)
-    				((BubbleTextView)v).updateFromItemInfo(mIconCache, info);
+    			if (ii.container == Favorites.CONTAINER_DRAWER) {
+    				ArrayList<IconItemInfo> lst = new ArrayList<IconItemInfo>();
+    				lst.add(info);
+    				mAllAppsGrid.updateApps(lst);
+    			}
+    			else {
+	    			View v = mWorkspace.findViewWithTag(info);
+	    			if (v instanceof BubbleTextView)
+	    				((BubbleTextView)v).updateFromItemInfo(mIconCache, info);
+    			}
     		}
 		}
 	}

@@ -128,7 +128,6 @@ public class CustomShirtcutActivity extends Activity implements OnClickListener 
 				intent.getAction().equals(Intent.ACTION_EDIT)
 				&& intent.hasExtra(EXTRA_APPLICATIONINFO)) {
 			long id = intent.getLongExtra(EXTRA_APPLICATIONINFO, 0);
-
             ItemInfo info = null;
             if ( intent.hasExtra(EXTRA_DRAWERINFO) )
             {

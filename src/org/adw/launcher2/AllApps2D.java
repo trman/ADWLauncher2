@@ -283,7 +283,6 @@ public class AllApps2D
 
         for (int i=0; i<N; i++) {
             final IconItemInfo item = list.get(i);
-            Log.d("BOOMBULER", "adding: "+item.getClass().getName());
             int index = Collections.binarySearch(mAllAppsList, item, Preferences.getInstance().getCurrentDrawerComparator());
             if (index < 0) {
                 index = -(index+1);
