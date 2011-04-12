@@ -244,18 +244,18 @@ public class AppDB extends BroadcastReceiver {
         		ResolveInfo rInfo = pmInfo.getResolveInfo();
                 Bitmap icon = Utilities.createIconBitmap(
                         rInfo.loadIcon(packageManager), mContext);
-    
+
                 ContentValues values = new ContentValues();
                 if ( !titleChanged )
                 {
                     values.put(AppInfos.TITLE, rInfo.loadLabel(packageManager).toString());
                 }
-                
+
                 if ( !iconChanged )
                 {
                     ItemInfo.writeBitmap(values, icon);
                 }
-    
+
         		cr.update(AppInfos.CONTENT_URI, values, AppInfos.ID + " = ?",
         				new String[] { String.valueOf(dbinfo.getId()) } );
         		updatedIds[i++] = dbinfo.getId();
@@ -628,8 +628,10 @@ public class AppDB extends BroadcastReceiver {
     	public DBInfo(Cursor c) {
     		mId = c.getLong(c.getColumnIndex(AppInfos.ID));
             mComponentName = c.getString(c.getColumnIndex(AppInfos.COMPONENT_NAME));
-            mTitleChanged = c.getInt(c.getColumnIndex(AppInfos.TITLE_CHANGED)) == 1;
-            mIconChanged = c.getInt(c.getColumnIndex(AppInfos.ICON_CHANGED)) == 1;
+            int tcidx = c.getColumnIndex(AppInfos.TITLE_CHANGED);
+            mTitleChanged = (tcidx >= 0) && (c.getInt(tcidx) == 1);
+            int icidx = c.getColumnIndex(AppInfos.ICON_CHANGED);
+            mIconChanged = (icidx >= 0) && (c.getInt(icidx) == 1);
     	}
 
     	public long getId(){
