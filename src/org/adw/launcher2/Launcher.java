@@ -2059,7 +2059,8 @@ public final class Launcher extends Activity
             final String name = mInput.getText().toString();
             if (!TextUtils.isEmpty(name)) {
                 // Make sure we have the right folder info
-                mFolderInfo = sFolders.get(mFolderInfo.id);
+            	if (sFolders.containsKey(mFolderInfo.id))
+            		mFolderInfo = sFolders.get(mFolderInfo.id);
                 mFolderInfo.setTitle(name);
                 LauncherModel.updateItemInDatabase(Launcher.this, mFolderInfo);
 
