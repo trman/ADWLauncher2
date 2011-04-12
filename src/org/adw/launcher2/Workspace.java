@@ -36,7 +36,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.res.TypedArray;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -1177,7 +1176,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                     {
                         newShortcutInfo.mIcon = newShortcutInfo.getIcon(mLauncher.getIconCache());
                     }
-                    
+
                     if ( shortcutInfo.mTitleInAppsDb )
                     {
                         newShortcutInfo.mTitle = newShortcutInfo.getTitle(mLauncher.getIconCache());
